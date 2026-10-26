@@ -1,0 +1,17 @@
+# 本地系统与 Python 缓存
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# 本地环境与凭据；示例配置可以提交
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# 运行产物仅保留目录占位
+/artifacts/*
+!/artifacts/.gitkeep
