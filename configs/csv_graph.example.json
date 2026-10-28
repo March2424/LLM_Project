@@ -1,0 +1,12 @@
+{
+  "namespace": "game-script",
+  "source_column": "source",
+  "id_column": "id",
+  "columns": {},
+  "max_rows": 8,
+  "max_characters": 1200,
+  "order_trusted": false,
+  "source_version": 1,
+  "source_lang": "en",
+  "target_lang": "zh"
+}

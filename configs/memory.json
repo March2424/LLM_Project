@@ -1,0 +1,8 @@
+{
+  "stm_size": 3,
+  "ltm_window": 20,
+  "ltm_top_k": 2,
+  "summary_step": 20,
+  "retrieval": "lexical",
+  "recency_weight": 0.0
+}

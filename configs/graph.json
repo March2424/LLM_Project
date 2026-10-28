@@ -1,0 +1,7 @@
+{
+  "max_hops": 4,
+  "max_nodes": 40,
+  "max_candidates": 30,
+  "max_characters": 6000,
+  "source_visibility": "previous"
+}
