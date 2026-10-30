@@ -4,9 +4,11 @@
 
 **核心架构：LangGraph 执行编排 + DelTA 式记忆 + TransGraph 启发的检索 + Loong 启发的上下文选择训练 + 角色风格约束 + 版本与依赖驱动的局部修订。**
 
-> 当前状态：以方案与协作设计为主；M1 已完成通用 CSV 导入和 Flare 固定快照文本整理（3,800 条中英对照、616 条待翻译），其余系统、训练与实验仍待实现。下文架构描述计划功能。更新日期：2026-10-30。
+> 当前状态：M1 已完成通用 CSV 导入和 Flare 固定快照文本整理（3,800 条中英对照、616 条待翻译）；M2 记忆模块及基础 M3 图引导检索已实现并通过离线验证，包含源文 CSV 建图与无序游戏记忆模式。其他模块仍按下文规划推进；尚未完成真实模型实验、训练或全系统闭环。更新日期：2026-10-30。数据说明见 [DATA.md](docs/DATA.md)，记忆与检索说明见 [MEMORY.md](docs/MEMORY.md) 和 [GRAPH.md](docs/GRAPH.md)。
 >
 > 本文基于 [系统协作与实现细节详解](Research/游戏本地化Agent_系统协作与实现细节详解_2026-10-24.md)，将可训练上下文选择器纳入正式模块，并更新评测方案。旧文档中“Loong 仅为后续扩展”的范围约定，以本文为准；其余业务细节继续参考该文档。
+
+无序游戏资源已增加轻量实体图＋五类记忆模式，使用方法与当前限制见 [GAME_MEMORY.md](docs/GAME_MEMORY.md)。
 
 ## 1. 我们要实现什么
 
@@ -86,6 +88,8 @@ flowchart TD
 
 **交付**：持久化存储、知识提取流程、记忆读写接口、证据与版本记录。首版采用 SQLite 与关系表，检索索引可重建。
 
+**已实现范围**：DelTA 式术语候选、双语摘要、STM/LTM，以及角色笔记存取；SQLite、批准流程、知识快照、运行隔离和基本依赖失效。角色自动提取、关系图和真实模型效果仍待后续完成，详见 [M2 实现报告](docs/MEMORY.md)。
+
 ### M3：规则解析、图引导检索与 Context Builder
 
 **职责**：在指定知识快照和译文读取水位下，找到对当前文本有效的规则与候选证据。
@@ -99,6 +103,8 @@ flowchart TD
 图用于导航到相关原文与记忆。项目采用轻量关系检索，不要求部署完整 Microsoft GraphRAG。
 
 **交付**：候选检索器、作用域解析器、Context Builder，以及固定 top-k / 排名融合基线。
+
+**已实现范围**：版本化 SQLite 图、可扩展实体关系、CSV 技术分块及人工标注、有界图遍历、Memory 联查、固定字符预算打包和带清单提交。自动语义建图、向量/排名融合及完整硬规则解析尚未实现，见 [GRAPH.md](docs/GRAPH.md)。
 
 ### M4：Loong 启发的可训练上下文选择工具
 
@@ -248,7 +254,7 @@ LLM Judge 的通用维度参考 Loong：总体质量、衔接、连贯、风格�
 | C：Agent 与维护 | M5、M6 | 模型适配、翻译闭环、状态恢复、版本与更新流程 |
 | D：评测与集成 | M7、公共契约复核 | 三项主指标、基线运行、质量检查、实验汇总 |
 
-以下基础目录已建立，空目录以 `.gitkeep` 保留；代码、配置和命令入口待各模块开发时添加：
+以下基础目录已建立，空目录以 `.gitkeep` 保留；M1 通用 CSV/Flare 适配、M2、基础 M3 及相关 schema、配置、演示和测试已有实现，其余模块逐步添加：
 
 ```text
 .
@@ -256,7 +262,7 @@ LLM Judge 的通用维度参考 Loong：总体质量、衔接、连贯、风格�
 ├── AGENTS.md                     # 编码助手共享约定
 ├── CONTRIBUTING.md               # 人工协作流程占位
 ├── .gitignore                    # 本地环境与运行产物忽略规则
-├── docs/                         # 协作文档占位页
+├── docs/                         # 实现说明、接口及待填写协作文档
 ├── Research/                     # 系统设计与调研资料
 ├── Proposal/                     # Proposal 与相关材料
 ├── src/localization_agent/
@@ -277,7 +283,7 @@ LLM Judge 的通用维度参考 Loong：总体质量、衔接、连贯、风格�
 └── artifacts/                    # 本地结果与日志，大文件默认不入库
 ```
 
-先共同固定 `Occurrence`、`MemoryRecord`、`ReadView`、`CandidatePool`、`SelectionResult`、`ContextPack`、`TranslationOutcome`、`UpdateReport` 八类接口。模块通过这些结构交换数据，避免各自维护不同字段含义。
+M1 数据类型与 M2/M3 运行时类型分别已有实现，尚未实现从 localization-text/0.2 到 MemoryStore/GraphStore 的接入适配；源侧导出不等于已写入记忆或图。后续继续对齐 `Occurrence`、`MemoryRecord`、`ReadView`、`CandidatePool`、`SelectionResult`、`ContextPack`、`TranslationOutcome`、`UpdateReport` 八类接口。模块通过这些结构交换数据，避免各自维护不同字段含义。
 
 协作约定：
 
@@ -323,11 +329,21 @@ LLM Judge 的通用维度参考 Loong：总体质量、衔接、连贯、风格�
 
 - [AGENTS.md](AGENTS.md)：Codex 共享开发指令、模块边界与研究约束。
 - [CONTRIBUTING.md](CONTRIBUTING.md)：人工协作开发流程占位页。
-- [协作文档入口](docs/README.md)：任务、接口、数据、训练、评测、实验、环境、决策和交接文档的用途与维护位置；当前各页为待填写占位。
+- [图引导检索](docs/GRAPH.md)：节点与关系、Memory 联动、版本与输入清单。
+- [CSV 导入与分块](docs/CSV_IMPORT.md)：缺失场景、人工补注和稳定 ID。
+- [记忆模块实现说明](docs/MEMORY.md)：DelTA 来源、实现内容、与原版差异、使用方式及验证结果。
+- [协作文档入口](docs/README.md)：协作约定与维护位置；记忆相关接口和环境说明已填写，其余按任务推进。
 - [系统协作与实现细节详解](Research/游戏本地化Agent_系统协作与实现细节详解_2026-10-24.md)：业务对象、上下文、审校、版本依赖和恢复机制。
-- [项目设计与实现 Roadmap](Research/游戏本地化Agent_项目设计与实现Roadmap_2026-10-23.md)：既有计划与实验设计，训练范围及主评测方案以本 README 更新为准。
-- [多模型协同与长程 Agent 架构推荐](Research/多模型协同与长程Agent架构推荐_2026-10-23.md)：多模型分工相关调研。
 - [P0 论文与开源项目详解](Research/P0论文与开源项目详解及架构复现建议_2026-10-22.md)：早期选型参考，仓库发布状态以最新核验为准。
+
+当前可在仓库根目录运行记忆模块的离线演示与测试（仅 Python 标准库）：
+
+```bash
+PYTHONPATH=src python3 scripts/demo_memory.py
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+```
+
+演示使用模拟模型，不能作为翻译质量结果。真实后端接入、数据库产物及环境说明见 [SETUP.md](docs/SETUP.md)；训练、全系统推理与正式评测入口尚未实现。
 
 当前尚无完整系统的安装与启动入口。M1 的 CSV 导入和 Flare 适配仅使用 Python 3.9+ 标准库，无需安装第三方包。
 

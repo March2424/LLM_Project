@@ -1,0 +1,4 @@
+Summarize the {side} material for topic {topic} as short factual bullets.
+These are unordered resources, NOT consecutive story events. Do not invent chronology, causes, scenes, relationships or missing facts. Preserve explicit conditions and disagreements. For target material summarize established terminology and expression only. Use the language of the supplied material.
+Material:
+{texts}
