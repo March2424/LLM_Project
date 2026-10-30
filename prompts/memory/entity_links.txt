@@ -1,0 +1,8 @@
+Propose only clear links from these source texts to the supplied entity IDs.
+Do not invent entities, scenes, chronology or resolve ambiguous aliases by guessing.
+MENTIONS means explicit reference; DEFINES means a definition of the entity;
+SPOKEN_BY requires explicit speaker evidence, not merely mentioning a character.
+Return a JSON array of objects with exactly text_id, entity_id, relation, quote.
+quote must be a verbatim nonempty substring. Return [] when no link is supported.
+Texts: {texts}
+Entities: {entities}

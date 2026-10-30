@@ -81,14 +81,20 @@ class MemoryService:
 
     def eligible(self, occurrence: Occurrence, view: ReadView) -> list[MemoryRecord]:
         run = self.store.run(view.run_id)
-        if (occurrence.project_id, occurrence.document_id, occurrence.source_lang, occurrence.target_lang) != (
-                run["project"], run["document"], run["source_lang"], run["target_lang"]):
-            raise ValueError("Occurrence does not belong to this run/document/direction")
+        self.store.check_run(occurrence, run)
+        game = run['mode'] == 'game_resources'
         result = []
         for record in self.store.visible(view):
-            if record.run_id and record.position >= occurrence.position:
+            if not game and record.run_id and record.position >= occurrence.position:
                 continue
             if scope_match(record.scope, occurrence) != "match":
+                continue
+            if game and record.kind in {'translation', 'summary'}:
+                if not self.store.game_compatible(record, occurrence):
+                    continue
+                if record.kind == 'translation' and record.evidence[0].occurrence_id == occurrence.occurrence_id:
+                    continue
+                result.append(record)
                 continue
             # Target-side examples are conservative: unknown vs known is not a wildcard.
             if record.kind in {"translation", "summary"} and (
@@ -98,20 +104,29 @@ class MemoryService:
             result.append(record)
         return result
 
-    def read(self, occurrence: Occurrence, view: ReadView) -> MemoryBundle:
+    def read(self, occurrence: Occurrence, view: ReadView, *, related_ids: set[str] | None = None) -> MemoryBundle:
         records = self.eligible(occurrence, view)
-        translations = sorted((r for r in records if r.kind == "translation"), key=lambda r: (r.position, r.record_id))
-        stm = translations[-self.config.stm_size:] if self.config.stm_size else []
+        game = self.store.run(view.run_id)['mode'] == 'game_resources'
+        topic = occurrence.metadata.get('topic_id')
+        def related(record):
+            return bool((topic and record.content.get('metadata', {}).get('topic_id') == topic)
+                        or (related_ids and record.evidence[0].occurrence_id in related_ids))
+        translations = sorted((r for r in records if r.kind == "translation"), key=lambda r: (r.commit_seq if game else r.position, r.record_id))
+        recent = [r for r in translations if related(r)] if game else translations
+        stm = recent[-self.config.stm_size:] if self.config.stm_size else []
         stm_ids = {r.record_id for r in stm}
         # One canonical TM; exclude STM before ranking LTM so the slots are not duplicated.
-        candidates = [r for r in translations[-self.config.ltm_window:] if r.record_id not in stm_ids]
+        candidates = [r for r in (translations if game else translations[-self.config.ltm_window:]) if r.record_id not in stm_ids]
+        if game:
+            linked = [r for r in candidates if related(r)]
+            candidates = linked or candidates
         ltm = self._retrieve(occurrence.source, candidates)
         terms = [r for r in records if r.kind == "term" and r.content["source"] in occurrence.source]
         by_source: dict[str, set[str]] = {}
         for term in terms:
             by_source.setdefault(term.content["source"], set()).add(term.content["target"])
         conflicts = tuple(source for source, targets in by_source.items() if len(targets) > 1)
-        return MemoryBundle(view, tuple(terms), tuple(r for r in records if r.kind == "summary"),
+        return MemoryBundle(view, tuple(terms), tuple(r for r in records if r.kind == "summary" and (not game or related(r))),
                             tuple(stm), tuple(ltm), tuple(r for r in records if r.kind == "style"), conflicts)
 
     def _retrieve(self, query: str, candidates: list[MemoryRecord]) -> list[MemoryRecord]:
@@ -184,6 +199,8 @@ class MemoryService:
         flush=True handles a scene/document tail shorter than summary_step.
         next_occurrence supplies the scope and the exclusive source-position boundary.
         """
+        if self.store.run(view.run_id)['mode'] == 'game_resources':
+            return self.summarize_topic(next_occurrence, view, flush=flush)
         records = self.eligible(next_occurrence, view)
         previous = max((r for r in records if r.kind == "summary"), key=lambda r: r.position, default=None)
         pending = sorted((r for r in records if r.kind == "translation" and
@@ -215,3 +232,47 @@ class MemoryService:
                                 "covered_translations": [asdict(r.ref) for r in chunk], "input_view": asdict(view)},
                                evidence, dependencies=dependencies, run_id=view.run_id, position=chunk[-1].position,
                                record_id=record_id, expected_version=self.store.latest_version(record_id))
+
+    def summarize_topic(self, occurrence: Occurrence, view: ReadView, *, flush: bool = False,
+                        topic_id: str | None = None, sources: tuple[Evidence, ...] = ()) -> MemoryRecord | None:
+        """Rebuild a compact topic overview; target coverage is run-local verified TM only."""
+        run = self.store.run(view.run_id)
+        self.store.check_run(occurrence, run)
+        if run['mode'] != 'game_resources':
+            raise ValueError('Topic summaries require game_resources mode')
+        topic = topic_id or occurrence.metadata.get('topic_id')
+        if not topic:
+            return None
+        scope = self.store.game_scope(occurrence)
+        ids = {e.occurrence_id for e in sources}
+        records = [r for r in self.eligible(occurrence, view) if r.kind == 'translation' and
+                   (r.evidence[0].occurrence_id in ids or r.content.get('metadata', {}).get('topic_id') == topic)]
+        if not records:
+            return None
+        key = 'topic:' + text_hash(json.dumps([view.run_id, asdict(scope), topic], sort_keys=True))
+        version = self.store.latest_version(key)
+        previous = self.store.get(MemoryRef(key, version)) if version else None
+        inputs = [asdict(r.ref) for r in records]
+        evidence = tuple(dict.fromkeys(sources + tuple(r.evidence[0] for r in records)))
+        if previous and self.store.is_valid(previous.ref) and previous.content.get('covered_translations') == inputs and previous.evidence == evidence:
+            return None
+        old = previous.content.get('covered_translations', []) if previous and self.store.is_valid(previous.ref) else []
+        if not flush and sum(ref not in old for ref in inputs) < self.config.summary_step:
+            return None
+        source_texts = []
+        for e in evidence:
+            src = self.store.source(occurrence.project_id, e)
+            if (src.source_lang, src.target_lang) != (occurrence.source_lang, occurrence.target_lang) or any(
+                    src.metadata.get(k) != occurrence.metadata.get(k) for k in ('branch_id', 'phase_id')):
+                raise ValueError('Topic source conditions/direction differ')
+            source_texts.append(e.quote)
+        result, calls = {}, []
+        for side, texts in [('source', source_texts), ('target', [r.content['target'] for r in records])]:
+            result[side], call = self._call('topic_' + side, 'topic.txt', side=side, topic=topic,
+                                           texts=json.dumps(texts, ensure_ascii=False))
+            calls.append(call)
+        return self.store.draft('summary', scope, {**result, 'summary_mode': 'topic',
+            'metadata': {**occurrence.metadata, 'topic_id': topic}, 'covered_translations': inputs,
+            'model_calls': calls, 'input_view': asdict(view)}, evidence,
+            dependencies=tuple(r.ref for r in records), run_id=view.run_id, position=view.watermark,
+            record_id=key, expected_version=version)

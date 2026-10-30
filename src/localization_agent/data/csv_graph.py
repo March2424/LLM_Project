@@ -21,6 +21,7 @@ class CSVConfig:
     source_version: int = 1
     source_lang: str = 'en'
     target_lang: str = 'zh'
+    mode: str = 'document'
 
 
 @dataclass(frozen=True)
@@ -39,7 +40,9 @@ def import_csv(path: str | Path, project_id: str, graph: GraphStore, config: CSV
     """
     if not config.namespace or config.max_rows < 1 or config.max_characters < 1:
         raise ValueError('Namespace and positive block limits required')
-    allowed = {'document', 'scene', 'block', 'branch_id', 'phase_id', 'speaker_id', 'addressee_id', 'text_type'}
+    if config.mode not in {'document', 'game_resources'}:
+        raise ValueError('Unknown CSV mode')
+    allowed = {'topic_id', 'document', 'scene', 'block', 'branch_id', 'phase_id', 'speaker_id', 'addressee_id', 'text_type'}
     if set(config.columns) - allowed:
         raise ValueError('Unknown source metadata mapping')
     annotations = annotations or {}
@@ -70,6 +73,8 @@ def import_csv(path: str | Path, project_id: str, graph: GraphStore, config: CSV
         # This document ID is an import unit when no chapter/document has been supplied.
         document = config.namespace + ':document:' + (labels.get('document') or '__source_unit__')
         metadata = {name: labels.get(name) for name in sorted(allowed - {'document', 'scene', 'block'})}
+        if not labels.get('topic_id'):
+            metadata.pop('topic_id', None)
         occurrence_id = config.namespace + ':row:' + text_hash(key)[:24]
         position = positions.get(document, 0)
         positions[document] = position + 1
@@ -134,11 +139,12 @@ def import_csv(path: str | Path, project_id: str, graph: GraphStore, config: CSV
                 identity = occurrence.metadata.get(field)
                 if identity is None:
                     continue
-                entity_id = 'character:' + text_hash(str((project_id, first.document_id, identity, scope)))
+                entity_scope = Scope(project_id, source_lang=config.source_lang, target_lang=config.target_lang) if config.mode == 'game_resources' else scope
+                entity_id = 'character:' + text_hash(str((project_id, identity, config.source_lang, config.target_lang) if config.mode == 'game_resources' else (project_id, first.document_id, identity, scope)))
                 version = graph.latest('node', entity_id)
                 character = graph.get(GraphRef('node', entity_id, version)) if version else None
                 if character is None or not graph.valid(character.ref):
-                    character = graph.put_node(GraphNode(entity_id, 'entity', scope,
+                    character = graph.put_node(GraphNode(entity_id, 'entity', entity_scope,
                         {'entity_type': 'character', 'source_id': identity}, (e,)), expected_version=version)
                 links.append((relation, node, character))
         # Technical adjacency is only enabled when the caller explicitly trusts the order.

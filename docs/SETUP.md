@@ -28,3 +28,8 @@ PYTHONPATH=src python3 scripts/import_graph_csv.py --help
 ```
 
 配置、CSV 实际导入参数及运行约束见 [GRAPH.md](GRAPH.md) 与 [CSV_IMPORT.md](CSV_IMPORT.md)。全量测试仍使用上面的 unittest 命令，现有 15 个测试通过。没有启动真实模型服务。
+
+
+## 2026-10-29：无序游戏模式
+
+新增轻量实体图与五类记忆组织方式；`start_run(..., mode="game_resources")` 启用项目范围，默认文档模式保持原行为。DEFINES 反查、候选链接、主题 STM/LTM 和双语概览的实际接口及限制见 [GAME_MEMORY.md](GAME_MEMORY.md)。

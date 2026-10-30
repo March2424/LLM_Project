@@ -29,6 +29,7 @@ class GraphStore:
             ('IN_SCENE', ('block',), ('scene',), False),
             ('IN_BLOCK', ('occurrence',), ('block',), True),
             ('PREVIOUS', ('block',), ('block',), True),
+            ('DEFINES', ('occurrence',), ('entity',), True),
             ('SPOKEN_BY', ('occurrence',), ('entity',), True),
             ('ADDRESSED_TO', ('occurrence',), ('entity',), True),
             ('MENTIONS', ('occurrence', 'block'), ('entity',), True),

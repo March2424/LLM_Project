@@ -49,3 +49,8 @@ M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/me
 - MemoryStore.commit_translation()：新增可选 context_sources/context_manifest。图调用方使用 GraphRetriever.commit() 验证图及输入包；旧 M2 调用保持兼容。
 
 CSV 的 document/scene/block 为结构归属；branch/phase/speaker/addressee/text_type 进入兼容元数据。没有场景时保持未知；技术块不构成语义关系。CSV 工作流使用 GraphRetriever 以启用未知顺序保护，详见 [CSV_IMPORT.md](CSV_IMPORT.md)。
+
+
+## 2026-10-29：无序游戏模式
+
+新增轻量实体图与五类记忆组织方式；`start_run(..., mode="game_resources")` 启用项目范围，默认文档模式保持原行为。DEFINES 反查、候选链接、主题 STM/LTM 和双语概览的实际接口及限制见 [GAME_MEMORY.md](GAME_MEMORY.md)。

@@ -95,7 +95,26 @@ class MemoryStore:
         row = self.db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
         if row is None:
             raise KeyError(f"Unknown run: {run_id}")
-        return dict(row)
+        return {**dict(row), 'mode': 'game_resources' if row['document'] is None else 'document'}
+
+    def check_run(self, occurrence: Occurrence, run: dict) -> None:
+        if (occurrence.project_id, occurrence.source_lang, occurrence.target_lang) != (
+                run['project'], run['source_lang'], run['target_lang']):
+            raise ValueError('Occurrence does not belong to this run/direction')
+        if run['mode'] == 'document' and occurrence.document_id != run['document']:
+            raise ValueError('Occurrence does not belong to this run/document')
+
+    @staticmethod
+    def game_scope(occurrence: Occurrence) -> Scope:
+        return Scope(occurrence.project_id, conditions={
+            k: (occurrence.metadata[k],) for k in ('branch_id', 'phase_id')
+            if occurrence.metadata.get(k) is not None
+        }, source_lang=occurrence.source_lang, target_lang=occurrence.target_lang)
+
+    @staticmethod
+    def game_compatible(record: MemoryRecord, occurrence: Occurrence) -> bool:
+        return all(record.content.get('metadata', {}).get(k) == occurrence.metadata.get(k)
+                   for k in ('branch_id', 'phase_id'))
 
     def view(self, run_id: str) -> ReadView:
         self.run(run_id)
@@ -140,7 +159,7 @@ class MemoryStore:
             if dependency.run_id is not None and dependency.run_id != record.run_id:
                 raise ValueError("Cross-run dependency")
             if record.kind == "summary" and (dependency.kind not in {"summary", "translation"}
-                                             or dependency.scope != record.scope):
+                                             or (dependency.scope != record.scope and record.content.get('summary_mode') != 'topic')):
                 raise ValueError("Summary dependencies must be compatible translations/summaries")
         seq = self.view(record.run_id).watermark + 1 if record.run_id else 0
         record = replace(record, version=actual + 1, commit_seq=seq)
@@ -193,20 +212,22 @@ class MemoryStore:
         if current_source_version != occurrence.source_version:
             raise VersionConflict("Source version has advanced; regenerate and recheck")
         run = self.run(run_id)
+        self.check_run(occurrence, run)
+        game = run["mode"] == "game_resources"
         view = view or self.view(run_id)
         if view.run_id != run_id:
             raise ValueError("Read view belongs to another run")
         available = {r.ref: r for r in self.visible(view)}
         for ref in used:
-            if ref not in available or (available[ref].position is not None and available[ref].position >= occurrence.position):
+            if ref not in available or (not game and available[ref].position is not None and available[ref].position >= occurrence.position):
                 raise ValueError("Supplied dependency is outside the run snapshot or prior history")
             dependency = available[ref]
             if scope_match(dependency.scope, occurrence) != "match":
                 raise ValueError("Supplied dependency is outside the occurrence scope")
-            if dependency.kind in {"translation", "summary"} and dependency.content.get("metadata", {}) != occurrence.metadata:
+            if dependency.kind in {"translation", "summary"} and (not self.game_compatible(dependency, occurrence) if game else dependency.content.get("metadata", {}) != occurrence.metadata):
                 raise ValueError("Target-side context is not compatible with this occurrence")
         record_id = "tm:" + text_hash(_json([run_id, occurrence.occurrence_id]))
-        record = MemoryRecord(record_id, 0, "translation", Scope.for_occurrence(occurrence),
+        record = MemoryRecord(record_id, 0, "translation", self.game_scope(occurrence) if game else Scope.for_occurrence(occurrence),
                               {"source": occurrence.source, "target": target,
                                "metadata": occurrence.metadata, "check": asdict(check),
                                "knowledge_snapshot": run["snapshot"], "input_view": asdict(view),
@@ -219,7 +240,7 @@ class MemoryStore:
                 self._invalidate(MemoryRef(record_id, expected_version), "Translation replaced")
             # A late insertion into already summarized history requires rebuilding that summary.
             for summary in self._approved(view=self.view(run_id)):
-                if summary.kind == "summary" and summary.scope == saved.scope and summary.position >= saved.position:
+                if not game and summary.kind == "summary" and summary.scope == saved.scope and summary.position >= saved.position:
                     self._invalidate(summary.ref, "Translation inserted or revised inside summary coverage")
             return saved
 
@@ -241,8 +262,12 @@ class MemoryStore:
             refs = [asdict(r.ref) for r in self._approved(project=project)]
             self.db.execute("INSERT INTO snapshots VALUES (?, ?, ?)", (snapshot_id, project, _json(refs)))
 
-    def start_run(self, run_id: str, project: str, document: str, source_lang: str,
-                  target_lang: str, snapshot_id: str) -> None:
+    def start_run(self, run_id: str, project: str, document: str | None, source_lang: str,
+                  target_lang: str, snapshot_id: str, *, mode: str = "document") -> None:
+        if mode not in {"document", "game_resources"} or (mode == "document" and not document):
+            raise ValueError("Choose document with an ID, or game_resources")
+        if mode == "game_resources":
+            document = None
         snapshot = self.db.execute("SELECT project FROM snapshots WHERE id=?", (snapshot_id,)).fetchone()
         if snapshot is None or snapshot["project"] != project:
             raise ValueError("Run needs an existing knowledge snapshot from its project")

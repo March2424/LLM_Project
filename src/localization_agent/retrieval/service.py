@@ -1,6 +1,6 @@
 """Bounded relation-guided retrieval and a deterministic character-budget context builder."""
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 
 from localization_agent.memory import MemoryService
 from localization_agent.schemas.memory import Evidence, MemoryRef, Occurrence, ReadView, TranslationCheck, scope_match, text_hash
@@ -10,6 +10,7 @@ from .graph import GraphStore
 
 @dataclass(frozen=True)
 class GraphConfig:
+    max_neighbors: int = 6
     max_hops: int = 4
     max_nodes: int = 40
     max_candidates: int = 30
@@ -17,7 +18,7 @@ class GraphConfig:
     source_visibility: str = 'previous'  # 'all' requires an explicitly supplied game source script
 
     def __post_init__(self):
-        if min(self.max_hops, self.max_nodes, self.max_candidates, self.max_characters) < 1:
+        if min(self.max_neighbors, self.max_hops, self.max_nodes, self.max_candidates, self.max_characters) < 1:
             raise ValueError('Positive retrieval limits required')
         if self.source_visibility not in {'previous', 'all'}:
             raise ValueError('Unknown source visibility')
@@ -34,7 +35,7 @@ def canonical(value):
 
 def candidate_from_memory(record, *, mandatory=False, path=(), relations=()):
     return Candidate('memory:' + record.record_id + '@' + str(record.version), record.kind,
-                     canonical(record.content), mandatory, record.ref, record.evidence, path, relations)
+                     canonical({k: v for k, v in record.content.items() if k in {'source', 'target', 'note', 'metadata', 'summary_mode'}}), mandatory, record.ref, record.evidence, path, relations)
 
 
 class GraphRetriever:
@@ -44,17 +45,20 @@ class GraphRetriever:
         self.graph, self.memory = graph, memory
         self.config = config or GraphConfig()
 
-    def _source_allowed(self, occurrence, evidence):
+    def _source_allowed(self, occurrence, evidence, game=False):
         source = self.graph.memory.source(occurrence.project_id, evidence)
-        if source.document_id != occurrence.document_id:
+        if (source.source_lang, source.target_lang) != (occurrence.source_lang, occurrence.target_lang):
+            return False
+        if not game and source.document_id != occurrence.document_id:
             return False
         # Unknown branch/phase cannot be treated as matching a known one, in either direction.
         for key in ('branch_id', 'phase_id'):
             if source.metadata.get(key) != occurrence.metadata.get(key):
                 return False
-        return self.config.source_visibility == 'all' or source.position <= occurrence.position
+        return game or self.config.source_visibility == 'all' or source.position <= occurrence.position
 
     def retrieve(self, occurrence: Occurrence, view: ReadView, snapshot_id: str) -> CandidatePool:
+        game = self.memory.store.run(view.run_id)['mode'] == 'game_resources'
         snapshot = self.graph.snapshot(snapshot_id)
         if snapshot.project_id != occurrence.project_id:
             raise ValueError('Graph snapshot belongs to another project')
@@ -69,7 +73,8 @@ class GraphRetriever:
         by_ref = {r.ref: r for r in eligible}
         baseline = self.memory.read(occurrence, view)
         candidates = {}
-        for record in (*baseline.terms, *baseline.styles, *baseline.stm, *baseline.ltm, *baseline.summaries):
+        initial = (*baseline.terms, *baseline.styles) if game else (*baseline.terms, *baseline.styles, *baseline.stm, *baseline.ltm, *baseline.summaries)
+        for record in initial:
             item = candidate_from_memory(record, mandatory=record.kind == 'term' or bool(record.content.get('mandatory')))
             candidates[item.id] = item
         nodes = {}
@@ -79,7 +84,7 @@ class GraphRetriever:
             if not self.graph.valid(ref):
                 continue
             item = self.graph.get(ref)
-            match = scope_match(item.scope, occurrence)
+            match = scope_match(replace(item.scope, document_id=None) if game and not (isinstance(item, GraphNode) and item.kind == "memory") else item.scope, occurrence)
             if match == 'unknown':
                 unresolved.append('scope_unknown:' + item.id)
             if match != 'match':
@@ -88,13 +93,16 @@ class GraphRetriever:
                 if item.kind == 'memory' and MemoryRef(**item.attributes['memory_ref']) not in by_ref:
                     continue
                 nodes[ref] = item
-            elif all(self._source_allowed(occurrence, e) for e in item.evidence):
+            elif all(self._source_allowed(occurrence, e, game) for e in item.evidence):
                 edges.append(item)
         edges = [e for e in edges if e.source in nodes and e.target in nodes]
         outgoing = {}
         members = {}
+        reverse = {}
         for edge in edges:
-            if self.graph.relation_type(edge.relation).traversable:
+            if game and edge.relation in {'DEFINES', 'MENTIONS', 'SPOKEN_BY'}:
+                reverse.setdefault(edge.target, []).append(edge)
+            if self.graph.relation_type(edge.relation).traversable and (not game or edge.relation not in {'IN_BLOCK', 'PREVIOUS', 'CONTINUES'}):
                 outgoing.setdefault(edge.source, []).append(edge)
             if edge.relation == 'IN_BLOCK':
                 members.setdefault(edge.target, []).append(edge)
@@ -102,7 +110,7 @@ class GraphRetriever:
         if len(starts) != 1:
             raise ValueError('Snapshot needs exactly one current occurrence node')
         current_blocks = [nodes[e.target] for e in edges if e.source == starts[0] and e.relation == 'IN_BLOCK']
-        if not any(b.attributes.get('order_trusted') for b in current_blocks):
+        if not game and not any(b.attributes.get('order_trusted') for b in current_blocks):
             candidates = {k: c for k, c in candidates.items() if c.category not in {'translation', 'summary'}}
             unresolved.append('untrusted_order:local_target_memory_disabled')
         queue = [(starts[0], (), (), 0)]
@@ -123,7 +131,7 @@ class GraphRetriever:
                 elif obj.kind in {'entity', 'occurrence'}:
                     path_sources.extend(obj.evidence)
             path_sources = tuple(dict.fromkeys(path_sources))
-            allowed = all(self._source_allowed(occurrence, e) for e in path_sources)
+            allowed = all(self._source_allowed(occurrence, e, game) for e in path_sources)
             if allowed and node.kind == 'occurrence' and ref != starts[0]:
                 e = node.evidence[0]
                 source = self.graph.memory.source(occurrence.project_id, e)
@@ -146,13 +154,21 @@ class GraphRetriever:
                 candidates[item.id] = item
             if depth >= self.config.max_hops or not allowed:
                 continue
-            for edge in outgoing.get(ref, ()):
+            if game and node.kind == 'entity':
+                # Definitions first; reverse lookup does not assert an inverse semantic fact.
+                incoming = sorted(reverse.get(ref, ()), key=lambda e: (e.relation != 'DEFINES', e.id))
+                for edge in incoming[:self.config.max_neighbors]:
+                    queue.append((edge.source, graph_refs + (edge.ref,), labels + ('REVERSE_' + edge.relation,), depth + 1))
+            links = outgoing.get(ref, ())
+            for edge in (links[:self.config.max_neighbors] if game else links):
                 label = edge.relation
                 if nodes[edge.source].kind == 'entity' and nodes[edge.target].kind == 'entity':
+                    if game and any(r.kind == 'edge' and self.graph.get(self.graph.get(r).source).kind == 'entity' and self.graph.get(self.graph.get(r).target).kind == 'entity' for r in path):
+                        continue
                     # Preserve the fact itself, not only a path leading to another entity.
                     refs = tuple(dict.fromkeys(graph_refs + (edge.ref, edge.target)))
                     sources = tuple(dict.fromkeys(path_sources + edge.evidence + nodes[edge.target].evidence))
-                    if all(self._source_allowed(occurrence, e) for e in sources):
+                    if all(self._source_allowed(occurrence, e, game) for e in sources):
                         item = Candidate('relation:' + edge.id + '@' + str(edge.version), 'relation',
                             canonical({'source': node.attributes, 'relation': label,
                                        'target': nodes[edge.target].attributes, 'qualifiers': edge.attributes}),
@@ -173,7 +189,14 @@ class GraphRetriever:
                     queue.append((edge.source, graph_refs + (edge.ref,), labels + ('BLOCK_MEMBER',), depth + 1))
         if queue:
             unresolved.append('graph_truncated')
-        for record in eligible:
+        if game:
+            related = set(reached_occurrences)
+            bundle = self.memory.read(occurrence, view, related_ids=related)
+            for record in (*bundle.stm, *bundle.ltm, *bundle.summaries):
+                path, labels, sources = reached_occurrences.get(record.evidence[0].occurrence_id, ((), (), ()))
+                item = candidate_from_memory(record, path=path, relations=labels + ('RELATED_EXAMPLE' if record.kind == 'translation' else 'TOPIC_OVERVIEW',))
+                candidates[item.id] = replace(item, sources=tuple(dict.fromkeys(item.sources + sources)))
+        for record in ([] if game else eligible):
             if record.kind == 'translation' and record.evidence[0].occurrence_id in reached_occurrences:
                 path, labels, sources = reached_occurrences[record.evidence[0].occurrence_id]
                 item = candidate_from_memory(record, path=path, relations=labels)
@@ -216,7 +239,7 @@ class GraphRetriever:
         sources = tuple(dict.fromkeys(e for c in selected for e in c.sources))
         manifest = {'occurrence_id': pool.occurrence_id, 'source_version': pool.source_version,
                     'view': asdict(pool.view), 'graph_snapshot': pool.graph_snapshot,
-                    'source_visibility': self.config.source_visibility,
+                    'source_visibility': 'all' if self.memory.store.run(pool.view.run_id)['mode'] == 'game_resources' else self.config.source_visibility,
                     'items': [asdict(c) for c in selected],
                     'memory_refs': [asdict(c.memory_ref) for c in selected if c.memory_ref],
                     'graph_refs': [asdict(r) for r in refs], 'sources': [asdict(e) for e in sources]}

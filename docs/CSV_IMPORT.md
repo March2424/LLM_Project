@@ -61,3 +61,8 @@ PYTHONPATH=src python3 scripts/import_graph_csv.py /path/to/source.csv \
 只读取显式配置的源文和元数据列，其余列不保存到图中。不会自动识别或读取 reference/target 列；调用者仍需正确指定源侧列，不能把测试参考映射到 source 或元数据中。关系证据必须引用登记过的源文。
 
 CLI 已用构造 CSV 验证，不代表任意游戏解包格式都兼容。当前使用逗号分隔、UTF-8（支持 BOM）；其他编码、分隔符应先转换。csv_row 是含表头的记录序号，多行字段情况下不是编辑器物理行号。
+
+
+## 2026-10-29：无序游戏模式
+
+新增轻量实体图与五类记忆组织方式；`start_run(..., mode="game_resources")` 启用项目范围，默认文档模式保持原行为。DEFINES 反查、候选链接、主题 STM/LTM 和双语概览的实际接口及限制见 [GAME_MEMORY.md](GAME_MEMORY.md)。

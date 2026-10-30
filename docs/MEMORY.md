@@ -207,3 +207,8 @@ def model_adapter(task: str, prompt: str) -> ModelReply:
 | 大规模性能 | 当前查询、依赖失效和 embedding 使用简单实现；没有建立向量库或执行性能基准 |
 
 建议下一次协作先由 C 接入一个实际模型适配器，A 提供十余条独立开发用源句及少量可信资料，B 对齐 MemoryBundle → CandidatePool 的转换，D 检查证据忠实性和调用日志。先获得可信的小闭环，再扩大数据与模型成本。
+
+
+## 2026-10-29：无序游戏模式
+
+新增轻量实体图与五类记忆组织方式；`start_run(..., mode="game_resources")` 启用项目范围，默认文档模式保持原行为。DEFINES 反查、候选链接、主题 STM/LTM 和双语概览的实际接口及限制见 [GAME_MEMORY.md](GAME_MEMORY.md)。

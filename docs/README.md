@@ -4,6 +4,8 @@
 
 | 文档 | 作用 | 建议维护责任线 |
 | --- | --- | --- |
+| [GAME_MEMORY.md](GAME_MEMORY.md) | 无序游戏模式的已实现接口与离线演示 | A/B/C |
+| [MODULAR_GAME_MEMORY_PLAN.md](MODULAR_GAME_MEMORY_PLAN.md) | 无序游戏文本的轻量实体图＋五类记忆设计（核心已实施） | A/B/C |
 | [GRAPH.md](GRAPH.md) | 图类型、检索、M2 联动与清单 | A/B/C |
 | [CSV_IMPORT.md](CSV_IMPORT.md) | 解包 CSV 与结构缺失处理 | A |
 | [MEMORY.md](MEMORY.md) | 已实现 M2 的来源、架构、接口用法、差异与验证 | A，C/B/D 共同集成 |
