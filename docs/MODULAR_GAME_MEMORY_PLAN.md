@@ -1,6 +1,14 @@
 # 无序游戏文本的轻量方案：实体关系图＋五类记忆
 
-更新日期：2026-10-29。状态：**轻量核心已实现，真实模型效果待验证**。本版按“做减法”的方向重写上一版；此前复杂版本的代码改动已经撤回，本轮按轻量方向重新实施。实际接口、已实现范围和限制见 [GAME_MEMORY.md](GAME_MEMORY.md)，不代表真实游戏翻译效果已经验证。
+更新日期：2026-10-30。状态：**轻量核心已实现；四列独立记录输入，自动建图已有离线实现，真实模型效果待验证**。实际接口、已实现范围和限制见 [GAME_MEMORY.md](GAME_MEMORY.md)，不代表真实游戏翻译效果已经验证。
+
+## 实施更新（2026-10-30）
+
+四列 CSV 桥接、从空实体表发现/跨批次复用、实体间关系候选与单独模型复核、图派生身份/主题及最小逐条翻译记忆集成已实现。实际API、验证与剩余限制见 [AUTO_GRAPH.md](AUTO_GRAPH.md)。本次进一步移除 group_id 和原生组批处理，只按行数分批；完整 LangGraph 工作流、真实模型效果与全局实体维护仍未完成。
+
+## 上游输入边界更新（2026-10-30）
+
+主实验以原始文本及原生资源结构为输入；给实体关系提取 LLM 的 CSV 统一为 `id,source_text,text_type,context`，具体约定与案例见第 4 节。不要求人工填写实体表、speaker_id 或 topic_id，这些身份与关系由 agent 提取并作为内部结果。此前人工登记实体的方式用于接口验证或单列上限实验；自动建图实现及其限制见上方实施更新。评测隔离与输入公平性见 [GAME_EVALUATION_SCHEMA.md](GAME_EVALUATION_SCHEMA.md)。五类记忆的组织思路继续保留。
 
 ## 1. 推荐方案
 
@@ -13,7 +21,7 @@
 
 可以把整体理解为：**实体图负责找关联，五类记忆负责保存和使用不同的信息。** 图不另建一份记忆正文，引用现有文本和记忆记录即可。
 
-本版不再要求先建设 ResourceEntry、使用位置映射、ContextUnit、来源联合类型或完整资源 manifest 系统。继续用现有 Occurrence 表示待翻译的 CSV 记录；保留原有 ID、文件/key 和源版本即可。遇到实际引擎需求时再扩展，首版不为所有可能性设计对象。
+本版不再要求先建设 ResourceEntry、ContextUnit、来源联合类型或完整资源 manifest 系统。内部继续用现有 Occurrence 表示文本记录；文件/key、使用位置与源版本按 ID 保留在后台，不作为提取 CSV 的额外必填列。遇到实际引擎需求时再扩展，首版不为所有可能性设计对象。
 
 ## 2. 五类记忆全部保留，怎样调整
 
@@ -125,29 +133,80 @@ flowchart LR
 
 ## 4. 实体和关系怎样提取：只做有用的部分
 
-推荐一个简单流程：**批量读原文 → 提取候选 → 合并明确身份 → 核验后入图**。
+推荐一个简单流程：**四列独立记录 CSV → 按批次大小读原文 → 提取候选 → 合并明确身份 → 核验后入图**。
 
-### 4.1 先利用现成信息
+### 4.1 给提取 LLM 的 CSV：只保留四列
 
-CSV 明确给出的 speaker_id、技能 ID、已有术语表优先使用。没有字段就留空，不新增脚本分析、运行轨迹采集等前置工程。
+这份 CSV 只服务实体关系提取，不承担完整的翻译任务、导出或版本管理。目标是保留原文及必要的原生线索，不让数据整理人员提前完成实体发现。
 
-文件名可以提供候选线索，例如帮助发现角色名；但它本身不能证明每行都由该角色说出。技术切块仅用于控制模型输入长度，不能自动生成“同场景”关系。
+```csv
+id,source_text,text_type,context
+```
 
-### 4.2 小模型一次提出实体与关系候选
+| 字段 | 内容 | 用途与空值约定 |
+| --- | --- | --- |
+| `id` | 每条文本出现位置的唯一 ID | 必填；提取结果引用它定位证据，同句不同使用位置不合并 |
+| `source_text` | 原始待翻译文本 | 必填；不混入背景说明、参考译文或模型改写 |
+| `text_type` | 文本用途，如 dialogue、item_name、item_description、skill_name、skill_description、ui_label、system_message | 优先按原生字段映射；无法确定时填 unknown |
+| `context` | 少量原生附加信息 | 使用简单的 `键=值; 键=值` 文本；没有信息时留空，不要求嵌套 JSON |
+
+每行独立，不设置 `group_id`，也不加外层对象块、对话组或替代分组字段。相邻行、同一文件与同一批次都不能证明文本属于同一实体或场景。允许根据正文及已有 context 发现跨行关系，但不要求提前整理归属。
+
+不单设 `speaker` 列，也不用一个含义模糊的 `entity_id` 替代它。对话的发话信息放进 `context`，其他类型只填自己的必要线索。非对话没有说话人是正常情况；对话的说话人未知时可以写 `utterance_role=unknown`，不根据文件名猜测。
+
+| context 信息 | 示例 | 使用边界 |
+| --- | --- | --- |
+| 原生发话信息 | `npc_name=Abasi, Traveling Merchant; utterance_role=player` | NPC 名称来自资源头，player/npc 来自 you/him/her 字段；不能把文件里的所有文本都算作 NPC 台词 |
+| 出现条件 | `requires_status=emp_journal_finish` | 保留原始条件，避免提取成无条件事实；条件缺失不代表确认无条件 |
+| 明确引用 | `book=books/merchants_journal.txt` | 保留查找相关材料的线索，不直接当成已批准的实体关系 |
+| UI 用途 | `panel=audio; option=SFX` | 来自原生面板/控件信息，帮助解释短标签 |
+
+`context` 只保留有来源且影响理解的信息，不复制整份脚本、不人工补背景故事、不加入模型总结。条件与执行后的事件要区分，例如 `requires_status` 与 `set_status` 不能混成同一条件。原始重复条件可保留重复键；这里的键值文本供模型阅读，不在本轮新增通用解析语言。CSV 单元格中的逗号、双引号和换行按标准 CSV 规则转义。
+
+### 4.2 Flare 案例：同一结构覆盖物品、对话与 UI
+
+下面原文及原生线索来自 `artifacts/flare_full_v0.2/raw/` 的固定快照；`t01` 等行 ID 为说明用的简写，不是已生成的数据产物或关系标注。
+
+```csv
+id,source_text,text_type,context
+t01,Bear Figurine,item_name,
+t02,"Wood sculpture of a bear. A ""1"" is carved into the bottom.",item_description,
+t03,Be careful on these roads. Those goblins are nothing but trouble.,dialogue,"npc_name=Abasi, Traveling Merchant; utterance_role=npc; requires_not_status=emp_journal_init; requires_not_status=emp_journal_finish"
+t04,Thanks for the warning.,dialogue,"npc_name=Abasi, Traveling Merchant; utterance_role=player; requires_not_status=emp_journal_init; requires_not_status=emp_journal_finish"
+t05,Sound Volume,ui_label,panel=audio; option=SFX
+```
+
+- **物品**：t01/t02 来自 `flare-game/mods/empyrean_campaign/items/categories/quest.txt` 的物品 1009。这是供读者核对的来源说明，不作为模型的外层分组输入。t01 可以用于发现物品实体；仅凭 t02 与 t01 相邻，不能确定描述归属。若正文及 context 证据不足，就保留未链接文本，不强制生成 DEFINES。
+- **对话**：t03/t04 来自 `flare-game/mods/empyrean_campaign/npcs/base/abasi/quest_intro1.txt`；NPC 名称来自同目录的 `common.txt`，由 `npcs/abasi.txt` 的 INCLUDE 连接。`him` 与 `you` 分别表示 NPC 和玩家发话，因此 t04 不能产生“由 Abasi 说出”的关系。每条记录已保留自己的发话线索与条件，不要求把整个对话块一起输入，也不根据行序建立对话先后关系。
+- **UI**：t05 来自 `flare-engine/src/MenuConfig.cpp` 的音频设置。模型可以不提取任何实体关系；不能为了每行都有图边而虚构游戏人物或地点。
+
+Flare 的 `abasi.txt` 和 `abasi_2.txt` 还会共同引用 `quest_common.txt`。适配时保留不同使用位置的行 ID；人物是否为同一实体由后续身份连接处理，不因原文相同合并文本，也不因资源键不同就必然拆成人物实体。
+
+### 4.3 怎样组装输入，以及哪些内容不放进 CSV
+
+按配置的批次大小读取独立记录，只为控制模型输入长度，不增加外层分组、组号或公共背景包装。保留每条记录的 ID；一条文本在一次遍历中输入一次，不为每行复制相邻名称、说明或整段对话。
+
+模型依据正文、文本用途、已有 context 和已发现的实体候选判断关系。`text_type` 只表示用途，不能证明某条描述属于上一行的名称。删除分组后，模糊描述和省略指代可能无法可靠链接；允许不建立关系，继续保留原文用于检索，不要求人工补齐归属。跨批次复用实体也需要证据，不能按名称或输入顺序强行合并。
+
+不增加 `entity_id`、`relation`、`topic_id`、人工背景或参考译文列。实体、提及与关系是模型输出；文件/key、源版本及使用位置按 `id` 在后台保存，需要追溯 context 时也能找到对应原字段。模型结果应引用具体行 ID，并指出依据来自原文还是原生 context，不能只引用批次号。
+
+这四列是提取输入视图，不是最终翻译提示词。翻译阶段再根据当前原文查询图和五类记忆，不在 CSV 中预先复制所有相关资料。
+
+### 4.4 小模型提出实体与关系候选
 
 每个批次只要求输出：实体名称/类型、原文中的提及、关系类型、相关文本 ID 和依据。复用现有 ChatModel 和候选批准流程即可，不在这一步训练专用抽取模型。
 
 提取顺序建议：
 
-1. 先处理技能说明、物品说明、批准术语等定义较明确的材料，得到小型实体表。
+1. 先处理定义明确的技能/物品名称与说明记录，得到小型候选实体表；若使用批准术语，只能来自实验允许的源资料，不能从测试参考译文构造。
 2. 再处理人物台词，把已知实体表中的少量候选提供给提取器。
 3. 仅在有明确依据时连接关系；不确定的提及可以暂时不连。
 
 这样比先猜每句话属于哪个场景更直接，也不用对所有文件两两比较。
 
-### 4.3 项目内复用身份，但不按同名强制合并
+### 4.5 项目内复用身份，但不按同名强制合并
 
-有原生 ID 时用原生 ID；没有时使用项目内实体 ID 和少量批准别名。允许简单的人工实体表，不必先做通用实体消歧系统。
+有明确原生身份时优先利用；没有时由系统分配项目内实体 ID，并逐步积累有证据的别名。不要求人工预填实体表；人工实体表仅用于接口验证或单列的辅助实验，不必先做通用实体消歧系统。
 
 例如“ward”可能指两个技能，模型不能任选一个。保留未链接文本，继续使用原文检索；少量影响译名的歧义再人工确认。无须给每种不确定性设计新的记录类别。
 
@@ -191,12 +250,12 @@ CSV 明确给出的 speaker_id、技能 ID、已有术语表优先使用。没�
 
 ## 7. 代码层面只做必要改动
 
-以下为改造方向；本轮实现了项目模式、实体反查、主题记忆和基于已登记实体表的模型链接候选。自动创建/合并实体及真实模型实验仍未实施。
+轻量核心已有项目模式、实体反查、主题记忆及自动建图入口。本次将 `import_benchmark()` 改为四列独立记录，移除分组逻辑，提取与复核模型只收到四个源侧字段。旧 EntityLinker 仍服务已登记实体表；自动发现入口为 AutoGraphBuilder，真实模型效果仍待验证。
 
 | 位置 | 最小改动 |
 | --- | --- |
 | [schemas/memory.py](../src/localization_agent/schemas/memory.py) | 复用 Occurrence/MemoryRecord；实体关联通过图查询，摘要用 content 中的实体/主题标识，不先增加一组公共对象 |
-| [data/csv_graph.py](../src/localization_agent/data/csv_graph.py) | 保留行 ID 和文件来源；游戏模式下明确身份的人物可跨文件复用；技术块只用于批处理 |
+| [data/benchmark.py](../src/localization_agent/data/benchmark.py) | 接入四列独立记录，按行数分批并保留 context 证据；文件来源与源版本留在后台，不提供分组提示 |
 | [retrieval/graph.py](../src/localization_agent/retrieval/graph.py) | 注册 DEFINES；复用实体关系注册和候选批准；不扩展完整来源联合类型 |
 | [retrieval/service.py](../src/localization_agent/retrieval/service.py) | 增加实体→定义文本的反查；跨文件找源文；限制高频节点扩展 |
 | [memory/service.py](../src/localization_agent/memory/service.py) | 游戏模式 STM 按相关性筛选后取近期，LTM 不再被最近窗口截断；增加主题双语摘要提示词与更新逻辑 |
@@ -227,7 +286,7 @@ CSV 明确给出的 speaker_id、技能 ID、已有术语表优先使用。没�
 
 ### 第二步：调整五类记忆的读取与更新
 
-术语和角色笔记沿用已有逻辑；调整 STM/LTM 的候选范围与排序；摘要改成主题概览。先通过人工明确的实体链接验证闭环，再加入小模型抽取，避免同时调试数据质量和记忆逻辑。
+术语和角色笔记沿用已有逻辑；调整 STM/LTM 的候选范围与排序；摘要改成主题概览。人工明确的实体链接仅用于接口验证；主实验接入四列 CSV，先完成实体发现、链接和核验，再让图中的实体组织记忆，不把人工关系答案混入主输入。
 
 ### 第三步：小样本比较，暂不训练新模型
 

@@ -234,7 +234,8 @@ class MemoryService:
                                record_id=record_id, expected_version=self.store.latest_version(record_id))
 
     def summarize_topic(self, occurrence: Occurrence, view: ReadView, *, flush: bool = False,
-                        topic_id: str | None = None, sources: tuple[Evidence, ...] = ()) -> MemoryRecord | None:
+                        topic_id: str | None = None, sources: tuple[Evidence, ...] = (),
+                        context_manifest: dict | None = None) -> MemoryRecord | None:
         """Rebuild a compact topic overview; target coverage is run-local verified TM only."""
         run = self.store.run(view.run_id)
         self.store.check_run(occurrence, run)
@@ -245,7 +246,8 @@ class MemoryService:
             return None
         scope = self.store.game_scope(occurrence)
         ids = {e.occurrence_id for e in sources}
-        records = [r for r in self.eligible(occurrence, view) if r.kind == 'translation' and
+        records = [r for r in self.store.visible(view) if r.kind == 'translation' and
+                   scope_match(r.scope, occurrence) == 'match' and self.store.game_compatible(r, occurrence) and
                    (r.evidence[0].occurrence_id in ids or r.content.get('metadata', {}).get('topic_id') == topic)]
         if not records:
             return None
@@ -263,7 +265,7 @@ class MemoryService:
         for e in evidence:
             src = self.store.source(occurrence.project_id, e)
             if (src.source_lang, src.target_lang) != (occurrence.source_lang, occurrence.target_lang) or any(
-                    src.metadata.get(k) != occurrence.metadata.get(k) for k in ('branch_id', 'phase_id')):
+                    src.metadata.get(k) != occurrence.metadata.get(k) for k in ('branch_id', 'phase_id', 'requirements')):
                 raise ValueError('Topic source conditions/direction differ')
             source_texts.append(e.quote)
         result, calls = {}, []
@@ -273,6 +275,37 @@ class MemoryService:
             calls.append(call)
         return self.store.draft('summary', scope, {**result, 'summary_mode': 'topic',
             'metadata': {**occurrence.metadata, 'topic_id': topic}, 'covered_translations': inputs,
-            'model_calls': calls, 'input_view': asdict(view)}, evidence,
+            'model_calls': calls, 'input_view': asdict(view), 'context_manifest': context_manifest or {}}, evidence,
             dependencies=tuple(r.ref for r in records), run_id=view.run_id, position=view.watermark,
             record_id=key, expected_version=version)
+
+    def extract_style(self, occurrence: Occurrence, view: ReadView, *,
+                      context_manifest: dict | None = None) -> MemoryRecord | None:
+        """Draft a source-side role note; independent semantic review gates creation."""
+        speaker = occurrence.metadata.get('speaker_id')
+        if not speaker:
+            return None
+        run = self.store.run(view.run_id)
+        self.store.check_run(occurrence, run)
+        if run['mode'] != 'game_resources':
+            raise ValueError('Automatic role notes require game_resources mode')
+        key = 'style:' + text_hash(json.dumps([view.run_id, speaker, asdict(self.store.game_scope(occurrence))], sort_keys=True))
+        version = self.store.latest_version(key)
+        if version and self.store.is_valid(MemoryRef(key, version)):
+            return None
+        note, call = self._call('extract_style', 'style.txt', speaker=speaker,
+                               source=occurrence.source, context=occurrence.metadata.get('native_context', ''))
+        verdict, review = self._call('review_style', 'review_style.txt', source=occurrence.source,
+                                    context=occurrence.metadata.get('native_context', ''), note=note)
+        decision = json.loads(verdict)
+        if not isinstance(decision, dict) or decision.get('status') not in {'accepted', 'rejected', 'unknown'}:
+            raise ValueError('Style reviewer must return accepted/rejected/unknown')
+        if decision['status'] != 'accepted':
+            return None
+        base = self.store.game_scope(occurrence)
+        scope = Scope(base.project_id, conditions={**base.conditions, 'speaker_id': (speaker,)},
+                      source_lang=base.source_lang, target_lang=base.target_lang)
+        return self.store.draft('style', scope, {'note': note, 'model_calls': [call, review],
+            'context_manifest': context_manifest or {}},
+            (Evidence(occurrence.occurrence_id, occurrence.source_version, occurrence.source),),
+            run_id=view.run_id, position=occurrence.position, record_id=key, expected_version=version)

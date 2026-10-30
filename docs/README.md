@@ -4,6 +4,8 @@
 
 | 文档 | 作用 | 建议维护责任线 |
 | --- | --- | --- |
+| [AUTO_GRAPH.md](AUTO_GRAPH.md) | 四列CSV自动建图、模型复核与五类记忆接入（离线验证） | A/B/C |
+| [GAME_EVALUATION_SCHEMA.md](GAME_EVALUATION_SCHEMA.md) | 基于 Flare 的通用评测格式、轻量关系 schema 与五类记忆衔接建议 | A/B/C/D |
 | [GAME_MEMORY.md](GAME_MEMORY.md) | 无序游戏模式的已实现接口与离线演示 | A/B/C |
 | [MODULAR_GAME_MEMORY_PLAN.md](MODULAR_GAME_MEMORY_PLAN.md) | 无序游戏文本的轻量实体图＋五类记忆设计（核心已实施） | A/B/C |
 | [GRAPH.md](GRAPH.md) | 图类型、检索、M2 联动与清单 | A/B/C |

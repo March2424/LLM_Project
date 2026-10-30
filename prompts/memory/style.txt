@@ -1,0 +1,4 @@
+Describe only locally evidenced expression style for speaker {speaker} in one short note.
+Do not infer permanent personality, biography or relationships from a single line.
+Source: {source}
+Native context: {context}

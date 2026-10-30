@@ -83,6 +83,8 @@ class CandidatePool:
     candidates: tuple[Candidate, ...]
     conflicts: tuple[str, ...] = ()
     unresolved: tuple[str, ...] = ()
+    resolved_metadata: dict[str, str] = field(default_factory=dict)
+    binding_refs: tuple[GraphRef, ...] = ()
 
 
 @dataclass(frozen=True)

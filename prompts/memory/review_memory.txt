@@ -1,0 +1,7 @@
+Check this proposed memory against its source evidence and run-local verified translations
+contained in the candidate dependencies/content. Do not infer chronology or biography.
+For terms both sides must be grounded. For styles require only evidenced expression.
+For topic summaries preserve uncertainty and conditions; never turn examples into story facts.
+Return JSON with status accepted/rejected/unknown and reason. Ambiguity means unknown.
+Candidate: {candidate}
+Source evidence: {sources}
