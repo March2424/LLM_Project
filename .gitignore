@@ -15,3 +15,6 @@ venv/
 # 运行产物仅保留目录占位
 /artifacts/*
 !/artifacts/.gitkeep
+
+# 数据查看表与本地交付包（含参考译文）
+/outputs/

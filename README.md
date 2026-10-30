@@ -4,7 +4,7 @@
 
 **核心架构：LangGraph 执行编排 + DelTA 式记忆 + TransGraph 启发的检索 + Loong 启发的上下文选择训练 + 角色风格约束 + 版本与依赖驱动的局部修订。**
 
-> 当前状态：M2 记忆模块及 M3 图引导检索首版已实现并通过离线验证，包含基础源文 CSV 导入；其他模块仍按下文规划推进；尚未完成真实模型实验、训练或全系统闭环。更新日期：2026-10-28。实现与运行方式见 [记忆模块说明](docs/MEMORY.md) 与 [图检索说明](docs/GRAPH.md)。
+> 当前状态：M1 已完成通用 CSV 导入和 Flare 固定快照文本整理（3,800 条中英对照、616 条待翻译）；M2 记忆模块及基础 M3 图引导检索已实现并通过离线验证，包含源文 CSV 建图与无序游戏记忆模式。其他模块仍按下文规划推进；尚未完成真实模型实验、训练或全系统闭环。更新日期：2026-10-30。数据说明见 [DATA.md](docs/DATA.md)，记忆与检索说明见 [MEMORY.md](docs/MEMORY.md) 和 [GRAPH.md](docs/GRAPH.md)。
 >
 > 本文基于 [系统协作与实现细节详解](Research/游戏本地化Agent_系统协作与实现细节详解_2026-10-24.md)，将可训练上下文选择器纳入正式模块，并更新评测方案。旧文档中“Loong 仅为后续扩展”的范围约定，以本文为准；其余业务细节继续参考该文档。
 
@@ -66,7 +66,7 @@ flowchart TD
 **职责**：统一接入 GuoFeng、IWSLT2017 和自建游戏数据，保留文档顺序、来源、对齐与导出信息。
 
 - 文档数据保留 book / document / chapter / sentence 的边界和原始 ID。
-- 游戏数据采用 Scene → Dialogue Block → Occurrence 的层次；Occurrence 是翻译、修订和评测的原子记录。
+- 游戏数据以本地化文本的出现位置为翻译、修订和评测原子记录；对话按适用性关联场景和对话块，UI/物品不强制使用剧情层次。
 - 保存说话人、听话人、场景、分支、文本类型、源版本及导出键；没有依据的字段保留 unknown。
 - 源文与参考译文分离存储，参考译文仅向允许使用它的训练评分器和离线评测器开放。
 
@@ -254,7 +254,7 @@ LLM Judge 的通用维度参考 Loong：总体质量、衔接、连贯、风格�
 | C：Agent 与维护 | M5、M6 | 模型适配、翻译闭环、状态恢复、版本与更新流程 |
 | D：评测与集成 | M7、公共契约复核 | 三项主指标、基线运行、质量检查、实验汇总 |
 
-以下基础目录已建立，空目录以 `.gitkeep` 保留；M2、基础 M3 与 CSV 导入及相关 schema、配置、演示和测试已有实现，其余模块逐步添加：
+以下基础目录已建立，空目录以 `.gitkeep` 保留；M1 通用 CSV/Flare 适配、M2、基础 M3 及相关 schema、配置、演示和测试已有实现，其余模块逐步添加：
 
 ```text
 .
@@ -283,7 +283,7 @@ LLM Judge 的通用维度参考 Loong：总体质量、衔接、连贯、风格�
 └── artifacts/                    # 本地结果与日志，大文件默认不入库
 ```
 
-M2/M3 已有公共类型，后续继续对齐 `Occurrence`、`MemoryRecord`、`ReadView`、`CandidatePool`、`SelectionResult`、`ContextPack`、`TranslationOutcome`、`UpdateReport` 八类接口。模块通过这些结构交换数据，避免各自维护不同字段含义。
+M1 数据类型与 M2/M3 运行时类型分别已有实现，尚未实现从 localization-text/0.2 到 MemoryStore/GraphStore 的接入适配；源侧导出不等于已写入记忆或图。后续继续对齐 `Occurrence`、`MemoryRecord`、`ReadView`、`CandidatePool`、`SelectionResult`、`ContextPack`、`TranslationOutcome`、`UpdateReport` 八类接口。模块通过这些结构交换数据，避免各自维护不同字段含义。
 
 协作约定：
 
@@ -334,8 +334,6 @@ M2/M3 已有公共类型，后续继续对齐 `Occurrence`、`MemoryRecord`、`R
 - [记忆模块实现说明](docs/MEMORY.md)：DelTA 来源、实现内容、与原版差异、使用方式及验证结果。
 - [协作文档入口](docs/README.md)：协作约定与维护位置；记忆相关接口和环境说明已填写，其余按任务推进。
 - [系统协作与实现细节详解](Research/游戏本地化Agent_系统协作与实现细节详解_2026-10-24.md)：业务对象、上下文、审校、版本依赖和恢复机制。
-- [项目设计与实现 Roadmap](Research/游戏本地化Agent_项目设计与实现Roadmap_2026-10-23.md)：既有计划与实验设计，训练范围及主评测方案以本 README 更新为准。
-- [多模型协同与长程 Agent 架构推荐](Research/多模型协同与长程Agent架构推荐_2026-10-23.md)：多模型分工相关调研。
 - [P0 论文与开源项目详解](Research/P0论文与开源项目详解及架构复现建议_2026-10-22.md)：早期选型参考，仓库发布状态以最新核验为准。
 
 当前可在仓库根目录运行记忆模块的离线演示与测试（仅 Python 标准库）：
@@ -346,3 +344,23 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
 演示使用模拟模型，不能作为翻译质量结果。真实后端接入、数据库产物及环境说明见 [SETUP.md](docs/SETUP.md)；训练、全系统推理与正式评测入口尚未实现。
+
+当前尚无完整系统的安装与启动入口。M1 的 CSV 导入和 Flare 适配仅使用 Python 3.9+ 标准库，无需安装第三方包。
+
+在仓库根目录运行通用 CSV 导入和离线检查：
+
+```bash
+PYTHONPATH=src python3 scripts/import_localization_csv.py examples/localization.csv --dataset-id demo --output outputs/csv_demo
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+```
+
+CSV 主要格式为“类型、英文原文、中文参考译文、本地化上下文”，也接受 `text_type/source_text/reference_text/context` 英文表头。原文、参考分别写入 `source.jsonl` 和 `references.jsonl`；缺少中文时只保留源侧记录。输出目录需新建或为空。示例是自建演示文本，不作为实验语料或质量结果。接口、JSON 上下文及多文件用法见 [CSV 导入说明](docs/DATA.md#通用-csv-导入)；Flare 的原始 ID/条件/源位置仍保存在后台。
+
+Flare 全量整理需先下载公开文本快照（网络步骤），或使用已有本地输入：
+
+```bash
+python3 scripts/download_flare_sources.py
+PYTHONPATH=src python3 scripts/build_flare_full.py
+```
+
+Flare 输出 4,416 个使用位置，其中 3,800 条中英、616 条缺少中文。范围与复现说明见 [Flare 全量整理](docs/DATA.md#flare-全量本地化文本-v02)；原 47 条样例入口保留用于历史本地快照。未下载原始输入时，Flare 集成检查会明确跳过，CSV 检查始终运行。以上不表示实际游玩路径核验、译文人工评级或训练/评测已完成。
