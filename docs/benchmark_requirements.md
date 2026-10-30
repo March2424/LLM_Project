@@ -3,6 +3,7 @@
 ```csv
 id,source_text,text_type,context
 ```
+依旧使用简化本地化契约：localization-text/0.2的内容，只是需要改一下csv的内容。
 
 每行独立，不设置 group_id，不增加外层分组或替代字段。按批次大小输入，行序和同批关系不作为实体归属、说话人或场景的证据；正文及 context 无法确定关系时允许不连边。
 
