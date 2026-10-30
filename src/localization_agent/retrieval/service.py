@@ -3,7 +3,7 @@ import json
 from dataclasses import asdict, dataclass, replace
 
 from localization_agent.memory import MemoryService
-from localization_agent.schemas.memory import Evidence, MemoryRef, Occurrence, ReadView, TranslationCheck, scope_match, text_hash
+from localization_agent.schemas.memory import Evidence, MemoryRecord, MemoryRef, Occurrence, ReadView, TranslationCheck, scope_match, text_hash
 from localization_agent.schemas.graph import Candidate, CandidatePool, ContextPack, GraphEdge, GraphNode, GraphRef
 from .graph import GraphStore
 
@@ -55,7 +55,45 @@ class GraphRetriever:
         for key in ('branch_id', 'phase_id'):
             if source.metadata.get(key) != occurrence.metadata.get(key):
                 return False
+        if source.metadata.get('requirements') and source.metadata['requirements'] != occurrence.metadata.get('requirements'):
+            return False
         return game or self.config.source_visibility == 'all' or source.position <= occurrence.position
+
+    def bindings(self, occurrence: Occurrence, snapshot_id: str) -> tuple[dict[str, str], tuple[GraphRef, ...]]:
+        """Resolve only visible, approved direct links; never modify registered source."""
+        snapshot = self.graph.snapshot(snapshot_id)
+        if snapshot.project_id != occurrence.project_id:
+            raise ValueError('Graph snapshot belongs to another project')
+        nodes = {r: self.graph.get(r) for r in snapshot.refs if r.kind == 'node' and self.graph.valid(r)}
+        speakers, topics = {}, {}
+        for r in snapshot.refs:
+            if r.kind != 'edge' or not self.graph.valid(r):
+                continue
+            edge = self.graph.get(r)
+            if edge.source not in nodes or edge.target not in nodes:
+                continue
+            left, right = nodes[edge.source], nodes[edge.target]
+            if left.kind != 'occurrence' or left.attributes['occurrence_id'] != occurrence.occurrence_id or right.kind != 'entity':
+                continue
+            if any(scope_match(replace(obj.scope, document_id=None), occurrence) != 'match' for obj in (left, right, edge)):
+                continue
+            if not all(self._source_allowed(occurrence, e, True) for obj in (left, right, edge) for e in obj.evidence):
+                continue
+            refs = (left.ref, edge.ref, right.ref)
+            if edge.relation == 'SPOKEN_BY':
+                speakers[right.id] = refs
+            if edge.relation in {'DEFINES', 'MENTIONS'} and right.attributes['entity_type'] != 'character':
+                topics[right.id] = (0 if edge.relation == 'DEFINES' else 1, refs)
+        metadata, used = {}, []
+        if len(speakers) == 1:
+            identity, refs = next(iter(speakers.items()))
+            metadata['speaker_id'] = identity
+            used.extend(refs)
+        if topics:
+            identity = min(topics, key=lambda k: (topics[k][0], k))
+            metadata['topic_id'] = identity
+            used.extend(topics[identity][1])
+        return metadata, tuple(dict.fromkeys(used))
 
     def retrieve(self, occurrence: Occurrence, view: ReadView, snapshot_id: str) -> CandidatePool:
         game = self.memory.store.run(view.run_id)['mode'] == 'game_resources'
@@ -69,6 +107,8 @@ class GraphRetriever:
                                        (occurrence.project_id, occurrence.occurrence_id)).fetchone()[0]
         if latest != occurrence.source_version:
             raise ValueError('Current occurrence source version is stale')
+        resolved, binding_refs = self.bindings(occurrence, snapshot_id) if game else ({}, ())
+        occurrence = replace(occurrence, metadata={**occurrence.metadata, **resolved})
         eligible = self.memory.eligible(occurrence, view)
         by_ref = {r.ref: r for r in eligible}
         baseline = self.memory.read(occurrence, view)
@@ -215,7 +255,7 @@ class GraphRetriever:
                 by_term.setdefault(record.content['source'], set()).add(record.content['target'])
         conflicts = tuple(k for k, targets in by_term.items() if len(targets) > 1)
         return CandidatePool(occurrence.occurrence_id, occurrence.source_version, view, snapshot_id,
-                             tuple(values), conflicts, tuple(dict.fromkeys(unresolved)))
+                             tuple(values), conflicts, tuple(dict.fromkeys(unresolved)), resolved, binding_refs)
 
     def build_context(self, pool: CandidatePool, selected_ids: tuple[str, ...] | None = None) -> ContextPack:
         lookup = {c.id: c for c in pool.candidates}
@@ -235,15 +275,38 @@ class GraphRetriever:
                 item = lookup[item_id]
                 if not item.mandatory and size(selected + [item]) <= self.config.max_characters:
                     selected.append(item)
-        refs = tuple(dict.fromkeys(r for c in selected for r in c.graph_refs))
-        sources = tuple(dict.fromkeys(e for c in selected for e in c.sources))
+        refs = tuple(dict.fromkeys(pool.binding_refs + tuple(r for c in selected for r in c.graph_refs)))
+        sources = tuple(dict.fromkeys(tuple(e for c in selected for e in c.sources) +
+                    tuple(e for r in pool.binding_refs for e in self.graph.get(r).evidence)))
         manifest = {'occurrence_id': pool.occurrence_id, 'source_version': pool.source_version,
                     'view': asdict(pool.view), 'graph_snapshot': pool.graph_snapshot,
+                    'resolved_metadata': pool.resolved_metadata,
                     'source_visibility': 'all' if self.memory.store.run(pool.view.run_id)['mode'] == 'game_resources' else self.config.source_visibility,
                     'items': [asdict(c) for c in selected],
                     'memory_refs': [asdict(c.memory_ref) for c in selected if c.memory_ref],
                     'graph_refs': [asdict(r) for r in refs], 'sources': [asdict(e) for e in sources]}
         return ContextPack(pool, tuple(selected), status, text_hash(canonical(manifest)), manifest, size(selected))
+
+    def update_memory(self, occurrence: Occurrence, view: ReadView, snapshot_id: str, *,
+                      flush: bool = False) -> tuple[MemoryRecord, ...]:
+        """Produce topic/role drafts using the same visible graph as translation."""
+        pool = self.retrieve(occurrence, view, snapshot_id)
+        pack = self.build_context(pool)
+        if pack.status != 'ready':
+            raise ValueError('Memory update needs a ready context pack')
+        effective = replace(occurrence, metadata={**occurrence.metadata, **pool.resolved_metadata})
+        source_items = [c for c in pool.candidates if c.category == 'source' and any(
+            r.kind == 'node' and r.id == pool.resolved_metadata.get('topic_id') for r in c.graph_refs)]
+        sources = tuple(dict.fromkeys(e for c in source_items for e in c.sources))
+        # Include current source: after commit, a topic update must cover that new TM.
+        sources = tuple(dict.fromkeys(sources + (Evidence(occurrence.occurrence_id, occurrence.source_version, occurrence.source),)))
+        memory_manifest = {**pack.manifest, 'graph_refs': [asdict(r) for r in dict.fromkeys(
+            pool.binding_refs + tuple(r for c in source_items for r in c.graph_refs))],
+            'sources': [asdict(e) for e in sources]}
+        summary = self.memory.summarize_topic(effective, view, flush=flush, sources=sources,
+                                              context_manifest=memory_manifest)
+        style = self.memory.extract_style(effective, view, context_manifest=pack.manifest)
+        return tuple(r for r in (summary, style) if r is not None)
 
     def commit(self, occurrence: Occurrence, target: str, check: TranslationCheck, pack: ContextPack,
                *, expected_version: int = 0):

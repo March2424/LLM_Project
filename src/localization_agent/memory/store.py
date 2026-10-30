@@ -107,14 +107,14 @@ class MemoryStore:
     @staticmethod
     def game_scope(occurrence: Occurrence) -> Scope:
         return Scope(occurrence.project_id, conditions={
-            k: (occurrence.metadata[k],) for k in ('branch_id', 'phase_id')
+            k: (occurrence.metadata[k],) for k in ('branch_id', 'phase_id', 'requirements')
             if occurrence.metadata.get(k) is not None
         }, source_lang=occurrence.source_lang, target_lang=occurrence.target_lang)
 
     @staticmethod
     def game_compatible(record: MemoryRecord, occurrence: Occurrence) -> bool:
         return all(record.content.get('metadata', {}).get(k) == occurrence.metadata.get(k)
-                   for k in ('branch_id', 'phase_id'))
+                   for k in ('branch_id', 'phase_id', 'requirements'))
 
     def view(self, run_id: str) -> ReadView:
         self.run(run_id)
@@ -217,19 +217,21 @@ class MemoryStore:
         view = view or self.view(run_id)
         if view.run_id != run_id:
             raise ValueError("Read view belongs to another run")
+        effective = replace(occurrence, metadata={**occurrence.metadata,
+                            **(context_manifest or {}).get('resolved_metadata', {})}) if game else occurrence
         available = {r.ref: r for r in self.visible(view)}
         for ref in used:
             if ref not in available or (not game and available[ref].position is not None and available[ref].position >= occurrence.position):
                 raise ValueError("Supplied dependency is outside the run snapshot or prior history")
             dependency = available[ref]
-            if scope_match(dependency.scope, occurrence) != "match":
+            if scope_match(dependency.scope, effective) != "match":
                 raise ValueError("Supplied dependency is outside the occurrence scope")
-            if dependency.kind in {"translation", "summary"} and (not self.game_compatible(dependency, occurrence) if game else dependency.content.get("metadata", {}) != occurrence.metadata):
+            if dependency.kind in {"translation", "summary"} and (not self.game_compatible(dependency, effective) if game else dependency.content.get("metadata", {}) != occurrence.metadata):
                 raise ValueError("Target-side context is not compatible with this occurrence")
         record_id = "tm:" + text_hash(_json([run_id, occurrence.occurrence_id]))
         record = MemoryRecord(record_id, 0, "translation", self.game_scope(occurrence) if game else Scope.for_occurrence(occurrence),
                               {"source": occurrence.source, "target": target,
-                               "metadata": occurrence.metadata, "check": asdict(check),
+                               "metadata": effective.metadata, "check": asdict(check),
                                "knowledge_snapshot": run["snapshot"], "input_view": asdict(view),
                                "context_manifest": context_manifest or {}},
                               tuple(dict.fromkeys((evidence,) + context_sources)), used,

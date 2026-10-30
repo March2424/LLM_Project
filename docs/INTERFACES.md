@@ -120,3 +120,8 @@ source 只含四个核心字段；后台保存原 CSV 文件/行、额外列与�
 ## M1 与 M2/M3 的接入边界（2026-10-30）
 
 `game_text.py` 中的 M1 导出类型与 `memory.py` 中的运行时 `Occurrence` 分属不同阶段。通用四列 CSV 导入器输出 source/references JSONL；`csv_graph.py` 则按显式源侧列映射直接登记 MemoryStore/GraphStore，参数及格式见 [CSV_IMPORT.md](CSV_IMPORT.md)。两套入口保留各自用途，当前没有从 localization-text/0.2 JSONL 自动写入 M2/M3 的桥接适配器。后续接入需明确 record_id 到 occurrence_id、源版本、项目、作用域和来源的映射；仅可读取源侧资料，不得将参考译文或双语查看表作为批准 TM。
+
+
+## 自动建图接入（2026-10-30）
+
+新增 `schemas.benchmark.BenchmarkInput/BuildResult`；`data.import_benchmark()` 只读 `id,source_text,text_type,context` 四列源 CSV，登记 Occurrence 并按行数分批；不接受 group_id，不增加外层分组。`retrieval.AutoGraphBuilder.build()` 返回实体/边引用、逐项审查状态及调用ID。CandidatePool新增默认空的resolved_metadata与binding_refs；实际输入清单保存派生身份与图引用，原始Occurrence不改写。GraphRetriever.update_memory返回待批准草稿；GameSession提供最小顺序翻译集成，状态和模型调用约定见 [AUTO_GRAPH.md](AUTO_GRAPH.md)。提取与复核模型输入仅含上述四个字段，文件来源留在后台。旧四列通用 CSV 入口保持原用途，其列名和参考侧约定不同，不能混用。

@@ -1,0 +1,6 @@
+Check whether this style note is supported by the source and native context.
+Reject invented personality/biography; use unknown if evidence is insufficient.
+Return JSON with status accepted/rejected/unknown and reason.
+Source: {source}
+Native context: {context}
+Proposed note: {note}

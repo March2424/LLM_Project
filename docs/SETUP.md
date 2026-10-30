@@ -50,3 +50,6 @@ Flare 下载是独立的可选联网步骤，默认保存到被忽略的 `artifa
 ## 合并验证（2026-10-30）
 
 在本地执行 `PYTHONPATH=src python3 -m unittest discover -s tests -v`：发现 30 项，24 项通过，6 项 Flare 集成检查因未下载可选快照而跳过。未运行全量数据下载或真实模型。
+
+
+自动建图与最小游戏翻译入口见 [AUTO_GRAPH.md](AUTO_GRAPH.md)，需注入提取/翻译与审查模型适配器。命令帮助及离线模拟链路已验证，未执行真实模型全量运行。
