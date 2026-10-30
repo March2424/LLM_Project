@@ -7,3 +7,15 @@
 后续填写：Python/依赖版本、锁定方式、CPU 模拟环境、推理/训练/sCOMET/dCOMET 的环境隔离、模型获取与服务、环境变量名、数据路径、最小样例、训练/推理/评测命令，以及常见故障。
 
 只写已经存在并验证过的命令，标注验证环境与日期。配置示例不包含真实密钥、账号凭据或成员机器的绝对路径；当前没有默认可运行启动命令。
+
+## 已验证的数据入口（2026-10-30）
+
+CSV 和 Flare 适配器使用 Python 3.9+ 标准库，不需要安装依赖或配置模型凭据。在仓库根目录设置 `PYTHONPATH=src` 即可运行 [README 的数据命令](../README.md#9-项目文档)。通用 CSV 示例已经执行，输出 5 条源侧、4 条参考、1 条缺译。
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+```
+
+CSV 的 5 项检查始终离线运行。Flare 的 6 项集成检查只在 `artifacts/` 对应固定快照存在时运行，否则显示 skipped；不会在测试时下载语料。GitHub Actions 使用 Python 3.11 执行相同命令。CSV 导入目标需新建或为空；路径、UTF-8 编码、上下文模式和输入列的错误会明确报告。
+
+Flare 下载是独立的可选联网步骤，默认保存到被忽略的 `artifacts/flare_full_v0.2/`；不提交下载内容和 `outputs/`。目前仍无完整 Agent、训练或评测启动入口。
