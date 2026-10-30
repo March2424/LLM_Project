@@ -1,0 +1,131 @@
+{
+  "schema_version": "localization-text/0.2",
+  "profile": "flare-processed-v0.2",
+  "published_date": "2026-10-30",
+  "source_language": "en",
+  "reference_language": "zh-Hans",
+  "original_catalog_language": "zh",
+  "language_note": "zh-Hans describes the sampled writing system; no regional locale certification",
+  "revisions": {
+    "flare-game": "af6eee6d339ac98011864bfe89da837fe7769c28",
+    "flare-engine": "4075191d576a28cbf4f27ec345ee1c7ef1482756"
+  },
+  "reference_catalogs": {
+    "alpha_demo": {
+      "repository": "flareteam/flare-game",
+      "revision": "af6eee6d339ac98011864bfe89da837fe7769c28",
+      "path": "mods/alpha_demo/languages/data.zh.po"
+    },
+    "empyrean_campaign": {
+      "repository": "flareteam/flare-game",
+      "revision": "af6eee6d339ac98011864bfe89da837fe7769c28",
+      "path": "mods/empyrean_campaign/languages/data.zh.po"
+    },
+    "fantasycore": {
+      "repository": "flareteam/flare-game",
+      "revision": "af6eee6d339ac98011864bfe89da837fe7769c28",
+      "path": "mods/fantasycore/languages/data.zh.po"
+    },
+    "default": {
+      "repository": "flareteam/flare-engine",
+      "revision": "4075191d576a28cbf4f27ec345ee1c7ef1482756",
+      "path": "mods/default/languages/data.zh.po"
+    },
+    "engine": {
+      "repository": "flareteam/flare-engine",
+      "revision": "4075191d576a28cbf4f27ec345ee1c7ef1482756",
+      "path": "mods/default/languages/engine.zh.po"
+    }
+  },
+  "origin_manifest_sha256": "8558214be04c772f00020b505a6c08ed00aceb157e4beec9171bea03e5c5674c",
+  "origin_adapter_sha256": "007889b0a0695b5f35f34f378df51f7cf79809611964c088497636e3cad85f08",
+  "source_records": 4416,
+  "reference_records": 3800,
+  "missing_reference_records": 616,
+  "runtime_source": "source.jsonl",
+  "offline_reference": "references.jsonl",
+  "human_views": [
+    "flare_bilingual.csv",
+    "flare_untranslated.csv"
+  ],
+  "background_files": [
+    "background/provenance.jsonl",
+    "background/dialogue_order.jsonl",
+    "background/view_row_lookup.jsonl"
+  ],
+  "split": "unassigned",
+  "translation_quality": "upstream_unreviewed",
+  "scope": "Processed text data and static source metadata only; no raw snapshots, catalogs, source code, media or archives.",
+  "publication_changes": [
+    "CSV record terminators normalized to LF; CSV cell values unchanged",
+    "Raw event/script bodies, catalog bodies and raw input inventories omitted from background",
+    "Source/reference JSONL bytes preserved from the previously verified snapshot"
+  ],
+  "source_visibility": "Read source.jsonl for model inputs. References and bilingual views are offline-only; metadata does not grant access to reference text.",
+  "licenses": {
+    "game_content": "licenses/CC-BY-SA-3.0.txt",
+    "engine_origin": "licenses/GPL-3.0.txt"
+  },
+  "files": [
+    {
+      "path": "ATTRIBUTION.txt",
+      "bytes": 2777,
+      "sha256": "801c9c0507d7ad5cbaf3a57c3c6b95f90df71f42d42d7702ea45a571bec64fc8"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6587,
+      "sha256": "761e3291f7e1d8ab2a03d1d45d7685dcf9b8fb06dcce919318e5f1dec1b99669"
+    },
+    {
+      "path": "background/dialogue_order.jsonl",
+      "bytes": 24058,
+      "sha256": "1ebad94fc8ff2a0f829925a3128ab43ef852b2470f10609be9808302c0a58537"
+    },
+    {
+      "path": "background/provenance.jsonl",
+      "bytes": 2438369,
+      "sha256": "37795490b20924eeebec6ebeb7a80718bc5ff7eebe6d52c8d8fd2e4a17933161"
+    },
+    {
+      "path": "background/view_row_lookup.jsonl",
+      "bytes": 335638,
+      "sha256": "387b67a33e27281ef2f99637d2326b1ce0253bcb64112bbb39dffb989e5e392e"
+    },
+    {
+      "path": "coverage.json",
+      "bytes": 6074,
+      "sha256": "e8c17308b3bb78c3c1cb0a90b31f6919b540c98b9a2732412394532a518c9f03"
+    },
+    {
+      "path": "flare_bilingual.csv",
+      "bytes": 726077,
+      "sha256": "4a06c6b38429d6367a22404a2aec7344aaa9ff7de6b48e4e70e6b0cd0224f2f6"
+    },
+    {
+      "path": "flare_untranslated.csv",
+      "bytes": 127458,
+      "sha256": "5bef3fc416d0cd42edb3f1f4cff38562d420a010ba9f17d3d3e1ee3dc26fa1ef"
+    },
+    {
+      "path": "licenses/CC-BY-SA-3.0.txt",
+      "bytes": 22240,
+      "sha256": "3f941b3b89cf7b8370ceb83cc76d2120d471b58735d8ca60238a751a48d7f72f"
+    },
+    {
+      "path": "licenses/GPL-3.0.txt",
+      "bytes": 35147,
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "path": "references.jsonl",
+      "bytes": 327082,
+      "sha256": "c22a181015ba0d840c033251bc4a131c4ddb4178e6ec122d05fa7e84d550ee4d"
+    },
+    {
+      "path": "source.jsonl",
+      "bytes": 1154754,
+      "sha256": "51e620c97029b2b3d2febaf665c0e63f7b4b3897db49239e0bb10df3524cb71f"
+    }
+  ]
+}

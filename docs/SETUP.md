@@ -19,3 +19,5 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 CSV 的 5 项检查始终离线运行。Flare 的 6 项集成检查只在 `artifacts/` 对应固定快照存在时运行，否则显示 skipped；不会在测试时下载语料。GitHub Actions 使用 Python 3.11 执行相同命令。CSV 导入目标需新建或为空；路径、UTF-8 编码、上下文模式和输入列的错误会明确报告。
 
 Flare 下载是独立的可选联网步骤，默认保存到被忽略的 `artifacts/flare_full_v0.2/`；不提交下载内容和 `outputs/`。目前仍无完整 Agent、训练或评测启动入口。
+
+处理后的 Flare 快照现已随仓库放在 [data/flare/v0.2](../data/flare/v0.2/README.md)，可直接读取或导入其 CSV，不需要联网。发布数据一致性检查始终离线运行，只有重新提取资源的 6 项集成检查需要可选原始快照。

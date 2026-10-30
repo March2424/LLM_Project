@@ -1,0 +1,248 @@
+{
+  "schema_version": "localization-text/0.2",
+  "revisions": {
+    "flare-game": "af6eee6d339ac98011864bfe89da837fe7769c28",
+    "flare-engine": "4075191d576a28cbf4f27ec345ee1c7ef1482756"
+  },
+  "text_type_labels": {
+    "dialogue": "对话",
+    "dialogue_option": "对话选项",
+    "character_name": "角色名称",
+    "enemy_name": "敌人名称",
+    "item_name": "物品名称",
+    "item_description": "物品描述",
+    "item_property": "物品属性与类别",
+    "skill_name": "技能名称",
+    "skill_description": "技能描述",
+    "quest_name": "任务名称",
+    "quest_description": "任务说明",
+    "location_name": "地点名称",
+    "world_tooltip": "场景提示",
+    "book_text": "书籍文本",
+    "narrative": "剧情旁白",
+    "credits": "制作人员表标签",
+    "ui": "UI",
+    "system_message": "系统消息",
+    "other": "其他本地化文本"
+  },
+  "source_records": 4416,
+  "bilingual_records": 3800,
+  "untranslated_records": 616,
+  "unique_bilingual_source_texts": 2044,
+  "unique_bilingual_pairs": 2114,
+  "reference_diagnostics": {
+    "unchanged_from_english": 86,
+    "without_han_characters": 95
+  },
+  "by_type": {
+    "对话": {
+      "all": 247,
+      "bilingual": 137,
+      "untranslated": 110
+    },
+    "对话选项": {
+      "all": 238,
+      "bilingual": 212,
+      "untranslated": 26
+    },
+    "角色名称": {
+      "all": 40,
+      "bilingual": 22,
+      "untranslated": 18
+    },
+    "敌人名称": {
+      "all": 164,
+      "bilingual": 150,
+      "untranslated": 14
+    },
+    "物品名称": {
+      "all": 638,
+      "bilingual": 626,
+      "untranslated": 12
+    },
+    "物品描述": {
+      "all": 75,
+      "bilingual": 64,
+      "untranslated": 11
+    },
+    "物品属性与类别": {
+      "all": 34,
+      "bilingual": 33,
+      "untranslated": 1
+    },
+    "技能名称": {
+      "all": 362,
+      "bilingual": 354,
+      "untranslated": 8
+    },
+    "技能描述": {
+      "all": 324,
+      "bilingual": 318,
+      "untranslated": 6
+    },
+    "任务名称": {
+      "all": 13,
+      "bilingual": 13,
+      "untranslated": 0
+    },
+    "任务说明": {
+      "all": 92,
+      "bilingual": 60,
+      "untranslated": 32
+    },
+    "地点名称": {
+      "all": 92,
+      "bilingual": 65,
+      "untranslated": 27
+    },
+    "场景提示": {
+      "all": 904,
+      "bilingual": 657,
+      "untranslated": 247
+    },
+    "书籍文本": {
+      "all": 88,
+      "bilingual": 88,
+      "untranslated": 0
+    },
+    "剧情旁白": {
+      "all": 19,
+      "bilingual": 19,
+      "untranslated": 0
+    },
+    "制作人员表标签": {
+      "all": 52,
+      "bilingual": 49,
+      "untranslated": 3
+    },
+    "UI": {
+      "all": 572,
+      "bilingual": 525,
+      "untranslated": 47
+    },
+    "系统消息": {
+      "all": 462,
+      "bilingual": 408,
+      "untranslated": 54
+    }
+  },
+  "by_module": {
+    "alpha_demo": {
+      "name": "Alpha Demo（旧版）",
+      "all": 740,
+      "bilingual": 201,
+      "untranslated": 539
+    },
+    "centered_statbars": {
+      "name": "居中状态条模块",
+      "all": 1,
+      "bilingual": 0,
+      "untranslated": 1
+    },
+    "default": {
+      "name": "引擎默认资源",
+      "all": 20,
+      "bilingual": 20,
+      "untranslated": 0
+    },
+    "devlab": {
+      "name": "开发教学模块",
+      "all": 64,
+      "bilingual": 0,
+      "untranslated": 64
+    },
+    "empyrean_campaign": {
+      "name": "Empyrean 主战役",
+      "all": 2819,
+      "bilingual": 2818,
+      "untranslated": 1
+    },
+    "engine": {
+      "name": "引擎界面与消息",
+      "all": 671,
+      "bilingual": 665,
+      "untranslated": 6
+    },
+    "fantasycore": {
+      "name": "公共奇幻资源",
+      "all": 95,
+      "bilingual": 94,
+      "untranslated": 1
+    },
+    "gcw0_defaults": {
+      "name": "GCW-Zero 配置",
+      "all": 1,
+      "bilingual": 0,
+      "untranslated": 1
+    },
+    "minicore": {
+      "name": "缩放资源",
+      "all": 1,
+      "bilingual": 0,
+      "untranslated": 1
+    },
+    "minicore_alpha": {
+      "name": "旧版缩放资源",
+      "all": 4,
+      "bilingual": 2,
+      "untranslated": 2
+    }
+  },
+  "alignment_status": {
+    "blank": 538,
+    "aligned": 3800,
+    "missing_catalog": 78
+  },
+  "catalogs": [
+    {
+      "domain": "alpha_demo",
+      "template_keys": 488,
+      "represented_keys": 488,
+      "unrepresented_keys": [],
+      "translated_keys": 172
+    },
+    {
+      "domain": "empyrean_campaign",
+      "template_keys": 1349,
+      "represented_keys": 1349,
+      "unrepresented_keys": [],
+      "translated_keys": 1349
+    },
+    {
+      "domain": "fantasycore",
+      "template_keys": 76,
+      "represented_keys": 76,
+      "unrepresented_keys": [],
+      "translated_keys": 76
+    },
+    {
+      "domain": "default",
+      "template_keys": 20,
+      "represented_keys": 20,
+      "unrepresented_keys": [],
+      "translated_keys": 20
+    },
+    {
+      "domain": "engine",
+      "template_keys": 531,
+      "represented_keys": 531,
+      "unrepresented_keys": [],
+      "translated_keys": 531
+    }
+  ],
+  "issues": [],
+  "excluded": {
+    "credits_person_names_or_links": 648
+  },
+  "dialogue_blocks": 93,
+  "translation_quality": "upstream_unreviewed",
+  "split": "unassigned",
+  "reference_visibility": "references and bilingual views are offline only; runtime source is source.jsonl",
+  "scope": "All five upstream Simplified Chinese gettext domains, static eligible text in every bundled mod and all literal engine gettext calls. Credits' nonlocalized people names/URLs and media excluded.",
+  "limitations": [
+    "Static resource occurrences, not executed playthrough paths or one record per spawned NPC",
+    "INCLUDE and APPEND are expanded against mod dependency fallback; optional module combinations are not executed",
+    "Status predicates and native IDs are in background only; semantic quest/item links are source-derived",
+    "No translation quality rating, model calls, train/dev/test split or complete dynamic tooltip reconstruction"
+  ]
+}
