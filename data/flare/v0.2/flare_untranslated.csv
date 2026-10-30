@@ -1,0 +1,2225 @@
+﻿类型,英文原文,中文参考译文,本地化上下文
+UI,The new Flare 1.0 campaign,,资源范围：Empyrean 主战役
+UI,"The render size refers to the height in pixels of the surface used to draw the game. Mods define the allowed render sizes, but this option allows overriding the minimum size.",,"资源范围：引擎界面与消息
+界面：Settings
+用途：Interface label or tooltip"
+UI,Minimum Render Size,,"资源范围：引擎界面与消息
+界面：Settings
+界面区域：Video
+用途：Interface label or tooltip"
+UI,You do not have the required items to craft.,,"资源范围：引擎界面与消息
+界面：Inventory
+用途：Interface label or tooltip"
+UI,Craft,,"资源范围：引擎界面与消息
+界面：Merchant
+用途：Interface label or tooltip"
+系统消息,Unknown Property,,"资源范围：引擎界面与消息
+用途：Item tooltip or item feedback"
+系统消息,Crafting requires:,,"资源范围：引擎界面与消息
+用途：Item tooltip or item feedback"
+UI,Isometric generic fantasy assets.,,资源范围：公共奇幻资源
+对话,"I am Guill, a scribe with the Order. I am grateful you've come -- we are short on trained warriors due to the call-to-arms in Ancelot.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Chat
+说话人：Guill, Scribe of the Order
+后文（英文）：Player: Why is the Order interested in these ruins? / Guill, Scribe of the Order: What the locals call the Goblin Warrens is actually the entrance to a grand underground fortress known as Averguard Keep. This site is sacred to our order. Our primary mission is to cleanse the evil from this place.
+条件文本：是，具体触发条件留在后台"
+对话,Why is the Order interested in these ruins?,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Chat
+说话人：Player
+前文（英文）：Guill, Scribe of the Order: I am Guill, a scribe with the Order. I am grateful you've come -- we are short on trained warriors due to the call-to-arms in Ancelot.
+后文（英文）：Guill, Scribe of the Order: What the locals call the Goblin Warrens is actually the entrance to a grand underground fortress known as Averguard Keep. This site is sacred to our order. Our primary mission is to cleanse the evil from this place.
+条件文本：是，具体触发条件留在后台"
+对话,What the locals call the Goblin Warrens is actually the entrance to a grand underground fortress known as Averguard Keep. This site is sacred to our order. Our primary mission is to cleanse the evil from this place.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Chat
+说话人：Guill, Scribe of the Order
+前文（英文）：Guill, Scribe of the Order: I am Guill, a scribe with the Order. I am grateful you've come -- we are short on trained warriors due to the call-to-arms in Ancelot. / Player: Why is the Order interested in these ruins?
+条件文本：是，具体触发条件留在后台"
+对话,The goblins in the Warrens answer to a warlord named Ukkonen. Most goblins are merely curious; this Ukkonen is bloodthirsty. Punish him for desecrating this place. His lair is here in the Warrens.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Goblins Warrens
+说话人：Guill, Scribe of the Order
+条件文本：是，具体触发条件留在后台"
+对话,Ukkonen's lair is somewhere here in the Goblin Warrens.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Ukkonen Search
+说话人：Guill, Scribe of the Order
+条件文本：是，具体触发条件留在后台"
+对话,Ukkonen is defeated -- I sensed a calm in this place the moment you ended him. Take this reward for your bravery.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Ukkonen Defeated
+说话人：Guill, Scribe of the Order
+条件文本：是，具体触发条件留在后台"
+对话,The Averguard left a set of Chronicles detailing their final era. One volume is missing. I've searched this entire area except for Ukkonen's lair. If you find the book please return to me.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Chronicles
+说话人：Guill, Scribe of the Order
+后文（英文）：Player: I'll keep an eye out for it.
+条件文本：是，具体触发条件留在后台"
+对话,I'll keep an eye out for it.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Chronicles
+说话人：Player
+前文（英文）：Guill, Scribe of the Order: The Averguard left a set of Chronicles detailing their final era. One volume is missing. I've searched this entire area except for Ukkonen's lair. If you find the book please return to me.
+条件文本：是，具体触发条件留在后台"
+对话,You found this tome in Ukkonen's lair? Most excellent -- I feared this volume was lost. With it we can piece together the true history of this keep. I just need a moment to study...,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Tome
+说话人：Guill, Scribe of the Order
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Tome"
+对话,This tome confirms what we know of Averguard Keep -- it crumbled against the plague many centuries ago. But not all of the infected were destroyed. It appears many undead where locked away in hopes that a cure would be found.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Keep
+说话人：Guill, Scribe of the Order
+后文（英文）：Player: Why were the undead spared? / Guill, Scribe of the Order: I don't know, but we should investigate. Head into the Atrium, then the Averguard Prison. Search for a key to access the sealed areas of the Keep.
+条件文本：是，具体触发条件留在后台"
+对话,Why were the undead spared?,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Keep
+说话人：Player
+前文（英文）：Guill, Scribe of the Order: This tome confirms what we know of Averguard Keep -- it crumbled against the plague many centuries ago. But not all of the infected were destroyed. It appears many undead where locked away in hopes that a cure would be found.
+后文（英文）：Guill, Scribe of the Order: I don't know, but we should investigate. Head into the Atrium, then the Averguard Prison. Search for a key to access the sealed areas of the Keep.
+条件文本：是，具体触发条件留在后台"
+对话,"I don't know, but we should investigate. Head into the Atrium, then the Averguard Prison. Search for a key to access the sealed areas of the Keep.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Keep
+说话人：Guill, Scribe of the Order
+前文（英文）：Guill, Scribe of the Order: This tome confirms what we know of Averguard Keep -- it crumbled against the plague many centuries ago. But not all of the infected were destroyed. It appears many undead where locked away in hopes that a cure would be found. / Player: Why were the undead spared?
+条件文本：是，具体触发条件留在后台"
+对话,"I have the prison key. The old prison warden carried it on his person -- he was infected, haunting the depths of the Prison.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Key
+说话人：Player
+后文（英文）：Guill, Scribe of the Order: A true shame that he was infected.  Well, now that we have the Averguard Key, the depths of Averguard Keep are open to us. The Order thanks you.
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Key"
+对话,"A true shame that he was infected.  Well, now that we have the Averguard Key, the depths of Averguard Keep are open to us. The Order thanks you.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Key
+说话人：Guill, Scribe of the Order
+前文（英文）：Player: I have the prison key. The old prison warden carried it on his person -- he was infected, haunting the depths of the Prison.
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Key"
+对话,There is one place within the Keep that no living being has seen for centuries: the burial chamber behind Averguard Temple. From the Atrium you can access the Temple. Use your key to enter the Burial Chamber.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Burial Chamber
+说话人：Guill, Scribe of the Order
+后文（英文）：Player: Who is buried there? / Guill, Scribe of the Order: The powerful leader of the Averguard -- Sir Evan Maddox.
+条件文本：是，具体触发条件留在后台"
+对话,Who is buried there?,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Burial Chamber
+说话人：Player
+前文（英文）：Guill, Scribe of the Order: There is one place within the Keep that no living being has seen for centuries: the burial chamber behind Averguard Temple. From the Atrium you can access the Temple. Use your key to enter the Burial Chamber.
+后文（英文）：Guill, Scribe of the Order: The powerful leader of the Averguard -- Sir Evan Maddox.
+条件文本：是，具体触发条件留在后台"
+对话,The powerful leader of the Averguard -- Sir Evan Maddox.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Burial Chamber
+说话人：Guill, Scribe of the Order
+前文（英文）：Guill, Scribe of the Order: There is one place within the Keep that no living being has seen for centuries: the burial chamber behind Averguard Temple. From the Atrium you can access the Temple. Use your key to enter the Burial Chamber. / Player: Who is buried there?
+条件文本：是，具体触发条件留在后台"
+对话,I tried the key on the Burial Chamber door but it would not open.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Key to Burial Chamber
+说话人：Player
+后文（英文）：Guill, Scribe of the Order: It must be sealed by powerful magic. There was only one sorceror of Averguard with that kind of power - Professor Langlier. Search through his collection to find a way into the Burial Chamber. Enter the Academy through the Atrium. / Player: As you wish.
+条件文本：是，具体触发条件留在后台"
+对话,It must be sealed by powerful magic. There was only one sorceror of Averguard with that kind of power - Professor Langlier. Search through his collection to find a way into the Burial Chamber. Enter the Academy through the Atrium.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Key to Burial Chamber
+说话人：Guill, Scribe of the Order
+前文（英文）：Player: I tried the key on the Burial Chamber door but it would not open.
+后文（英文）：Player: As you wish. / Guill, Scribe of the Order: I must admit jealousy -- I have dreamed many years of seeing the old volumes there, but it is simply too dangerous yet.
+条件文本：是，具体触发条件留在后台"
+对话,As you wish.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Key to Burial Chamber
+说话人：Player
+前文（英文）：Player: I tried the key on the Burial Chamber door but it would not open. / Guill, Scribe of the Order: It must be sealed by powerful magic. There was only one sorceror of Averguard with that kind of power - Professor Langlier. Search through his collection to find a way into the Burial Chamber. Enter the Academy through the Atrium.
+后文（英文）：Guill, Scribe of the Order: I must admit jealousy -- I have dreamed many years of seeing the old volumes there, but it is simply too dangerous yet.
+条件文本：是，具体触发条件留在后台"
+对话,"I must admit jealousy -- I have dreamed many years of seeing the old volumes there, but it is simply too dangerous yet.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Key to Burial Chamber
+说话人：Guill, Scribe of the Order
+前文（英文）：Guill, Scribe of the Order: It must be sealed by powerful magic. There was only one sorceror of Averguard with that kind of power - Professor Langlier. Search through his collection to find a way into the Burial Chamber. Enter the Academy through the Atrium. / Player: As you wish.
+条件文本：是，具体触发条件留在后台"
+对话,"I am back from the Academy. Langlier was rags and bones, yet still a powerful mage. He wore this symbol.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Langlier's Talisman
+说话人：Player
+后文（英文）：Guill, Scribe of the Order: Fate has delivered this talisman to you. With it and the Averguard Key, you have the ability to open the Burial Chamber. Read these runes aloud at the sealed door and the path will be opened.
+条件文本：是，具体触发条件留在后台
+条件：Must carry Langlier's Talisman"
+对话,"Fate has delivered this talisman to you. With it and the Averguard Key, you have the ability to open the Burial Chamber. Read these runes aloud at the sealed door and the path will be opened.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Langlier's Talisman
+说话人：Guill, Scribe of the Order
+前文（英文）：Player: I am back from the Academy. Langlier was rags and bones, yet still a powerful mage. He wore this symbol.
+条件文本：是，具体触发条件留在后台
+条件：Must carry Langlier's Talisman"
+对话,"My worst fear is come alive. Just as with the Warden and with Professor Langlier, Sir Evan Maddox himself was inflicted with undeath. If we are to reclaim the Keep, you must defeat him. The Order will reward you magnificently for this service. But be prepared -- not even undeath will limit Maddox's zeal. Enter the Burial Chamber and allow him redemption.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Sir Evan Maddox
+说话人：Guill, Scribe of the Order
+条件文本：是，具体触发条件留在后台"
+对话,"You have risked much for the Order. Take this final reward, as your mission here is complete. The grip of necromancy over Averguard Keep is broken -- in time the remaining undead will pass over into death.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Maddox Defeated
+说话人：Guill, Scribe of the Order
+后文（英文）：Player: Thank you Guill. I am glad to be of service.
+条件文本：是，具体触发条件留在后台"
+对话,Thank you Guill. I am glad to be of service.,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Maddox Defeated
+说话人：Player
+前文（英文）：Guill, Scribe of the Order: You have risked much for the Order. Take this final reward, as your mission here is complete. The grip of necromancy over Averguard Keep is broken -- in time the remaining undead will pass over into death.
+条件文本：是，具体触发条件留在后台"
+对话,"It is still dangerous here, but with Maddox defeated his followers will soon find rest.",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Chat
+说话人：Guill, Scribe of the Order
+条件文本：是，具体触发条件留在后台"
+对话,"Welcome to my mines, stranger. If you have the back for it, I've got the work.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+说话人：Martigan, Overseer
+后文（英文）：Player: I heard you might have something more interesting. / Martigan, Overseer: Ah, you're the adventurer? If you seek out danger you're in the right place. We had two guards stationed here; both were recalled to Ancelot. Now we're vulnerable.
+条件文本：是，具体触发条件留在后台"
+对话,I heard you might have something more interesting.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+说话人：Player
+前文（英文）：Martigan, Overseer: Welcome to my mines, stranger. If you have the back for it, I've got the work.
+后文（英文）：Martigan, Overseer: Ah, you're the adventurer? If you seek out danger you're in the right place. We had two guards stationed here; both were recalled to Ancelot. Now we're vulnerable. / Player: So how's the mining business?
+条件文本：是，具体触发条件留在后台"
+对话,"Ah, you're the adventurer? If you seek out danger you're in the right place. We had two guards stationed here; both were recalled to Ancelot. Now we're vulnerable.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+说话人：Martigan, Overseer
+前文（英文）：Martigan, Overseer: Welcome to my mines, stranger. If you have the back for it, I've got the work. / Player: I heard you might have something more interesting.
+后文（英文）：Player: So how's the mining business? / Martigan, Overseer: Not good at all. While I was digging, my pickaxe scraped a skull that was wedged in the rock wall. Before I knew it, the nasty thing started moving and a whole body emerged. Now that thing is in there, preventing any more mining.
+条件文本：是，具体触发条件留在后台"
+对话,So how's the mining business?,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+说话人：Player
+前文（英文）：Player: I heard you might have something more interesting. / Martigan, Overseer: Ah, you're the adventurer? If you seek out danger you're in the right place. We had two guards stationed here; both were recalled to Ancelot. Now we're vulnerable.
+后文（英文）：Martigan, Overseer: Not good at all. While I was digging, my pickaxe scraped a skull that was wedged in the rock wall. Before I knew it, the nasty thing started moving and a whole body emerged. Now that thing is in there, preventing any more mining. / Martigan, Overseer: Kill that skeleton for me, and I'll make it worth your while.
+条件文本：是，具体触发条件留在后台"
+对话,"Not good at all. While I was digging, my pickaxe scraped a skull that was wedged in the rock wall. Before I knew it, the nasty thing started moving and a whole body emerged. Now that thing is in there, preventing any more mining.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+说话人：Martigan, Overseer
+前文（英文）：Martigan, Overseer: Ah, you're the adventurer? If you seek out danger you're in the right place. We had two guards stationed here; both were recalled to Ancelot. Now we're vulnerable. / Player: So how's the mining business?
+后文（英文）：Martigan, Overseer: Kill that skeleton for me, and I'll make it worth your while.
+条件文本：是，具体触发条件留在后台"
+对话,"Kill that skeleton for me, and I'll make it worth your while.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+说话人：Martigan, Overseer
+前文（英文）：Player: So how's the mining business? / Martigan, Overseer: Not good at all. While I was digging, my pickaxe scraped a skull that was wedged in the rock wall. Before I knew it, the nasty thing started moving and a whole body emerged. Now that thing is in there, preventing any more mining.
+条件文本：是，具体触发条件留在后台"
+对话,We're having problems. Goblins. All the noise from our mining is drawing their attention. We can't have them thinking we're easy prey.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Goblin Camp
+说话人：Martigan, Overseer
+后文（英文）：Martigan, Overseer: Attack their encampment up river from here. 20 gold now, 80 more when you return.
+条件文本：是，具体触发条件留在后台"
+对话,"Attack their encampment up river from here. 20 gold now, 80 more when you return.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Goblin Camp
+说话人：Martigan, Overseer
+前文（英文）：Martigan, Overseer: We're having problems. Goblins. All the noise from our mining is drawing their attention. We can't have them thinking we're easy prey.
+条件文本：是，具体触发条件留在后台"
+对话,The goblins have an encampment up the river from here on the west side. Clear them out and I'll pay you 80 gold.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Goblin Camp Search
+说话人：Martigan, Overseer
+条件文本：是，具体触发条件留在后台"
+对话,"Unfortunate work, but my workers will sleep safe tonight. Here's your reward.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rilrak Defeated
+说话人：Martigan, Overseer
+条件文本：是，具体触发条件留在后台"
+对话,A member of the Order passed through our camp a few days ago. He left for the tower ruins in Ydrakka Pass.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Chat
+说话人：Martigan, Overseer
+条件文本：是，具体触发条件留在后台"
+对话,"This region was once well guarded. There are watch towers positioned throughout these plains, but most are abandoned and crumbling now.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower
+说话人：Martigan, Overseer
+后文（英文）：Martigan, Overseer: I need someone to inspect the outpost tower in White Winds, south west of the Frontier Plains. Let me know if goblins have found their way inside.
+条件文本：是，具体触发条件留在后台"
+对话,"I need someone to inspect the outpost tower in White Winds, south west of the Frontier Plains. Let me know if goblins have found their way inside.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower
+说话人：Martigan, Overseer
+前文（英文）：Martigan, Overseer: This region was once well guarded. There are watch towers positioned throughout these plains, but most are abandoned and crumbling now.
+条件文本：是，具体触发条件留在后台"
+对话,Search for the abandoned tower southwest of the Frontier plains. The lands around there are called White Wind.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Search
+说话人：Martigan, Overseer
+条件文本：是，具体触发条件留在后台"
+对话,"There are plenty of goblins in the White Winds area, but not near the tower.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Player
+后文（英文）：Martigan, Overseer: Are you sure? Did you look inside the tower? / Player: Well...
+条件文本：是，具体触发条件留在后台"
+对话,Are you sure? Did you look inside the tower?,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Martigan, Overseer
+前文（英文）：Player: There are plenty of goblins in the White Winds area, but not near the tower.
+后文（英文）：Player: Well...
+条件文本：是，具体触发条件留在后台"
+对话,Well...,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Player
+前文（英文）：Player: There are plenty of goblins in the White Winds area, but not near the tower. / Martigan, Overseer: Are you sure? Did you look inside the tower?
+条件文本：是，具体触发条件留在后台"
+对话,"There are plenty of goblins in the white winds area, but not near the tower.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Player
+后文（英文）：Martigan, Overseer: Are you sure? Did you look inside the tower? / Player: I saw no signs of goblins through the locked iron grate door.
+条件文本：是，具体触发条件留在后台"
+对话,Are you sure? Did you look inside the tower?,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Martigan, Overseer
+前文（英文）：Player: There are plenty of goblins in the white winds area, but not near the tower.
+后文（英文）：Player: I saw no signs of goblins through the locked iron grate door. / Martigan, Overseer: Good! Have this small reward.
+条件文本：是，具体触发条件留在后台"
+对话,I saw no signs of goblins through the locked iron grate door.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Player
+前文（英文）：Player: There are plenty of goblins in the white winds area, but not near the tower. / Martigan, Overseer: Are you sure? Did you look inside the tower?
+后文（英文）：Martigan, Overseer: Good! Have this small reward.
+条件文本：是，具体触发条件留在后台"
+对话,Good! Have this small reward.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+说话人：Martigan, Overseer
+前文（英文）：Martigan, Overseer: Are you sure? Did you look inside the tower? / Player: I saw no signs of goblins through the locked iron grate door.
+条件文本：是，具体触发条件留在后台"
+对话,Please take care of that skeleton. Work in the mine can't continue otherwise.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Reanimated Skeleton
+说话人：Martigan, Overseer
+条件文本：是，具体触发条件留在后台"
+对话,I've defeated the Reanimated Skeleton.,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Skeleton Defeated
+说话人：Player
+后文（英文）：Martigan, Overseer: Excellent work! As promised, here's a little something for your troubles.
+条件文本：是，具体触发条件留在后台"
+对话,"Excellent work! As promised, here's a little something for your troubles.",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Skeleton Defeated
+说话人：Martigan, Overseer
+前文（英文）：Player: I've defeated the Reanimated Skeleton.
+条件文本：是，具体触发条件留在后台"
+对话,Who goes there?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+后文（英文）：Player: I came here to kill lots of monsters. / Statue Guardian (Fire): Intruder! You shall not interrupt the masters' work!
+条件文本：是，具体触发条件留在后台"
+对话,I came here to kill lots of monsters.,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Fire): Who goes there?
+后文（英文）：Statue Guardian (Fire): Intruder! You shall not interrupt the masters' work!
+条件文本：是，具体触发条件留在后台"
+对话,Intruder! You shall not interrupt the masters' work!,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+前文（英文）：Statue Guardian (Fire): Who goes there? / Player: I came here to kill lots of monsters.
+条件文本：是，具体触发条件留在后台"
+对话,Who goes there?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+后文（英文）：Player: Vesuvvio. / Statue Guardian (Fire): ...Are you feeling alright, Master Vesuvvio? You did not refer to yourself as ""the Destroyer.""
+条件文本：是，具体触发条件留在后台"
+对话,Vesuvvio.,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Fire): Who goes there?
+后文（英文）：Statue Guardian (Fire): ...Are you feeling alright, Master Vesuvvio? You did not refer to yourself as ""the Destroyer."" / Statue Guardian (Fire): Have your brothers been teasing you about your real name being Stootley again?
+条件文本：是，具体触发条件留在后台"
+对话,"...Are you feeling alright, Master Vesuvvio? You did not refer to yourself as ""the Destroyer.""",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+前文（英文）：Statue Guardian (Fire): Who goes there? / Player: Vesuvvio.
+后文（英文）：Statue Guardian (Fire): Have your brothers been teasing you about your real name being Stootley again? / Player: Er, no. It's all right. I'm Vesuvvio the Destroyer.
+条件文本：是，具体触发条件留在后台"
+对话,Have your brothers been teasing you about your real name being Stootley again?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+前文（英文）：Player: Vesuvvio. / Statue Guardian (Fire): ...Are you feeling alright, Master Vesuvvio? You did not refer to yourself as ""the Destroyer.""
+后文（英文）：Player: Er, no. It's all right. I'm Vesuvvio the Destroyer. / Statue Guardian (Fire): Then welcome, Master Vesuvvio, may you enjoy your destruction tonight.
+条件文本：是，具体触发条件留在后台"
+对话,"Er, no. It's all right. I'm Vesuvvio the Destroyer.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Fire): ...Are you feeling alright, Master Vesuvvio? You did not refer to yourself as ""the Destroyer."" / Statue Guardian (Fire): Have your brothers been teasing you about your real name being Stootley again?
+后文（英文）：Statue Guardian (Fire): Then welcome, Master Vesuvvio, may you enjoy your destruction tonight. / Player: (This Vesuvvio guy sure is strange...)
+条件文本：是，具体触发条件留在后台"
+对话,"Then welcome, Master Vesuvvio, may you enjoy your destruction tonight.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+前文（英文）：Statue Guardian (Fire): Have your brothers been teasing you about your real name being Stootley again? / Player: Er, no. It's all right. I'm Vesuvvio the Destroyer.
+后文（英文）：Player: (This Vesuvvio guy sure is strange...)
+条件文本：是，具体触发条件留在后台"
+对话,(This Vesuvvio guy sure is strange...),,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Player: Er, no. It's all right. I'm Vesuvvio the Destroyer. / Statue Guardian (Fire): Then welcome, Master Vesuvvio, may you enjoy your destruction tonight.
+条件文本：是，具体触发条件留在后台"
+对话,"Welcome, Master Vesuvvio, may you enjoy your destruction tonight.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Fire)
+条件文本：是，具体触发条件留在后台"
+对话,Who goes there?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Ice)
+后文（英文）：Player: Uh... a lone adventurer? / Statue Guardian (Ice): Intruder! You shall not interrupt the masters' work!
+条件文本：是，具体触发条件留在后台"
+对话,Uh... a lone adventurer?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Ice): Who goes there?
+后文（英文）：Statue Guardian (Ice): Intruder! You shall not interrupt the masters' work!
+条件文本：是，具体触发条件留在后台"
+对话,Intruder! You shall not interrupt the masters' work!,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Ice)
+前文（英文）：Statue Guardian (Ice): Who goes there? / Player: Uh... a lone adventurer?
+条件文本：是，具体触发条件留在后台"
+对话,Who goes there?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Ice)
+后文（英文）：Player: Scathelocke. / Statue Guardian (Ice): Welcome, Master Scathelocke.
+条件文本：是，具体触发条件留在后台"
+对话,Scathelocke.,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Ice): Who goes there?
+后文（英文）：Statue Guardian (Ice): Welcome, Master Scathelocke.
+条件文本：是，具体触发条件留在后台"
+对话,"Welcome, Master Scathelocke.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Ice)
+前文（英文）：Statue Guardian (Ice): Who goes there? / Player: Scathelocke.
+条件文本：是，具体触发条件留在后台"
+对话,"Welcome, Master Scathelocke.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Ice)
+条件文本：是，具体触发条件留在后台"
+对话,Who goes there?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Wind)
+后文（英文）：Player: A friend of the masters. / Statue Guardian (Wind): Intruder! You shall not interrupt the masters' work!
+条件文本：是，具体触发条件留在后台"
+对话,A friend of the masters.,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Wind): Who goes there?
+后文（英文）：Statue Guardian (Wind): Intruder! You shall not interrupt the masters' work!
+条件文本：是，具体触发条件留在后台"
+对话,Intruder! You shall not interrupt the masters' work!,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Wind)
+前文（英文）：Statue Guardian (Wind): Who goes there? / Player: A friend of the masters.
+条件文本：是，具体触发条件留在后台"
+对话,Who goes there?,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Wind)
+后文（英文）：Player: Grisbon. / Statue Guardian (Wind): Welcome, Master Grisbon.
+条件文本：是，具体触发条件留在后台"
+对话,Grisbon.,,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Player
+前文（英文）：Statue Guardian (Wind): Who goes there?
+后文（英文）：Statue Guardian (Wind): Welcome, Master Grisbon.
+条件文本：是，具体触发条件留在后台"
+对话,"Welcome, Master Grisbon.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Wind)
+前文（英文）：Statue Guardian (Wind): Who goes there? / Player: Grisbon.
+条件文本：是，具体触发条件留在后台"
+对话,"Welcome, Master Grisbon.",,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room
+说话人：Statue Guardian (Wind)
+条件文本：是，具体触发条件留在后台"
+对话选项,Chat,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Chat
+条件文本：是，具体触发条件留在后台"
+对话选项,Goblins Warrens,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Goblins Warrens
+条件文本：是，具体触发条件留在后台"
+对话选项,Ukkonen Search,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Ukkonen Search
+条件文本：是，具体触发条件留在后台"
+对话选项,Ukkonen Defeated,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Ukkonen Defeated
+条件文本：是，具体触发条件留在后台"
+对话选项,Averguard Chronicles,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Chronicles
+条件文本：是，具体触发条件留在后台"
+对话选项,Averguard Tome,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Tome
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Tome"
+对话选项,Averguard Keep,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Keep
+条件文本：是，具体触发条件留在后台"
+对话选项,Averguard Key,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Averguard Key
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Key"
+对话选项,Burial Chamber,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Burial Chamber
+条件文本：是，具体触发条件留在后台"
+对话选项,Key to Burial Chamber,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Key to Burial Chamber
+条件文本：是，具体触发条件留在后台"
+对话选项,Langlier's Talisman,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Langlier's Talisman
+条件文本：是，具体触发条件留在后台
+条件：Must carry Langlier's Talisman"
+对话选项,Sir Evan Maddox,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Sir Evan Maddox
+条件文本：是，具体触发条件留在后台"
+对话选项,Maddox Defeated,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Maddox Defeated
+条件文本：是，具体触发条件留在后台"
+对话选项,Chat,,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens
+话题：Chat
+条件文本：是，具体触发条件留在后台"
+对话选项,Goblin Camp,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Goblin Camp
+条件文本：是，具体触发条件留在后台"
+对话选项,Goblin Camp Search,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Goblin Camp Search
+条件文本：是，具体触发条件留在后台"
+对话选项,Rilrak Defeated,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rilrak Defeated
+条件文本：是，具体触发条件留在后台"
+对话选项,Chat,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Chat
+条件文本：是，具体触发条件留在后台"
+对话选项,Rotten Tower,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower
+条件文本：是，具体触发条件留在后台"
+对话选项,Rotten Tower Search,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Search
+条件文本：是，具体触发条件留在后台"
+对话选项,Rotten Tower Found,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+条件文本：是，具体触发条件留在后台"
+对话选项,Rotten Tower Found,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Rotten Tower Found
+条件文本：是，具体触发条件留在后台"
+对话选项,Reanimated Skeleton,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Reanimated Skeleton
+条件文本：是，具体触发条件留在后台"
+对话选项,Skeleton Defeated,,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost
+话题：Skeleton Defeated
+条件文本：是，具体触发条件留在后台"
+角色名称,"Talrych, Captured Trader",,"资源范围：Alpha Demo（旧版）
+角色：Talrych, Captured Trader
+可能出现地点：Caves Level 1"
+角色名称,"Guill, Scribe of the Order",,"资源范围：Alpha Demo（旧版）
+角色：Guill, Scribe of the Order
+可能出现地点：Goblin Warrens"
+角色名称,"Kayl, Alchemist",,"资源范围：Alpha Demo（旧版）
+角色：Kayl, Alchemist
+可能出现地点：Frontier Outpost"
+角色名称,"Kenrik, Trade Guild",,"资源范围：Alpha Demo（旧版）
+角色：Kenrik, Trade Guild
+可能出现地点：Frontier Outpost"
+角色名称,"Lorund, Smith",,"资源范围：Alpha Demo（旧版）
+角色：Lorund, Smith
+可能出现地点：Frontier Outpost"
+角色名称,"Martigan, Overseer",,"资源范围：Alpha Demo（旧版）
+角色：Martigan, Overseer
+可能出现地点：Frontier Outpost"
+角色名称,"Nerin, Bowyer",,"资源范围：Alpha Demo（旧版）
+角色：Nerin, Bowyer
+可能出现地点：Frontier Outpost"
+角色名称,Statue Guardian (Fire),,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Fire)
+可能出现地点：Brothers' Sacrifice Room"
+角色名称,Statue Guardian (Ice),,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Ice)
+可能出现地点：Brothers' Sacrifice Room"
+角色名称,Statue Guardian (Wind),,"资源范围：Alpha Demo（旧版）
+角色：Statue Guardian (Wind)
+可能出现地点：Brothers' Sacrifice Room"
+敌人名称,Grisbon,,资源范围：Alpha Demo（旧版）
+敌人名称,"Krakatoa, Antlion Burster",,资源范围：Alpha Demo（旧版）
+敌人名称,Miner,,资源范围：Alpha Demo（旧版）
+敌人名称,Apprentice Necromancer,,资源范围：Alpha Demo（旧版）
+敌人名称,Professor Langlier,,资源范围：Alpha Demo（旧版）
+敌人名称,Reanimated Skeleton,,资源范围：Alpha Demo（旧版）
+敌人名称,"Rilrak, Goblin Shaman",,资源范围：Alpha Demo（旧版）
+敌人名称,Scathelocke,,资源范围：Alpha Demo（旧版）
+敌人名称,Sir Evan Maddox,,资源范围：Alpha Demo（旧版）
+敌人名称,Skeletal Prophet,,资源范围：Alpha Demo（旧版）
+敌人名称,Skeletal Thundersword,,资源范围：Alpha Demo（旧版）
+敌人名称,The Warden,,资源范围：Alpha Demo（旧版）
+敌人名称,"Ukkonen, Goblin Chieftain",,资源范围：Alpha Demo（旧版）
+敌人名称,Vesuvvio (the Destroyer),,资源范围：Alpha Demo（旧版）
+物品名称,Broken Dagger,,"资源范围：Alpha Demo（旧版）
+物品：Broken Dagger
+物品类别：Main Hand"
+物品名称,Seven-league boots,,"资源范围：Alpha Demo（旧版）
+物品：Seven-league boots
+物品说明：These enchanted boots are prized possessions of Courier guildsmen.
+物品类别：Feet
+条件文本：是，具体触发条件留在后台"
+物品名称,Ashwood Wand,,"资源范围：Alpha Demo（旧版）
+物品：Ashwood Wand
+物品说明：The secrets to harvesting Yggdrasil twigs are known only to traitorous dryads.
+物品类别：Main Hand
+条件文本：是，具体触发条件留在后台"
+物品名称,Lawman's Sidearm,,"资源范围：Alpha Demo（旧版）
+物品：Lawman's Sidearm
+物品说明：The workmanship on this blade appears hurried, as if forged under the fever of vigilance.
+物品类别：Main Hand
+条件文本：是，具体触发条件留在后台"
+物品名称,Forgotten Ring,,"资源范围：Alpha Demo（旧版）
+物品：Forgotten Ring
+物品说明：Faded memories are vivid to the wearer of this silver band.
+物品类别：Ring"
+物品名称,Averguard Tome,,"资源范围：Alpha Demo（旧版）
+物品：Averguard Tome
+物品类别：Book"
+物品名称,Averguard Key,,"资源范围：Alpha Demo（旧版）
+物品：Averguard Key
+物品类别：Key"
+物品名称,Langlier's Talisman,,"资源范围：Alpha Demo（旧版）
+物品：Langlier's Talisman
+物品类别：Gem"
+物品名称,Scathelocke's Spellbook,,"资源范围：Alpha Demo（旧版）
+物品：Scathelocke's Spellbook
+物品类别：Artifact"
+物品名称,Scathelocke's Key,,"资源范围：Alpha Demo（旧版）
+物品：Scathelocke's Key
+物品类别：Key"
+物品名称,Vesuvvio's Key,,"资源范围：Alpha Demo（旧版）
+物品：Vesuvvio's Key
+物品类别：Key"
+物品名称,Grisbon's Key,,"资源范围：Alpha Demo（旧版）
+物品：Grisbon's Key
+物品类别：Key"
+物品描述,Restore 50% of maximum HP,,"资源范围：Alpha Demo（旧版）
+物品：Health Potion
+物品类别：Potion
+用途：Item use/equipped power description"
+物品描述,Restore 50% of maximum MP,,"资源范围：Alpha Demo（旧版）
+物品：Mana Potion
+物品类别：Potion
+用途：Item use/equipped power description"
+物品描述,The secrets to harvesting Yggdrasil twigs are known only to traitorous dryads.,,"资源范围：Alpha Demo（旧版）
+物品：Ashwood Wand
+物品类别：Main Hand
+条件文本：是，具体触发条件留在后台"
+物品描述,"The workmanship on this blade appears hurried, as if forged under the fever of vigilance.",,"资源范围：Alpha Demo（旧版）
+物品：Lawman's Sidearm
+物品类别：Main Hand
+条件文本：是，具体触发条件留在后台"
+物品描述,Faded memories are vivid to the wearer of this silver band.,,"资源范围：Alpha Demo（旧版）
+物品：Forgotten Ring
+物品类别：Ring"
+物品描述,This tome bears the seal of the Averguard,,"资源范围：Alpha Demo（旧版）
+物品：Averguard Tome
+物品类别：Book
+用途：Item use/equipped power description"
+物品描述,Opens special doors in Averguard Keep,,"资源范围：Alpha Demo（旧版）
+物品：Averguard Key
+物品类别：Key
+用途：Item use/equipped power description"
+物品描述,Etched runes surround this talisman,,"资源范围：Alpha Demo（旧版）
+物品：Langlier's Talisman
+物品类别：Gem
+用途：Item use/equipped power description"
+物品描述,Opens Scathelocke's Runed Chest,,"资源范围：Alpha Demo（旧版）
+物品：Scathelocke's Key
+物品类别：Key
+用途：Item use/equipped power description"
+物品描述,Opens Vesuvvio's Runed Chest,,"资源范围：Alpha Demo（旧版）
+物品：Vesuvvio's Key
+物品类别：Key
+用途：Item use/equipped power description"
+物品描述,Opens Grisbon's Runed Chest,,"资源范围：Alpha Demo（旧版）
+物品：Grisbon's Key
+物品类别：Key
+用途：Item use/equipped power description"
+物品属性与类别,Sage's Wardrobe,,资源范围：Alpha Demo（旧版）
+技能名称,Ember Shot,,"资源范围：Alpha Demo（旧版）
+技能：Ember Shot
+技能说明：Fire a spray of burning embers at close range. Effective against armored enemies.
+条件文本：是，具体触发条件留在后台"
+技能名称,Revert Form,,"资源范围：Alpha Demo（旧版）
+技能：Revert Form
+技能说明：Transform back to human"
+技能名称,Thunderstrike,,"资源范围：Alpha Demo（旧版）
+技能：Thunderstrike
+技能说明：Lightning strikes from the sky to stun enemies
+条件文本：是，具体触发条件留在后台"
+技能名称,Shock [enemy],,"资源范围：Alpha Demo（旧版）
+技能：Shock [enemy]
+技能说明：Electrocute an enemy from a distance; +50% crit chance against movement-impaired enemies.
+条件文本：是，具体触发条件留在后台"
+技能名称,Arrow Wall Strike,,"资源范围：Alpha Demo（旧版）
+技能：Arrow Wall Strike"
+技能名称,Orange Spark,,"资源范围：Alpha Demo（旧版）
+技能：Orange Spark"
+技能名称,Blue Spark,,"资源范围：Alpha Demo（旧版）
+技能：Blue Spark"
+技能名称,Red Spark,,"资源范围：Alpha Demo（旧版）
+技能：Red Spark"
+技能描述,Raise your shield to raise your avoidance by 10% and absorb by 1-5. Chance to reflect missiles increased by 50%.,,"资源范围：Alpha Demo（旧版）
+技能：Block
+条件文本：是，具体触发条件留在后台"
+技能描述,"Attack all enemies in a wide arc, dealing 50% of melee weapon damage",,"资源范围：Alpha Demo（旧版）
+技能：Cleave
+条件文本：是，具体触发条件留在后台"
+技能描述,Fire a spray of burning embers at close range. Effective against armored enemies.,,"资源范围：Alpha Demo（旧版）
+技能：Ember Shot
+条件文本：是，具体触发条件留在后台"
+技能描述,Electrocute an enemy from a distance; +50% crit chance against movement-impaired enemies.,,"资源范围：Alpha Demo（旧版）
+技能：Shock
+条件文本：是，具体触发条件留在后台"
+技能描述,Lightning strikes from the sky to stun enemies,,"资源范围：Alpha Demo（旧版）
+技能：Thunderstrike
+条件文本：是，具体触发条件留在后台"
+技能描述,Electrocute an enemy from a distance; +50% crit chance against movement-impaired enemies.,,"资源范围：Alpha Demo（旧版）
+技能：Shock [enemy]
+条件文本：是，具体触发条件留在后台"
+任务说明,Defeat Ukkonen in the Goblin Warrens.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Report your victory over Ukkonen to Guill in the Goblin Warrens.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Search Ukkonen's lair in the Goblin Warrens for a missing Averguard Tome.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Deliver the Averguard Tome to Guill in the Goblin Warrens.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Find the Averguard Key. It is held in Averguard Prison.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Tell Guill that you have found the Averguard Key.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Use the Averguard Key to enter the burial chamber deep within Averguard Temple.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,The Averguard Key did not open the burial chamber door. Speak to Guill for help.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Search the Averguard Academy for Professor Langlier's secret to breaking the Burial Chamber seal.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Show Langlier's Talisman to Guill.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Enter the Averguard Temple burial chamber and defeat Sir Evan Maddox.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Report Maddox's defeat to Guill,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Defeat the goblins at the River Encampment,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,River Encampment cleared. Return to Martigan for your reward.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Find a way to destroy the large pillar near the lake.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Use the blasting powder you found to destroy the large pillar.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Run! You don't want to be caught in the blast of your own explosion!,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Search for the name of the ice wizard to pass the statue guardian.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Search for the name of the fire wizard to pass the statue guardian.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Search for the name of the wind wizard to pass the statue guardian.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,"Pass the ice statue guardian by using the name ""Scathelocke"".",,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,"Pass the fire statue guardian by using the name ""Vesuvvio"".",,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,"Pass the wind statue guardian by using the name ""Grisbon"".",,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,"Kill the three necromancer brothers: Scathelocke, Grisbon and Vesuvvio.",,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Use Scathelocke's Key to open his runed chest.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Use Vesuvvio's Key to open his runed chest.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Use Grisbon's Key to open his runed chest.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Find and defeat the Reanimated Skeleton in Mineshaft Longsword.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Report the defeat of the Reanimated Skeleton to Martigan.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Search the rotten tower south west of the Frontier Plains.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Inspect the tower more closely.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+任务说明,Return to Martigan and tell him about the abandoned tower.,,"资源范围：Alpha Demo（旧版）
+条件文本：是，具体触发条件留在后台"
+地点名称,Ancient Temple,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map location title"
+地点名称,Averguard Academy,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map location title"
+地点名称,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map location title"
+地点名称,Averguard Complex,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map location title"
+地点名称,Averguard Prison,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map location title"
+地点名称,Averguard Temple,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map location title"
+地点名称,Brothers' Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map location title"
+地点名称,Brothers' Lair Fire Hall,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map location title"
+地点名称,Brothers' Lair Ice Hall,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map location title"
+地点名称,Brothers' Sacrifice Room,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Sacrifice Room
+用途：Map location title"
+地点名称,Brothers' Lair Wind Hall,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map location title"
+地点名称,Caves Level 1,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map location title"
+地点名称,Cave of Living Bones 1,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map location title"
+地点名称,Cave of Living Bones 2,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map location title"
+地点名称,Cave of Living Bones 3,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 3
+用途：Map location title"
+地点名称,Frontier Outpost,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Outpost
+用途：Map location title"
+地点名称,Frontier Plains,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map location title"
+地点名称,Goblin Warrens,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map location title"
+地点名称,Lost Mines Level 1,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map location title"
+地点名称,Mineshaft Longsword,,"资源范围：Alpha Demo（旧版）
+地点：Mineshaft Longsword
+用途：Map location title"
+地点名称,River Encampment,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map location title"
+地点名称,Warp Zone,,"资源范围：Alpha Demo（旧版）
+地点：Warp Zone
+用途：Map location title"
+地点名称,White Wind,,"资源范围：Alpha Demo（旧版）
+地点：White Wind
+用途：Map location title"
+地点名称,Ydrakka Pass,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map location title"
+场景提示,Frontier Plains,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,In Memoriam,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip"
+场景提示,Warp Zone,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Langlier's Tomb,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction tooltip"
+场景提示,Goblin Warrens,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction tooltip"
+场景提示,Averguard Temple,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction tooltip"
+场景提示,Averguard Prison,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction tooltip"
+场景提示,Averguard Academy,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction tooltip"
+场景提示,Averguard Complex,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction tooltip"
+场景提示,Warp Zone,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction tooltip"
+场景提示,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Switch System,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction tooltip"
+场景提示,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip"
+场景提示,Switch,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction tooltip"
+场景提示,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip"
+场景提示,Switch,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip"
+场景提示,Sealed Temple Door,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Key"
+场景提示,Activate Talisman,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Maddox's Tomb,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip"
+场景提示,Sealed Temple Door,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Brothers' Lair Ice Hall,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction tooltip"
+场景提示,Brothers' Sacrifice Room,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction tooltip"
+场景提示,Cave of Living Bones 2,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Fire Hall,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Wind Hall,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction tooltip"
+场景提示,Warp Zone,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台
+条件：Must carry Vesuvvio's Key"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Suspicious Bookcase,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Bookcase,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台
+条件：Must carry Scathelocke's Key"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台
+条件：Must carry Scathelocke's Key"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Bookcase,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Bookcase,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Sacrifice Room
+用途：Map interaction tooltip"
+场景提示,Rising Wind Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Rising Fire Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Rising Ice Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Falling Ice Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Falling Wind Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Falling Fire Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Waiting Wind Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Waiting Fire Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Waiting Ice Switch,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台
+条件：Must carry Grisbon's Key"
+场景提示,Runed Chest,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Goblin Warrens,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Lost Mines Level 1,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Mine Cart,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Mine Cart,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction tooltip"
+场景提示,Ydrakka Pass,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Cave of Living Bones 2,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 1
+用途：Map interaction tooltip"
+场景提示,Cave of Living Bones 1,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip"
+场景提示,Cave of Living Bones 3,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip"
+场景提示,Brothers' Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip"
+场景提示,Giant Pillar,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Place Explosive,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Cave of Living Bones 2,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 3
+用途：Map interaction tooltip"
+场景提示,Crate of Blasting Powder,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 3
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 3
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 3
+用途：Map interaction tooltip"
+场景提示,Mineshaft Longsword,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Outpost
+用途：Map interaction tooltip"
+场景提示,Frontier Plains,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Outpost
+用途：Map interaction tooltip"
+场景提示,Stash,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Outpost
+用途：Map interaction tooltip"
+场景提示,Warp Zone,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Outpost
+用途：Map interaction tooltip"
+场景提示,Frontier Outpost,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,River Encampment,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Ydrakka Pass,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,White Wind,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Ancient Temple,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Plains
+用途：Map interaction tooltip"
+场景提示,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Caves Level 1,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Ydrakka Pass,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Book Stand,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction tooltip"
+场景提示,Caves Level 1,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Stalagmite Pillar,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Treasure Chest,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction tooltip"
+场景提示,Frontier Outpost,,"资源范围：Alpha Demo（旧版）
+地点：Mineshaft Longsword
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Mineshaft Longsword
+用途：Map interaction tooltip"
+场景提示,Crate,,"资源范围：Alpha Demo（旧版）
+地点：Mineshaft Longsword
+用途：Map interaction tooltip"
+场景提示,Barrel,,"资源范围：Alpha Demo（旧版）
+地点：Mineshaft Longsword
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map interaction tooltip"
+场景提示,Frontier Plains,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：River Encampment
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Ancient Temple,,"资源范围：Alpha Demo（旧版）
+地点：Warp Zone
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Frontier Outpost,,"资源范围：Alpha Demo（旧版）
+地点：Warp Zone
+用途：Map interaction tooltip"
+场景提示,Ydrakka Pass,,"资源范围：Alpha Demo（旧版）
+地点：Warp Zone
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Averguard Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Warp Zone
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Brothers Lair Atrium,,"资源范围：Alpha Demo（旧版）
+地点：Warp Zone
+用途：Map interaction tooltip
+条件文本：是，具体触发条件留在后台"
+场景提示,Frontier Plains,,"资源范围：Alpha Demo（旧版）
+地点：White Wind
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：White Wind
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：White Wind
+用途：Map interaction tooltip"
+场景提示,Goblin Warrens,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction tooltip"
+场景提示,Goblin Warrens,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction tooltip"
+场景提示,Frontier Plains,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction tooltip"
+场景提示,Cave of Living Bones 1,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction tooltip"
+场景提示,Supplies,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction tooltip"
+场景提示,Warp Zone,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction tooltip"
+制作人员表标签,Flare Game Credits - alpha_demo,,资源范围：Alpha Demo（旧版）
+制作人员表标签,Content Designers,,资源范围：Alpha Demo（旧版）
+制作人员表标签,Translators,,资源范围：Alpha Demo（旧版）
+UI,Fire,,"资源范围：Alpha Demo（旧版）
+用途：Element label"
+UI,Ice,,"资源范围：Alpha Demo（旧版）
+用途：Element label"
+UI,Air,,"资源范围：Alpha Demo（旧版）
+用途：Element label"
+UI,Earth,,"资源范围：Alpha Demo（旧版）
+用途：Element label"
+UI,Light,,"资源范围：Alpha Demo（旧版）
+用途：Element label"
+UI,Shadow,,"资源范围：Alpha Demo（旧版）
+用途：Element label"
+UI,Grand Master,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Master,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Warlord,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Archwizard,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Sniper,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Templar,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Assassin,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Lord,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Tempest,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,High Priest,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Battle Archmage,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,High Warden,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Hero,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Wizard,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Paladin,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Rogue,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Knight,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Striker,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Cleric,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Battle Mage,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Warden,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Adventurer,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Knave,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Squire,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Slinger,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Shepherd,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Sparkblade,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,Watch,,"资源范围：Alpha Demo（旧版）
+用途：Character title"
+UI,The original alpha game for Flare.,,资源范围：Alpha Demo（旧版）
+系统消息,"Tho' Nature, red in tooth and claw; With ravine, shriek'd against his creed",,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction message"
+系统消息,Ancient Temple waypoint discovered.,,"资源范围：Alpha Demo（旧版）
+地点：Ancient Temple
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"""Some say the Averguard Academy is the greatest collection of knowledge within the empire.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction message"
+系统消息,"""Professor Langlier is High Sage of the Averguard.  Several volumes kept here are his own writings.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction message"
+系统消息,"""The Academy is only open to oathkeeping members of the Averguard.  Few others know of its existence.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction message"
+系统消息,"""The peasants could not be trusted with literacy.  Most gave up their books without incident.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction message"
+系统消息,This false book has a secret compartment.,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,This tomb glows with magical runes.,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Academy
+用途：Map interaction message"
+系统消息,Averguard Atrium waypoint discovered,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Atrium
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"This book is entitled ""Training Your Antlion"". Chapter 1 is ""How Not To Get Eaten"". The rest of the book is unfinished.",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Complex
+用途：Map interaction message"
+系统消息,"The last entry of this well-preserved journal reads: ""I feared it would come to this.  I knew the Warden's secrets but they would not be contained forever.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Prison
+用途：Map interaction message"
+系统消息,"You insert the Averguard Key. Runes glow around the door, then fade. The door is still sealed.",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台
+条件：Must carry Averguard Key"
+系统消息,You read aloud the runes on Langlier's Talisman. The Avergard Key begins to glow!,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"""Some said Sir Maddox cared too much for the peasants.  He would not quarantine, saying the villagers did not deserve to die locked away.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message"
+系统消息,"""Maddox died of the plague in 638.  After attempts to magically revive him failed he was sealed deep behind the temple.""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message"
+系统消息,This chest is locked.,,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"A plaque under the statue reads ""Sir Evan Maddox, may he return to rescue us all""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message"
+系统消息,"A ghastly voice reverberates from the next chamber.  ""What fool disturbs my tomb?!""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message"
+系统消息,"You wipe dust away from the tomb lid, revealing an inscription: ""Here lies Sir Evan Maddox""",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message"
+系统消息,"A locked gate is here, with a small keyhole in the center.",,"资源范围：Alpha Demo（旧版）
+地点：Averguard Temple
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,Brothers Lair Atrium waypoint discovered,,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Atrium
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"""Today Pompeii got a little over-excited to meet me and blew himself up. So I had to go into the caves and catch myself a NEW antlion burster. Again. I think I'm going to name this one 'Krakatoa'. ~Vesuvvio (the Destroyer)""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Fire Hall
+用途：Map interaction message"
+系统消息,"""When we could no longer stand the idiotic practices of our master, I hatched a plan to kill him. My brothers agreed the deed had to be done.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""In accordance with our plan, G. asked the old fool to teach him about the preparation of corpses in the later stages of decay. Naturally, the corpse in question was a cleverly disguised bomb made by V.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""My brothers and I wandered around for a few days. In an incredible stroke of luck, we encountered a master necromancer who, seeing the marks of banishment on our foreheads, took us as his apprentices.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""We grew swiftly under the tutelage of the necromancer. The more we learned, the more we realized we could do better than the short-sighted git.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""My brothers V. and G. used to go to a wizard's academy with me. We were top students until one day V. killed another student in a spontaneous fit of rage.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""Naturally, V. was expelled for his crime. It was foolish of us, but G. and I decided to defend our brother. We were expelled too. The wizards magically marked us with a sign of banishment on our foreheads so that no wizard would dare teach us.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""G. suggested that each of us should take one of the halls in the old necromancer's lair.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""It's days like today that make me wonder if I should go a step further and eliminate V. and G. too... they're getting on my nerves. ~Scathelocke""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Ice Hall
+用途：Map interaction message"
+系统消息,"""Fire is either Falling or Waiting. One element, one temperament.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction message"
+系统消息,"""Wind is not Rising. Wind is Falling on the firmament.""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction message"
+系统消息,"""People used to ask me why I use a sword rather than a wand. It never occurs to them that the metal blade can conduct and channel lightning as well as (or better than!) any enchanted twig. ~Grisbon""",,"资源范围：Alpha Demo（旧版）
+地点：Brothers' Lair Wind Hall
+用途：Map interaction message"
+系统消息,The crumbling walls of the south tunnel are held up by planks of rotting wood.,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction message"
+系统消息,These goblins have captured a human trader.  Human bones are carefully arranged around the pillar in preparation for a goblin ritual.,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction message"
+系统消息,"Talrych says, ""You arrived just in time.  Please, take this.""",,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction message"
+系统消息,The walls collapse inward and rubble blocks off the passage!,,"资源范围：Alpha Demo（旧版）
+地点：Caves Level 1
+用途：Map interaction message"
+系统消息,This pillar is laced with cracks and crevices. Maybe with enough force it can be knocked down.,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,Run! You don't want to be caught in the blast of your own explosion!,,"资源范围：Alpha Demo（旧版）
+地点：Cave of Living Bones 2
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,Frontier Outpost waypoint discovered.,,"资源范围：Alpha Demo（旧版）
+地点：Frontier Outpost
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,This book bears the seal of the Averguard,,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"""In the Age of Settlement, the Averguard Knights defended peasants against the chaos of the wilderness.""",,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction message"
+系统消息,"""Sir Evan Maddox led the Averguard when the plague struck.  Powerful clerics from the corners of the world were brought here.  By the time a cure was found it was too late.""",,"资源范围：Alpha Demo（旧版）
+地点：Goblin Warrens
+用途：Map interaction message"
+系统消息,It looks like the necromancer has been raising the corpses of dead miners as his minions.,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction message"
+系统消息,A natural underground river flows through this room.,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction message"
+系统消息,"The river appears to have swollen recently, covering the location where the tracks once were.",,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction message"
+系统消息,The undead in this room are dressed in the remnants of shredded mining clothes.,,"资源范围：Alpha Demo（旧版）
+地点：Lost Mines Level 1
+用途：Map interaction message"
+系统消息,You spot the abandoned tower in the distance.,,"资源范围：Alpha Demo（旧版）
+地点：White Wind
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,"Looking through the grate, you confirm the tower is empty.",,"资源范围：Alpha Demo（旧版）
+地点：White Wind
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+系统消息,Ydrakka Pass waypoint discovered.,,"资源范围：Alpha Demo（旧版）
+地点：Ydrakka Pass
+用途：Map interaction message
+条件文本：是，具体触发条件留在后台"
+对话,"So Tiled allows us to draw maps. As the name suggests, this world is created by lots of tiles. Think of a tile as the smallest possible unit for mapping.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+后文（英文）：Player: So the throne next to you is a tile? / Programmer: Exactly, as you cannot break the throne apart in this game. Now take Tiled and load this map."
+对话,So the throne next to you is a tile?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Programmer: So Tiled allows us to draw maps. As the name suggests, this world is created by lots of tiles. Think of a tile as the smallest possible unit for mapping.
+后文（英文）：Programmer: Exactly, as you cannot break the throne apart in this game. Now take Tiled and load this map."
+对话,"Exactly, as you cannot break the throne apart in this game. Now take Tiled and load this map.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: So Tiled allows us to draw maps. As the name suggests, this world is created by lots of tiles. Think of a tile as the smallest possible unit for mapping. / Player: So the throne next to you is a tile?"
+对话,"Now we'll talk about the collision layer. That layer determines, where you can walk.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+后文（英文）：Player: I want to walk everywhere I want! Except for the walls of course. / Programmer: Then cross the room please. Check the mini map. There is some collision in the room."
+对话,I want to walk everywhere I want! Except for the walls of course.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Programmer: Now we'll talk about the collision layer. That layer determines, where you can walk.
+后文（英文）：Programmer: Then cross the room please. Check the mini map. There is some collision in the room. / Player: An invisible wall?"
+对话,Then cross the room please. Check the mini map. There is some collision in the room.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: Now we'll talk about the collision layer. That layer determines, where you can walk. / Player: I want to walk everywhere I want! Except for the walls of course.
+后文（英文）：Player: An invisible wall? / Programmer: Actually a few. Some of the invisible walls are not even visible in the mini map. If you get lost, check the collision layer of this map."
+对话,An invisible wall?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Player: I want to walk everywhere I want! Except for the walls of course. / Programmer: Then cross the room please. Check the mini map. There is some collision in the room.
+后文（英文）：Programmer: Actually a few. Some of the invisible walls are not even visible in the mini map. If you get lost, check the collision layer of this map."
+对话,"Actually a few. Some of the invisible walls are not even visible in the mini map. If you get lost, check the collision layer of this map.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: Then cross the room please. Check the mini map. There is some collision in the room. / Player: An invisible wall?"
+对话,"You could have also used your developer console, to teleport out of the jail.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+后文（英文）：Player: How do I access the console? / Programmer: Press F5. You can type ‘help’ to see a list of all the commands and type a command to see a hint on how to use the command."
+对话,How do I access the console?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Programmer: You could have also used your developer console, to teleport out of the jail.
+后文（英文）：Programmer: Press F5. You can type ‘help’ to see a list of all the commands and type a command to see a hint on how to use the command."
+对话,Press F5. You can type ‘help’ to see a list of all the commands and type a command to see a hint on how to use the command.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: You could have also used your developer console, to teleport out of the jail. / Player: How do I access the console?"
+对话,Did you notice the last room?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：Last Room
+说话人：Programmer
+后文（英文）：Player: It is very boring, I hasted through it, glad I made it here. / Programmer: Better go back again to perceive the mood there."
+对话,"It is very boring, I hasted through it, glad I made it here.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：Last Room
+说话人：Player
+前文（英文）：Programmer: Did you notice the last room?
+后文（英文）：Programmer: Better go back again to perceive the mood there. / Player: Why?"
+对话,Better go back again to perceive the mood there.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：Last Room
+说话人：Programmer
+前文（英文）：Programmer: Did you notice the last room? / Player: It is very boring, I hasted through it, glad I made it here.
+后文（英文）：Player: Why? / Programmer: So you'll never make the mistake to make boring maps. Remember to bring in some random elements."
+对话,Why?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：Last Room
+说话人：Player
+前文（英文）：Player: It is very boring, I hasted through it, glad I made it here. / Programmer: Better go back again to perceive the mood there.
+后文（英文）：Programmer: So you'll never make the mistake to make boring maps. Remember to bring in some random elements."
+对话,So you'll never make the mistake to make boring maps. Remember to bring in some random elements.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：Last Room
+说话人：Programmer
+前文（英文）：Programmer: Better go back again to perceive the mood there. / Player: Why?"
+对话,This room was constructed by a genious.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：This Room
+说话人：Player
+后文（英文）：Programmer: No, the creator was plain stupid. He did not know how to use the tiles correctly. It disturbs the game feeling as well. / Programmer: I'm just here for the fire place."
+对话,"No, the creator was plain stupid. He did not know how to use the tiles correctly. It disturbs the game feeling as well.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：This Room
+说话人：Programmer
+前文（英文）：Player: This room was constructed by a genious.
+后文（英文）：Programmer: I'm just here for the fire place."
+对话,I'm just here for the fire place.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：This Room
+说话人：Programmer
+前文（英文）：Player: This room was constructed by a genious. / Programmer: No, the creator was plain stupid. He did not know how to use the tiles correctly. It disturbs the game feeling as well."
+对话,So did you open this map?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+后文（英文）：Player: Not yet, I got lost in the folder structure. / Programmer: There is the folder tiled in the repository, which contains files ending in *.tmx. That's the maps you're looking for. This map should be found at devlab/lab_mapping.tmx"
+对话,"Not yet, I got lost in the folder structure.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Programmer: So did you open this map?
+后文（英文）：Programmer: There is the folder tiled in the repository, which contains files ending in *.tmx. That's the maps you're looking for. This map should be found at devlab/lab_mapping.tmx / Player: Ok found it. Can I just edit the file and save to get my changes in the game?"
+对话,"There is the folder tiled in the repository, which contains files ending in *.tmx. That's the maps you're looking for. This map should be found at devlab/lab_mapping.tmx",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: So did you open this map? / Player: Not yet, I got lost in the folder structure.
+后文（英文）：Player: Ok found it. Can I just edit the file and save to get my changes in the game? / Programmer: No, the tmx format is powerful and complicated, in the flare engine we're rather using a simplified format ending in *.txt. So you need to export the map to a Flare map."
+对话,Ok found it. Can I just edit the file and save to get my changes in the game?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Player: Not yet, I got lost in the folder structure. / Programmer: There is the folder tiled in the repository, which contains files ending in *.tmx. That's the maps you're looking for. This map should be found at devlab/lab_mapping.tmx
+后文（英文）：Programmer: No, the tmx format is powerful and complicated, in the flare engine we're rather using a simplified format ending in *.txt. So you need to export the map to a Flare map. / Player: The export dialog is asking for a file location. This map should be exported to mods/devlab/maps/lab_mapping.txt"
+对话,"No, the tmx format is powerful and complicated, in the flare engine we're rather using a simplified format ending in *.txt. So you need to export the map to a Flare map.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: There is the folder tiled in the repository, which contains files ending in *.tmx. That's the maps you're looking for. This map should be found at devlab/lab_mapping.tmx / Player: Ok found it. Can I just edit the file and save to get my changes in the game?
+后文（英文）：Player: The export dialog is asking for a file location. This map should be exported to mods/devlab/maps/lab_mapping.txt / Programmer: You're learning pretty fast. Now continue to the next room, where we'll talk about tilesets."
+对话,The export dialog is asking for a file location. This map should be exported to mods/devlab/maps/lab_mapping.txt,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Player: Ok found it. Can I just edit the file and save to get my changes in the game? / Programmer: No, the tmx format is powerful and complicated, in the flare engine we're rather using a simplified format ending in *.txt. So you need to export the map to a Flare map.
+后文（英文）：Programmer: You're learning pretty fast. Now continue to the next room, where we'll talk about tilesets."
+对话,"You're learning pretty fast. Now continue to the next room, where we'll talk about tilesets.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: No, the tmx format is powerful and complicated, in the flare engine we're rather using a simplified format ending in *.txt. So you need to export the map to a Flare map. / Player: The export dialog is asking for a file location. This map should be exported to mods/devlab/maps/lab_mapping.txt"
+对话,Now let's talk about tilesets. A tileset is an image containing all the tiles you see in the game.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+后文（英文）：Player: But there are so many different places, like dungeons or the outside world. That would be a very large image? / Programmer: Every map in flare only has one style. Each style is in one tileset. In Tiled you may see multiple tilesets per map however."
+对话,"But there are so many different places, like dungeons or the outside world. That would be a very large image?",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Programmer: Now let's talk about tilesets. A tileset is an image containing all the tiles you see in the game.
+后文（英文）：Programmer: Every map in flare only has one style. Each style is in one tileset. In Tiled you may see multiple tilesets per map however."
+对话,Every map in flare only has one style. Each style is in one tileset. In Tiled you may see multiple tilesets per map however.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: Now let's talk about tilesets. A tileset is an image containing all the tiles you see in the game. / Player: But there are so many different places, like dungeons or the outside world. That would be a very large image?"
+对话,Welcome to the Map drawing part of the Developer's Laboratory mod for Flare. Here we deal with the surrounding area like rooms and walls.,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+后文（英文）：Player: and doors? / Programmer: Sure, doors as well! To be prepared for this tutorial, visit www.mapeditor.org and checkout Tiled, our mapeditor. Also you need to get the maps and the art of this level, so better checkout https://github.com/flareteam/flare-game"
+对话,and doors?,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Player
+前文（英文）：Programmer: Welcome to the Map drawing part of the Developer's Laboratory mod for Flare. Here we deal with the surrounding area like rooms and walls.
+后文（英文）：Programmer: Sure, doors as well! To be prepared for this tutorial, visit www.mapeditor.org and checkout Tiled, our mapeditor. Also you need to get the maps and the art of this level, so better checkout https://github.com/flareteam/flare-game"
+对话,"Sure, doors as well! To be prepared for this tutorial, visit www.mapeditor.org and checkout Tiled, our mapeditor. Also you need to get the maps and the art of this level, so better checkout https://github.com/flareteam/flare-game",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+说话人：Programmer
+前文（英文）：Programmer: Welcome to the Map drawing part of the Developer's Laboratory mod for Flare. Here we deal with the surrounding area like rooms and walls. / Player: and doors?"
+对话,"Welcome to DevLab, the Developer's Laboratory (or Labyrinth!) mod for Flare. Here you'll find a series of rooms that demonstrate various options and scripting for Flare.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Welcome
+说话人：Programmer
+后文（英文）：Programmer: By editing the devlab maps in Tiled and looking at the devlab data files, you'll learn how to create Flare content."
+对话,"By editing the devlab maps in Tiled and looking at the devlab data files, you'll learn how to create Flare content.",,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Welcome
+说话人：Programmer
+前文（英文）：Programmer: Welcome to DevLab, the Developer's Laboratory (or Labyrinth!) mod for Flare. Here you'll find a series of rooms that demonstrate various options and scripting for Flare."
+对话选项,Last Room,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：Last Room"
+对话选项,This Room,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing
+话题：This Room"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Map Drawing"
+角色名称,Programmer,,"资源范围：开发教学模块
+角色：Programmer
+可能出现地点：Dev Lab - Welcome"
+地点名称,Dev Lab - Basic Lessons,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map location title"
+地点名称,Dev Lab - Map Drawing,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map location title"
+地点名称,Dev Lab - Welcome,,"资源范围：开发教学模块
+地点：Dev Lab - Welcome
+用途：Map location title"
+场景提示,Dev Lab - Welcome,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Dev Lab - Map Drawing,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Map Events,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Teleports,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Folders,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Intermediate Lessons,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Placing Enemies,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Random Enemies,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Placing NPCs,,"资源范围：开发教学模块
+地点：Dev Lab - Basic Lessons
+用途：Map interaction tooltip"
+场景提示,Dev Lab - Basic Lessons,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map interaction tooltip"
+场景提示,Book stand,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map interaction tooltip"
+场景提示,Book stand,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map interaction tooltip"
+场景提示,Runes on the ground.,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map interaction tooltip"
+场景提示,Dev Lab - Basic Lessons,,"资源范围：开发教学模块
+地点：Dev Lab - Welcome
+用途：Map interaction tooltip"
+UI,An interactive tutorial for modders.,,资源范围：开发教学模块
+系统消息,Mankind tends to lead by example. Be it good or bad.,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map interaction message"
+系统消息,Some traps cannot be escaped easily. Only those who can modify the map can get out of here.,,"资源范围：开发教学模块
+地点：Dev Lab - Map Drawing
+用途：Map interaction message"
+UI,Mage,,"资源范围：旧版缩放资源
+界面：Skills
+用途：Skill tree/category title"
+UI,A half-scale version of the alpha_demo mod.,,资源范围：旧版缩放资源
+UI,A half-scale version of the fantasycore mod.,,资源范围：缩放资源
+UI,Centered HP/MP/XP bars for fantasycore games,,资源范围：居中状态条模块
+UI,Default settings & button mapping for the GCW-Zero,,资源范围：GCW-Zero 配置

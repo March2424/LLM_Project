@@ -1,0 +1,7 @@
+# Keep published dataset checksums stable on checkout.
+data/flare/v0.2/** text eol=lf
+# Collapse generated corpus rows in PR diffs; usage and notices remain visible.
+data/flare/v0.2/*.csv linguist-generated=true
+data/flare/v0.2/*.jsonl linguist-generated=true
+data/flare/v0.2/*.json linguist-generated=true
+data/flare/v0.2/background/*.jsonl linguist-generated=true

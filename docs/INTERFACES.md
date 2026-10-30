@@ -116,6 +116,7 @@ ID 在固定快照内稳定；脚本插入/重排导致序号改变时，需要�
 
 source 只含四个核心字段；后台保存原 CSV 文件/行、额外列与参考存在状态。输入哈希、语言、上下文模式及缺译统计记录在 manifest。参考仍为未审定的离线数据；不建立 TM，不自动划分数据集，也不标记译文通过质量验证。
 
+仓库随附的 [Flare 处理后发布目录](../data/flare/v0.2/README.md) 保持相同源侧/参考侧协议。其后台是精简发布变体：保留来源、原生 ID、静态条件和声明顺序，移除原始事件脚本及目录正文，参考只从独立 reference 文件或离线双语视图读取。完整提取产物与精简发布产物分别使用各自 manifest，不要求已发布目录包含原始输入清单。
 ## M1 与 M2/M3 的接入边界（2026-10-30）
 
 `game_text.py` 中的 M1 导出类型与 `memory.py` 中的运行时 `Occurrence` 分属不同阶段。通用四列 CSV 导入器输出 source/references JSONL；`csv_graph.py` 则按显式源侧列映射直接登记 MemoryStore/GraphStore，参数及格式见 [CSV_IMPORT.md](CSV_IMPORT.md)。两套入口保留各自用途，当前没有从 localization-text/0.2 JSONL 自动写入 M2/M3 的桥接适配器。后续接入需明确 record_id 到 occurrence_id、源版本、项目、作用域和来源的映射；仅可读取源侧资料，不得将参考译文或双语查看表作为批准 TM。

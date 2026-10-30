@@ -1,0 +1,73 @@
+Flare processed localization data — upstream notices
+
+Text and translations belong to the Flare contributors and the upstream translators.
+Source strings and translations are unchanged; changes consist of extraction, classification,
+INCLUDE expansion, source-only context assembly, occurrence IDs and bilingual views.
+CSV record line endings are normalized to LF. No raw game/resource/source-code files are included.
+
+Game content: CC-BY-SA-3.0. Engine-origin material: GPL-3.0-or-later.
+These source-specific notices are retained; no single replacement license is assigned to all records.
+See licenses/ and manifest.json for the fixed source revisions; background/provenance.jsonl identifies each origin.
+
+https://github.com/flareteam/flare-game/tree/af6eee6d339ac98011864bfe89da837fe7769c28
+https://github.com/flareteam/flare-engine/tree/4075191d576a28cbf4f27ec345ee1c7ef1482756
+
+Upstream attribution/comment headers from the five Chinese catalogs follow (trailing whitespace normalized).
+Original PO/POT files and catalog syntax are not included.
+
+--- flare-engine/mods/default/languages/data.zh.po ---
+# Copyright (C) 2011 Clint Bellanger
+# This file is distributed under the same license as the FLARE package.
+#
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Translators:
+# Justin Jacobs <jajdorkster@gmail.com>, 2019
+# CodingJellyfish <dumaosen_main01@outlook.com>, 2019
+# Isaac Zhang, 2022
+#
+
+--- flare-engine/mods/default/languages/engine.zh.po ---
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+# Translators:
+# CodingJellyfish <dumaosen_main01@outlook.com>, 2021
+# Justin Jacobs <jajdorkster@gmail.com>, 2022
+# Isaac Zhang, 2025
+# Li Yang, 2026
+#
+#, fuzzy
+
+--- flare-game/mods/alpha_demo/languages/data.zh.po ---
+# Copyright (C) 2011 Clint Bellanger
+# This file is distributed under the same license as the FLARE package.
+#
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Translators:
+# Justin Jacobs <jajdorkster@gmail.com>, 2022
+#
+
+--- flare-game/mods/empyrean_campaign/languages/data.zh.po ---
+# Copyright (C) 2011 Clint Bellanger
+# This file is distributed under the same license as the FLARE package.
+#
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Translators:
+# A s <sakurafoundeded@outlook.com>, 2019
+# CodingJellyfish <dumaosen_main01@outlook.com>, 2021
+# Isaac Zhang, 2025
+# Li Yang, 2026
+#
+
+--- flare-game/mods/fantasycore/languages/data.zh.po ---
+# Copyright (C) 2011 Clint Bellanger
+# This file is distributed under the same license as the FLARE package.
+#
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Translators:
+# Justin Jacobs <jajdorkster@gmail.com>, 2018
+# CodingJellyfish <dumaosen_main01@outlook.com>, 2020
+# Li Yang, 2026
+#

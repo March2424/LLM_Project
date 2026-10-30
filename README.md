@@ -356,7 +356,9 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 
 CSV 主要格式为“类型、英文原文、中文参考译文、本地化上下文”，也接受 `text_type/source_text/reference_text/context` 英文表头。原文、参考分别写入 `source.jsonl` 和 `references.jsonl`；缺少中文时只保留源侧记录。输出目录需新建或为空。示例是自建演示文本，不作为实验语料或质量结果。接口、JSON 上下文及多文件用法见 [CSV 导入说明](docs/DATA.md#通用-csv-导入)；Flare 的原始 ID/条件/源位置仍保存在后台。
 
-Flare 全量整理需先下载公开文本快照（网络步骤），或使用已有本地输入：
+已整理的 Flare 数据现已随仓库提供：[数据与使用说明](data/flare/v0.2/README.md)。可直接读取 CSV 或分开的源文/参考 JSONL，无需下载原始文件；后台保留必要溯源。原始快照和包含原始文件的本地归档不随仓库上传。
+
+需要重新提取 Flare 资源时，再下载公开文本快照（网络步骤），或使用已有本地输入：
 
 ```bash
 python3 scripts/download_flare_sources.py

@@ -46,6 +46,7 @@ CSV 的 5 项检查始终离线运行。Flare 的 6 项集成检查只在 `artif
 
 Flare 下载是独立的可选联网步骤，默认保存到被忽略的 `artifacts/flare_full_v0.2/`；不提交下载内容和 `outputs/`。目前仍无完整 Agent、训练或评测启动入口。
 
+处理后的 Flare 快照现已随仓库放在 [data/flare/v0.2](../data/flare/v0.2/README.md)，可直接读取或导入其 CSV，不需要联网。发布数据一致性检查始终离线运行，只有重新提取资源的 6 项集成检查需要可选原始快照。
 ## 合并验证（2026-10-30）
 
 在本地执行 `PYTHONPATH=src python3 -m unittest discover -s tests -v`：发现 30 项，24 项通过，6 项 Flare 集成检查因未下载可选快照而跳过。未运行全量数据下载或真实模型。
