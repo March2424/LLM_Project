@@ -1,0 +1,3 @@
+{"key": "actors.buffs.buff.heromsg", "text": "", "path": "core/src/main/assets/messages/actors/actors.properties", "line": 135}
+{"key": "items.weapon.melee.meleeweapon.stats_desc", "text": "", "path": "core/src/main/assets/messages/items/items.properties", "line": 2063}
+{"key": "items.weapon.missiles.missileweapon.stats_desc", "text": "", "path": "core/src/main/assets/messages/items/items.properties", "line": 2283}

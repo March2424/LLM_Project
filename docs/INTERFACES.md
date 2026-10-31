@@ -125,3 +125,7 @@ source 只含四个核心字段；后台保存原 CSV 文件/行、额外列与�
 ## 自动建图接入（2026-10-30）
 
 新增 `schemas.benchmark.BenchmarkInput/BuildResult`；`data.import_benchmark()` 只读 `id,source_text,text_type,context` 四列源 CSV，登记 Occurrence 并按行数分批；不接受 group_id，不增加外层分组。`retrieval.AutoGraphBuilder.build()` 返回实体/边引用、逐项审查状态及调用ID。CandidatePool新增默认空的resolved_metadata与binding_refs；实际输入清单保存派生身份与图引用，原始Occurrence不改写。GraphRetriever.update_memory返回待批准草稿；GameSession提供最小顺序翻译集成，状态和模型调用约定见 [AUTO_GRAPH.md](AUTO_GRAPH.md)。提取与复核模型输入仅含上述四个字段，文件来源留在后台。旧四列通用 CSV 入口保持原用途，其列名和参考侧约定不同，不能混用。
+
+## Naev 数据视图的离线参考扩展
+
+Naev 源侧沿用 `id,source_text,text_type,context` 四列，模型接口不接收中文状态。[Naev 参考伴随文件](NAEV_DATA.md#中文参考状态) 使用 `record_id` 对应 CSV 的 `id`，每条源侧行都有参考状态记录：`status=translated|missing|fuzzy`，以及 `reference_text`、`fuzzy`、`reference_available`、`flags`、`match`、`source_form`、`reference_plural_index`。missing 时可为空；fuzzy 不等于批准或质量通过；单／复数源行共享中文复数索引 0 时显式标记。该扩展仅属于本数据 profile 的离线参考，不改变源侧四列契约，不应被导入批准 TM 或传回模型。其他已有参考格式保持原义。

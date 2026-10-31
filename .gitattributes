@@ -5,3 +5,17 @@ data/flare/v0.2/*.csv linguist-generated=true
 data/flare/v0.2/*.jsonl linguist-generated=true
 data/flare/v0.2/*.json linguist-generated=true
 data/flare/v0.2/background/*.jsonl linguist-generated=true
+# Source-only samples and manifests must retain their published byte hashes.
+data/flare/flare_entity_input_v0.2.csv text eol=lf linguist-generated=true
+data/flare/entity_input_background.jsonl text eol=lf linguist-generated=true
+data/game_samples.json text eol=lf
+data/shattered/** text eol=lf
+data/naev/** text eol=lf
+data/shattered/**/*.csv linguist-generated=true
+data/shattered/**/*.jsonl linguist-generated=true
+data/shattered/**/*.json linguist-generated=true
+data/naev/**/*.csv linguist-generated=true
+data/naev/**/*.jsonl linguist-generated=true
+data/naev/**/*.json linguist-generated=true
+# Significant whitespace inside upstream multiline CSV cells is not code style.
+data/naev/**/naev_entity_input.csv -whitespace
