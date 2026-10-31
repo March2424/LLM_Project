@@ -14,6 +14,9 @@
 | [TASKS.md](TASKS.md) | 里程碑、任务分工、依赖与验收 | 全组，D 汇总 |
 | [INTERFACES.md](INTERFACES.md) | 公共数据结构、模块输入输出和兼容性 | 接口提供方与调用方共同维护 |
 | [DATA.md](DATA.md) | 数据获取、划分、对齐、来源与可见范围 | A |
+| [GAME_SAMPLE_QA.md](GAME_SAMPLE_QA.md) | Flare、像素地牢、Naev 四列数据验收与参考隔离 | A/D |
+| [SHATTERED_DATA.md](SHATTERED_DATA.md) | 破碎的像素地牢固定快照、原生上下文与复现 | A |
+| [NAEV_DATA.md](NAEV_DATA.md) | Naev 生成资源、四列输入、独立缺译／fuzzy 状态 | A |
 | [LOONG_RL_PLAN.md](LOONG_RL_PLAN.md) | Loong 论文分析与四卡48GB/32小时训练建议（未执行） | B/C/D |
 | [TRAINING.md](TRAINING.md) | 上下文选择器采样、偏好、SFT/DPO 协议 | B |
 | [EVALUATION.md](EVALUATION.md) | 指标定义、Judge、基线与统一评测口径 | D |

@@ -235,7 +235,7 @@ def build_full(raw: Path, output: Path) -> dict[str, Any]:
                 return domain, key, catalogs.get(domain, {}).get(key)
         return None, (None, text), None
 
-    def emit(mod, p, t, text, kind, context, block_no=None, native_id=None, raw_conditions=None):
+    def emit(mod, p, t, text, kind, context, block_no=None, native_id=None, raw_conditions=None, native_context=()):
         domain, key, entry = choose_entry(mod, text)
         # Mark each independent catalog key represented, even if also present in another domain.
         for d in set([mod, domain]):
@@ -258,7 +258,8 @@ def build_full(raw: Path, output: Path) -> dict[str, Any]:
             "resource": str(p.relative_to(raw)), "source": source_info(t["path"], t["line"], t.get("field", "msg->get")),
             "source_column": t.get("column"),
             "include_chain": t.get("include_chain", []), "block_index": block_no, "conditions": raw_conditions or [],
-            "alignment_status": status, "quality_status": "upstream_unreviewed", "catalog": catalog_info})
+            "alignment_status": status, "quality_status": "upstream_unreviewed", "catalog": catalog_info,
+            "native_context": list(native_context)})
         reviews.append({**source, "reference_text": zh, "alignment_status": status})
         if entry is None:
             uncovered_sources.append({"record_id": rid, "source_text": text, "source": provenance[-1]["source"]})
@@ -355,7 +356,22 @@ def build_full(raw: Path, output: Path) -> dict[str, Any]:
                         if reqs:
                             context["requirements"] = reqs
                     context = {k:v for k,v in context.items() if v is not None and v != []}
-                    rid = emit(mod, p, t, text, kind, context, block_no, value(ts, "id"), raw_conditions)
+                    # Only explicit source fields enter the extraction view. Names,
+                    # descriptions and adjacent dialogue are not copied as grouping hints.
+                    clues = []
+                    def clue(label, val, token):
+                        clues.append({"field": label, "value": val,
+                            "source": source_info(token["path"], token["line"], token["field"])})
+                    if key in ("him", "her", "you"):
+                        name_token = next((q for q in reversed(header) if q.get("field") == "name"), None)
+                        if name_token:
+                            clue("npc_name", name_token["value"], name_token)
+                        clue("utterance_role", "player" if key == "you" else "npc", t)
+                    for q in ts:
+                        field = q["field"]
+                        if field.startswith("requires_") or field in {"book", "npc", "set_status", "unset_status", "pickup_status"}:
+                            clue(field, q["value"], q)
+                    rid = emit(mod, p, t, text, kind, context, block_no, value(ts, "id"), raw_conditions, clues)
                     if key in ("him", "her", "you"):
                         ids.append(rid)
                 if ids:
@@ -389,7 +405,14 @@ def build_full(raw: Path, output: Path) -> dict[str, Any]:
                 context["ui_section"] = tabs[tab[1]]
             context["usage"] = "Interface label or tooltip" if p.stem.startswith(("Menu", "Widget", "GameState")) else "Item tooltip or item feedback" if p.stem == "ItemManager" else "Skill tooltip or feedback" if "Power" in p.stem else "Engine feedback or display text"
             kind = "ui" if p.stem.startswith(("Menu", "Widget", "GameState")) else "system_message"
-            emit("engine", p, {"path":p,"line":n,"column":match.start()-clean.rfind("\n",0,match.start()),"field":"msg->getv" if "getv" in match[0] else "msg->get"}, text, kind, context)
+            clues = []
+            # Match the owning native widget call, not nearby labels or file names.
+            widget = re.search(r'cfg_tabs\[(\w+)_TAB\]\.setOption\w*\(([^,\n]+),[^;]*$', clean[clean.rfind(";", 0, match.start()) + 1:match.start()])
+            if widget:
+                for label, val in (("panel", widget[1].lower()), ("option", widget[2].strip().split("::")[-1])):
+                    clues.append({"field": label, "value": val,
+                        "source": source_info(p, n, "cfg_tabs.setOption")})
+            emit("engine", p, {"path":p,"line":n,"column":match.start()-clean.rfind("\n",0,match.start()),"field":"msg->getv" if "getv" in match[0] else "msg->get"}, text, kind, context, native_context=clues)
 
     catalog_report = []
     for domain, template in templates.items():

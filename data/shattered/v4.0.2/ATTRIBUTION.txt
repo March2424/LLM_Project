@@ -1,0 +1,6 @@
+Shattered Pixel Dungeon — text and translations by Evan Debenham and upstream contributors/translators.
+Based on Pixel Dungeon by Oleg Dolya (Watabou).
+Source: https://github.com/00-Evan/shattered-pixel-dungeon/tree/57a4e06a4caf162446d1c28caa7983f0493fecf0
+License: GNU GPL version 3 or later; see LICENSE.txt and upstream source notices.
+This project adds extraction, occurrence IDs and source/reference separation.
+Upstream Chinese translations are unreviewed by this project and are not approved TM.

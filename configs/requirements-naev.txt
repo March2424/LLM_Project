@@ -1,0 +1,9 @@
+# Optional offline adapter, independent of training/model dependencies. Python 3.11+.
+polib==1.2.0
+PyYAML==6.0.3
+lxml==6.1.3
+tree-sitter==0.25.2
+tree-sitter-c==0.24.2
+tree-sitter-lua==0.5.0
+tree-sitter-rust==0.24.2
+# External executable: GNU gettext-tools (validated with 1.0).

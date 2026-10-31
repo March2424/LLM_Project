@@ -1,0 +1,78 @@
+{
+  "review_date": "2026-10-31",
+  "model_fields": [
+    "id",
+    "source_text",
+    "text_type",
+    "context"
+  ],
+  "reference_visibility": "offline_only",
+  "split": "unassigned",
+  "datasets": [
+    {
+      "game": "flare",
+      "model_input_csv": "data/flare/flare_entity_input_v0.2.csv",
+      "offline_references": "data/flare/v0.2/references.jsonl",
+      "status_provenance": "data/flare/v0.2/background/provenance.jsonl",
+      "native_context_evidence": "data/flare/entity_input_background.jsonl",
+      "statistics": {
+        "source_records": 4416,
+        "reference_records": 3800,
+        "missing": 616,
+        "fuzzy": 0,
+        "context_records": 2081
+      },
+      "documentation": "docs/benchmark_requirements.md",
+      "sha256": {
+        "data/flare/entity_input_background.jsonl": "53ab9c7826682a873725791d1937c061b956c3b315c807968e02c985cc725e00",
+        "data/flare/v0.2/background/provenance.jsonl": "37795490b20924eeebec6ebeb7a80718bc5ff7eebe6d52c8d8fd2e4a17933161",
+        "data/flare/v0.2/references.jsonl": "c22a181015ba0d840c033251bc4a131c4ddb4178e6ec122d05fa7e84d550ee4d",
+        "data/flare/flare_entity_input_v0.2.csv": "fd636797736d71d4ad402dd407e84d018e892aa87e615e69d0d81731d79bdb42"
+      }
+    },
+    {
+      "game": "shattered",
+      "model_input_csv": "data/shattered/v4.0.2/shattered_entity_input.csv",
+      "offline_references": "data/shattered/v4.0.2/references.jsonl",
+      "status_provenance": "data/shattered/v4.0.2/background/provenance.jsonl",
+      "native_context_evidence": "data/shattered/v4.0.2/background/provenance.jsonl",
+      "statistics": {
+        "source_records": 5607,
+        "reference_records": 5606,
+        "missing": 1,
+        "fuzzy": 0,
+        "context_records": 1812,
+        "checked_context_evidence": 4313
+      },
+      "documentation": "docs/SHATTERED_DATA.md",
+      "sha256": {
+        "data/shattered/v4.0.2/shattered_entity_input.csv": "2bbc5a3196157be190a195d6592da385343e90ab25959def25c450fa3b8093a4",
+        "data/shattered/v4.0.2/background/provenance.jsonl": "d3c6728107cc60604f34aad4dd41c7a5c6b49a27113c66c605be9e6b7fa30e4e",
+        "data/shattered/v4.0.2/references.jsonl": "7acfed485fda29627413bb9c0c2d15542cd367601a400a084a4e4fe6dfbda278"
+      }
+    },
+    {
+      "game": "naev",
+      "model_input_csv": "data/naev/snapshot-123fdc1/naev_entity_input.csv",
+      "offline_references": "data/naev/snapshot-123fdc1/references.jsonl",
+      "status_provenance": "data/naev/snapshot-123fdc1/background/provenance.jsonl",
+      "native_context_evidence": "data/naev/snapshot-123fdc1/background/provenance.jsonl",
+      "statistics": {
+        "source_records": 36572,
+        "reference_records": 36572,
+        "translated": 26131,
+        "missing": 5486,
+        "fuzzy": 4955,
+        "formatting_records": 3,
+        "context_records": 25143,
+        "checked_context_evidence": 55832
+      },
+      "documentation": "docs/NAEV_DATA.md",
+      "sha256": {
+        "data/naev/snapshot-123fdc1/naev_entity_input.csv": "26699a15fe311e11bcf14bed1b32d54fd9abec3cbecc088f957ee7253f48fce7",
+        "data/naev/snapshot-123fdc1/background/provenance.jsonl": "4ed4ad667d7bc3a2d5a6470c6d0f3f51439b708f95be4c2a230298093af30e59",
+        "data/naev/snapshot-123fdc1/references.jsonl": "828b68f3691025075ac6d3e6523ebfd50faaf7d0b674bbec68f06ac736786566"
+      }
+    }
+  ]
+}

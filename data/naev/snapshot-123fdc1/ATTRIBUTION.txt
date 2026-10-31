@@ -1,0 +1,5 @@
+Naev text and translations by the Naev Dev Team and upstream contributors/translators.
+Source: https://github.com/naev/naev/tree/123fdc1be96d350fdff04cd2f61e2c66c99badd5
+Assets: https://codeberg.org/naev/naev-assets-lossy/src/commit/7dcc63f767d6657b737686722f868575fbf8e5c8
+Code/Lua GPL-3.0 with upstream version-specific terms; other files including XML CC BY-SA 4.0 or later except where noted. See LICENSE.txt.
+This project adds extraction and source/reference separation; translations are upstream and unreviewed, not approved TM.
