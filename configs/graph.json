@@ -1,7 +1,11 @@
 {
   "max_hops": 4,
   "max_nodes": 40,
-  "max_candidates": 30,
+  "max_candidates": 16,
   "max_characters": 6000,
-  "source_visibility": "previous"
+  "source_visibility": "previous",
+  "max_entity_seeds": 3,
+  "max_entity_hops": 1,
+  "max_selected": 5,
+  "max_soft_tokens": 1024
 }

@@ -9,12 +9,13 @@ class BenchmarkInput:
     occurrences: tuple[Occurrence, ...]
     nodes: tuple[GraphRef, ...]
     batches: tuple[tuple[GraphRef, ...], ...]
+    skipped_formatting_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
 class BuildResult:
     entities: tuple[GraphRef, ...]
     edges: tuple[GraphRef, ...]
-    decisions: dict[str, dict]
     extraction_call: str
-    review_call: str
+    verification: str = 'program_only'
+    rejected: tuple[dict, ...] = ()

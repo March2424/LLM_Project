@@ -1,0 +1,27 @@
+{
+  "model": {
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-flash",
+    "api_key_env": "LLM_API_KEY",
+    "max_output_tokens": 8192,
+    "context_tokens": 32768,
+    "temperature": 0.1,
+    "timeout": 60,
+    "input_price_per_million": null,
+    "output_price_per_million": null,
+    "extra_body": {}
+  },
+  "budget": {
+    "max_calls": 20,
+    "max_tokens": 200000,
+    "max_cost": null
+  },
+  "batch": {
+    "max_rows": 64,
+    "input_tokens": 5000,
+    "output_tokens": 8192
+  },
+  "catalog_limit": 48,
+  "catalog_tokens": 1200,
+  "max_batches": 5
+}

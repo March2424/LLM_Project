@@ -4,7 +4,13 @@
 
 | 文档 | 作用 | 建议维护责任线 |
 | --- | --- | --- |
-| [AUTO_GRAPH.md](AUTO_GRAPH.md) | 四列CSV自动建图、模型复核与五类记忆接入（离线验证） | A/B/C |
+| [AUTO_GRAPH.md](AUTO_GRAPH.md) | 四列CSV自动建图、程序检查与五类记忆接入（离线验证） | A/B/C |
+| [EXTRACTION_SCHEMA.md](EXTRACTION_SCHEMA.md) | 实体关系提取定稿、推断与程序准入 | A/B |
+| [EXTRACTION_RUN.md](EXTRACTION_RUN.md) | 模型接入、自适应批处理、预算与验收 | A/B |
+| [PRE_RL_ALIGNMENT.md](PRE_RL_ALIGNMENT.md) | 训练前的记忆/图召回对齐、真实闭环与验收计划 | A/B/C |
+| [LIGHTWEIGHT_RETRIEVAL.md](LIGHTWEIGHT_RETRIEVAL.md) | 已实现的 SQLite、无别名名称匹配、轻量召回与选择器预算/诊断 | A/B/C |
+| [TRANSLATION_PILOT.md](TRANSLATION_PILOT.md) | Flare 随机五项真实翻译试跑、人工核验页、失败与记忆重读 | A/B/C/D |
+| [REVIEWER_MEMORY_FLOW.md](REVIEWER_MEMORY_FLOW.md) | 当前单次 Agent Reviewer 接口、自动名称软记忆与独立更新 | B/C |
 | [GAME_EVALUATION_SCHEMA.md](GAME_EVALUATION_SCHEMA.md) | 基于 Flare 的通用评测格式、轻量关系 schema 与五类记忆衔接建议 | A/B/C/D |
 | [GAME_MEMORY.md](GAME_MEMORY.md) | 无序游戏模式的已实现接口与离线演示 | A/B/C |
 | [MODULAR_GAME_MEMORY_PLAN.md](MODULAR_GAME_MEMORY_PLAN.md) | 无序游戏文本的轻量实体图＋五类记忆设计（核心已实施） | A/B/C |
@@ -18,10 +24,11 @@
 | [SHATTERED_DATA.md](SHATTERED_DATA.md) | 破碎的像素地牢固定快照、原生上下文与复现 | A |
 | [NAEV_DATA.md](NAEV_DATA.md) | Naev 生成资源、四列输入、独立缺译／fuzzy 状态 | A |
 | [LOONG_RL_PLAN.md](LOONG_RL_PLAN.md) | Loong 论文分析与四卡48GB/32小时训练建议（未执行） | B/C/D |
-| [TRAINING.md](TRAINING.md) | 上下文选择器采样、偏好、SFT/DPO 协议 | B |
+| [TRAINING.md](TRAINING.md) | Teacher 选择示范蒸馏、pi_SFT 自采样和 DPO 协议（待实现） | B |
 | [EVALUATION.md](EVALUATION.md) | 指标定义、Judge、基线与统一评测口径 | D |
 | [EXPERIMENTS.md](EXPERIMENTS.md) | 已执行实验的配置、产物、结果和失败记录 | 实验执行者，D 汇总 |
 | [SETUP.md](SETUP.md) | 经验证的环境、依赖、模型服务和运行方式 | C 牵头，各模块补充 |
+| [SERVER_HANDOFF.md](SERVER_HANDOFF.md) | Push 检查、服务器依赖、源图迁移和 teacher trajectory 前置缺口 | A/B/C |
 | [DECISIONS.md](DECISIONS.md) | 已确定的重要设计取舍及影响 | 决策涉及成员 |
 | [HANDOFF.md](HANDOFF.md) | 跨成员、跨 Codex 会话的工作交接 | 当前任务执行者 |
 

@@ -4,6 +4,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+.vscode/
 
 # 本地环境与凭据；示例配置可以提交
 .venv/

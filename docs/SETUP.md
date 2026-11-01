@@ -1,5 +1,18 @@
 # 环境与运行说明
 
+2026-11-01 服务器交接：代码可在仓库根目录通过 `PYTHONPATH=src` 使用，建议 Python 3.11+。完整离线测试还需要已固定版本的数据解析依赖；并非全部只用标准库：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r configs/requirements-naev.txt -r configs/requirements-shattered.txt -r configs/requirements-retrieval.txt
+PYTHONPATH=src python -m unittest discover -s tests -v
+```
+
+已存在闭源模型适配、提取、随机选择翻译试跑入口；尚无分组划分与 teacher trajectory 采样入口。源 CSV 随 Git 分发，提取 SQLite 和预算 tokenizer 需单独同步。文件清单、服务器检查命令和后续实现边界见 [SERVER_HANDOFF.md](SERVER_HANDOFF.md)。下文保留各阶段的历史环境记录，其中“真实后端尚未配置”等描述不代表当前状态。
+
+2026-11-01：真实游戏的 token 预算打包需安装 [requirements-retrieval.txt](../configs/requirements-retrieval.txt) 中的 tokenizers，并注入本地预算 tokenizer.json；不需要下载模型权重。安装、源侧诊断和闭源翻译器/4B 选择器边界见 [LIGHTWEIGHT_RETRIEVAL.md](LIGHTWEIGHT_RETRIEVAL.md)。下文标准库说明适用于原有演示及关闭 token 预算的模拟用法；本轮未执行真实翻译或训练。
+
 状态：2026-10-30，数据接入、记忆模块及图检索已有离线入口；完整 Agent、训练及正式评测入口尚未实现。
 
 验证环境为 macOS、Python 3.14.7。当前代码只使用 Python 标准库，无需安装 DelTA 原仓库的推理依赖。M2/M3 代码语法要求 Python 3.10+；M1 数据适配器独立使用 Python 3.9+。运行合并后的全部检查建议使用 Python 3.10+，其他版本的实测范围以各模块记录为准。
@@ -45,6 +58,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 CSV 的 5 项检查始终离线运行。Flare 的 6 项集成检查只在 `artifacts/` 对应固定快照存在时运行，否则显示 skipped；不会在测试时下载语料。GitHub Actions 使用 Python 3.11 执行相同命令。CSV 导入目标需新建或为空；路径、UTF-8 编码、上下文模式和输入列的错误会明确报告。
 
 Flare 下载是独立的可选联网步骤，默认保存到被忽略的 `artifacts/flare_full_v0.2/`；不提交下载内容和 `outputs/`。目前仍无完整 Agent、训练或评测启动入口。
+
+下载器读取本地环境变量 `GITHUB_TOKEN`（或 `GH_TOKEN`），仅用于 GitHub API 目录请求；不写入文件或下载清单。遇到 API 限流可等待恢复，或在本机配置有效令牌后重试，不要在聊天或仓库中粘贴令牌。已缓存的 `*-tree.json` 和哈希匹配的原始文件会复用，下载中断后可执行同一命令继续。
 
 处理后的 Flare 快照现已随仓库放在 [data/flare/v0.2](../data/flare/v0.2/README.md)，可直接读取或导入其 CSV，不需要联网。发布数据一致性检查始终离线运行，只有重新提取资源的 6 项集成检查需要可选原始快照。
 ## 合并验证（2026-10-30）

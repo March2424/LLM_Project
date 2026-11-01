@@ -15,7 +15,9 @@ jobs:
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.11'
-      - name: Run standard-library data tests
+      - name: Install offline test dependencies
+        run: python -m pip install -r configs/requirements-naev.txt -r configs/requirements-shattered.txt -r configs/requirements-retrieval.txt
+      - name: Run offline tests
         env:
           PYTHONPATH: src
         run: python -m unittest discover -s tests -v

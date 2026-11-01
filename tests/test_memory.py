@@ -69,6 +69,29 @@ class MemoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             service.read(self.occurrence(2, source_lang="zh", target_lang="en"), old_view)
 
+    def test_term_reply_with_complete_json_fence(self):
+        saved=self.commit(0)
+        self.service.chat=lambda task,prompt:ModelReply('```json\n[{"source":"Aurora","target":"曙光"}]\n```','fixture')
+        term,=self.service.extract_terms(saved.ref)
+        self.assertEqual((term.content['source'],term.content['target']),('Aurora','曙光'))
+
+    def test_name_pairs_are_saved_without_model_calls_and_remain_soft(self):
+        from localization_agent.schemas.memory import is_mandatory
+        for i,(source,target,typ) in enumerate([('Cleave','顺劈斩','skill_name'),('Guill','基尔','character_name')]):
+            occurrence=self.occurrence(i,source=source,metadata={'text_type':typ})
+            saved=self.commit(i,occurrence=occurrence,target=target)
+            term,=self.service.extract_terms(saved.ref)
+            self.assertEqual((term.content['source'],term.content['target']),(source,target))
+            self.assertFalse(is_mandatory(term))
+            self.store.approve(term.ref,'program:reviewed-source')
+        self.assertFalse(self.model.calls)
+        alternate=self.store.draft('term',term.scope,{'source':'Guill','target':'吉尔','mandatory':False},
+                                  term.evidence,run_id='r1',position=1)
+        self.store.approve(alternate.ref,'fixture')
+        bundle=self.service.read(replace(occurrence,occurrence_id='s2',position=2),self.store.view('r1'))
+        self.assertEqual(len(bundle.terms),2)
+        self.assertFalse(bundle.conflicts)
+
     def test_scope_unknown_and_identical_source_occurrences(self):
         self.commit(0)
         branch = self.occurrence(1, source=self.occurrence(0).source, metadata={"branch_id": "other", "speaker_id": "hero"})
@@ -153,9 +176,10 @@ class MemoryTests(unittest.TestCase):
         self.store.approve(drafts[0].ref, "human-A")
         self.assertEqual(len(self.service.read(self.occurrence(1), self.store.view("r1")).terms), 1)
         self.assertEqual(self.service.extract_terms(first.ref), ())
-        bad = MemoryService(self.store, chat=lambda task, prompt: ModelReply('[{"source":"Fake","target":"虚构"}]', "fixture"))
-        with self.assertRaises(ValueError):
-            bad.extract_terms(first.ref)
+        mixed = MemoryService(self.store, chat=lambda task, prompt: ModelReply(
+            '[{"source":"Fake","target":"虚构"},{"source":"gate","target":"门","kind":"term"}]', "fixture"))
+        valid,=mixed.extract_terms(first.ref)
+        self.assertEqual((valid.content['source'],valid.content['target']),('gate','门'))
         with self.assertRaises(RuntimeError):
             MemoryService(self.store).summarize(self.occurrence(1), self.store.view("r1"), flush=True)
         self.assertEqual(self.service.read(self.occurrence(1), self.store.view("r1")).stm[0].ref, first.ref)

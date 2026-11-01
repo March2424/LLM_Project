@@ -12,9 +12,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from localization_agent.models.protocols import ChatModel, Embedder
+from localization_agent.models.structured import parse_json_reply
 from localization_agent.schemas.memory import (
     Evidence, MemoryBundle, MemoryRecord, MemoryRef, Occurrence, ReadView, Scope,
-    scope_match, text_hash,
+    scope_match, text_hash, is_mandatory,
 )
 from .store import MemoryStore
 
@@ -65,10 +66,18 @@ class MemoryService:
         self.chat = chat
         self.embedder = embedder
 
-    def _call(self, task: str, template: str, **values) -> tuple[str, str]:
+    def _call(self, task: str, template: str, *, _reuse_logged: bool = False, **values) -> tuple[str, str]:
         if self.chat is None:
             raise RuntimeError(f"{task} needs a configured ChatModel")
         prompt = (self.config.prompt_dir / template).read_text(encoding="utf-8").format(**values)
+        if _reuse_logged:
+            cached = self.store.db.execute(
+                'SELECT * FROM model_calls WHERE task=? AND prompt_hash=? AND error IS NULL ORDER BY rowid DESC LIMIT 1',
+                (task, text_hash(prompt))).fetchone()
+            if cached:
+                reply = json.loads(cached['response'])
+                if reply and reply.get('text'):
+                    return reply['text'].strip(), cached['id']
         try:
             reply = self.chat(task, prompt)
             if not reply.text.strip():
@@ -124,7 +133,8 @@ class MemoryService:
         terms = [r for r in records if r.kind == "term" and r.content["source"] in occurrence.source]
         by_source: dict[str, set[str]] = {}
         for term in terms:
-            by_source.setdefault(term.content["source"], set()).add(term.content["target"])
+            if is_mandatory(term):
+                by_source.setdefault(term.content["source"], set()).add(term.content["target"])
         conflicts = tuple(source for source, targets in by_source.items() if len(targets) > 1)
         return MemoryBundle(view, tuple(terms), tuple(r for r in records if r.kind == "summary" and (not game or related(r))),
                             tuple(stm), tuple(ltm), tuple(r for r in records if r.kind == "style"), conflicts)
@@ -139,7 +149,7 @@ class MemoryService:
             reply, _ = self._call("retrieve", "retrieve.txt", top_k=count, query=query,
                                   sentences=json.dumps([{ "id": r.record_id, "source": r.content["source"]}
                                                         for r in candidates], ensure_ascii=False))
-            ids = json.loads(reply)
+            ids = parse_json_reply(reply)
             lookup = {r.record_id: r for r in candidates}
             if (not isinstance(ids, list) or any(not isinstance(i, str) for i in ids)
                     or len(ids) != count or len(set(ids)) != len(ids) or any(i not in lookup for i in ids)):
@@ -165,20 +175,23 @@ class MemoryService:
         record = self.store.get(translation)
         if record.kind != "translation" or record.status != "approved" or not self.store.is_valid(translation):
             raise ValueError("Term extraction needs a verified, valid translation")
-        reply, call_id = self._call("extract_terms", "terms.txt", source_lang=record.scope.source_lang,
-                                   target_lang=record.scope.target_lang, source=record.content["source"],
-                                   target=record.content["target"])
-        pairs = json.loads(reply)
+        text_type=record.content.get('metadata',{}).get('text_type') or 'unknown'
+        call_id=None
+        if text_type=='name' or text_type.endswith('_name'):
+            pairs=[{'source':record.content['source'],'target':record.content['target']}]
+        else:
+            reply, call_id = self._call("extract_terms", "terms.txt", source_lang=record.scope.source_lang,
+                                       target_lang=record.scope.target_lang, source=record.content["source"],
+                                       target=record.content["target"],text_type=text_type)
+            pairs = parse_json_reply(reply)
         if not isinstance(pairs, list):
             raise ValueError("Term extractor must return a JSON array")
-        for pair in pairs:
-            if (not isinstance(pair, dict) or set(pair) != {"source", "target"}
-                    or any(not isinstance(pair[k], str) or not pair[k] for k in pair)
-                    or pair["source"] not in record.content["source"]
-                    or pair["target"] not in record.content["target"]):
-                raise ValueError("Term pair must be grounded in both sides of the verified translation")
         drafts = []
         for pair in pairs:
+            if (not isinstance(pair,dict) or any(not isinstance(pair.get(k),str) or not pair[k] for k in ('source','target'))
+                    or pair['source'] not in record.content['source'] or pair['target'] not in record.content['target']):
+                continue  # Keep valid pairs; the original model output remains in model_calls.
+            pair={k:pair[k] for k in ('source','target')}
             key = json.dumps([record.run_id, asdict(record.scope), pair], ensure_ascii=False, sort_keys=True)
             record_id = "term:" + text_hash(key)
             if self.store.latest_version(record_id):
@@ -187,7 +200,8 @@ class MemoryService:
                 if self.store.is_valid(existing.ref):
                     continue
             evidence = Evidence(record.evidence[0].occurrence_id, record.evidence[0].source_version, pair["source"])
-            drafts.append(self.store.draft("term", record.scope, {**pair, "model_call": call_id},
+            drafts.append(self.store.draft("term", record.scope, {**pair, "model_call": call_id,
+                                           'mandatory':False,'verification':'program_only'},
                                            (evidence,), dependencies=(record.ref,), run_id=record.run_id,
                                            position=record.position, record_id=record_id,
                                            expected_version=self.store.latest_version(record_id)))
@@ -273,7 +287,7 @@ class MemoryService:
             result[side], call = self._call('topic_' + side, 'topic.txt', side=side, topic=topic,
                                            texts=json.dumps(texts, ensure_ascii=False))
             calls.append(call)
-        return self.store.draft('summary', scope, {**result, 'summary_mode': 'topic',
+        return self.store.draft('summary', scope, {**result, 'summary_mode': 'topic','verification':'program_only',
             'metadata': {**occurrence.metadata, 'topic_id': topic}, 'covered_translations': inputs,
             'model_calls': calls, 'input_view': asdict(view), 'context_manifest': context_manifest or {}}, evidence,
             dependencies=tuple(r.ref for r in records), run_id=view.run_id, position=view.watermark,
@@ -281,7 +295,7 @@ class MemoryService:
 
     def extract_style(self, occurrence: Occurrence, view: ReadView, *,
                       context_manifest: dict | None = None) -> MemoryRecord | None:
-        """Draft a source-side role note; independent semantic review gates creation."""
+        """Draft a local expression note; semantic review belongs to the Agent Reviewer."""
         speaker = occurrence.metadata.get('speaker_id')
         if not speaker:
             return None
@@ -295,17 +309,11 @@ class MemoryService:
             return None
         note, call = self._call('extract_style', 'style.txt', speaker=speaker,
                                source=occurrence.source, context=occurrence.metadata.get('native_context', ''))
-        verdict, review = self._call('review_style', 'review_style.txt', source=occurrence.source,
-                                    context=occurrence.metadata.get('native_context', ''), note=note)
-        decision = json.loads(verdict)
-        if not isinstance(decision, dict) or decision.get('status') not in {'accepted', 'rejected', 'unknown'}:
-            raise ValueError('Style reviewer must return accepted/rejected/unknown')
-        if decision['status'] != 'accepted':
-            return None
         base = self.store.game_scope(occurrence)
         scope = Scope(base.project_id, conditions={**base.conditions, 'speaker_id': (speaker,)},
                       source_lang=base.source_lang, target_lang=base.target_lang)
-        return self.store.draft('style', scope, {'note': note, 'model_calls': [call, review],
+        return self.store.draft('style', scope, {'note': note, 'model_calls': [call],
+            'verification':'program_only',
             'context_manifest': context_manifest or {}},
             (Evidence(occurrence.occurrence_id, occurrence.source_version, occurrence.source),),
             run_id=view.run_id, position=occurrence.position, record_id=key, expected_version=version)

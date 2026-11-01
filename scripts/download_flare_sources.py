@@ -3,9 +3,11 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
+import os
 from pathlib import Path
 import time
-from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "artifacts/flare_full_v0.2"
@@ -16,14 +18,34 @@ def blob_hash(data):
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
+def fetch_tree(repo, rev):
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "localization-agent-flare-downloader"}
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    request = Request(f"https://api.github.com/repos/flareteam/{repo}/git/trees/{rev}?recursive=1", headers=headers)
+    try:
+        with urlopen(request, timeout=45) as response:
+            return response.read()
+    except HTTPError as error:
+        if error.code in (403, 429):
+            raise SystemExit(
+                "GitHub API rate limit or access restriction. Wait for the limit to reset, "
+                "or set GITHUB_TOKEN to a valid token locally and retry. "
+                "Existing tree caches and downloaded files will be reused."
+            ) from None
+        if error.code == 401:
+            raise SystemExit("GitHub token was rejected. Replace or unset GITHUB_TOKEN/GH_TOKEN and retry.") from None
+        raise
+
+
 def main():
     TARGET.mkdir(parents=True,exist_ok=True)
     jobs = []
     for repo, rev in REVS.items():
         tree_file=TARGET / (repo + "-tree.json")
         if not tree_file.exists():
-            with urlopen(f"https://api.github.com/repos/flareteam/{repo}/git/trees/{rev}?recursive=1",timeout=45) as response:
-                tree_file.write_bytes(response.read())
+            tree_file.write_bytes(fetch_tree(repo, rev))
         tree = json.loads(tree_file.read_text())
         if tree.get('truncated'):
             raise ValueError('Incomplete upstream tree: '+repo)

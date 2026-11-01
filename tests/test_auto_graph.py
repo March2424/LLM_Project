@@ -10,13 +10,13 @@ from localization_agent.memory import MemoryStore, MemoryService, MemoryConfig
 from localization_agent.models.protocols import ModelReply
 from localization_agent.retrieval import GraphStore, GraphRetriever, GraphConfig
 from localization_agent.schemas.memory import TranslationCheck, text_hash
+from localization_agent.schemas.extraction import ENTITY_TYPES, RELATIONS
 
 
 class DiscoveryFixture:
     """Deterministic contract fixture, not a quality experiment."""
     def __init__(self):
         self.calls = []
-        self.reject = False
         self.bad_quote = False
         self.bad_target = False
 
@@ -44,13 +44,6 @@ class DiscoveryFixture:
                 rel('speaker', 'text:l', 'entity:hero', 'SPOKEN_BY', 'l', 'context', 'speaker=Arin')
                 rel('member', 'entity:hero', 'entity:order', 'MEMBER_OF', 'l', 'context', 'Arin is a member of the Order')
             text = json.dumps({'entities': entities, 'relations': relations})
-        elif task == 'review_graph':
-            proposal = json.loads(prompt.split('\nProposal: ')[1])
-            decisions = {}
-            for collection, prefix in [('entities', 'entity'), ('relations', 'relation')]:
-                for x in proposal[collection]:
-                    decisions[prefix + ':' + x['key']] = {'status': 'unknown' if self.reject else 'accepted', 'reason': 'fixture decision'}
-            text = json.dumps({'decisions': decisions})
         elif task == 'check_game_translation':
             text = '{"passed":true,"issues":[]}'
         elif task == 'translate_game':
@@ -82,7 +75,7 @@ class AutoGraphTests(unittest.TestCase):
         self.input = import_benchmark([path], 'p', self.graph, batch_size=1)
         self.model = DiscoveryFixture()
         self.memory = MemoryService(self.store, MemoryConfig(summary_step=1), chat=self.model)
-        self.builder = AutoGraphBuilder(self.graph, self.memory, reviewer=self.memory)
+        self.builder = AutoGraphBuilder(self.graph, self.memory)
 
     def build(self):
         a = self.builder.build(self.input.batches[0])
@@ -90,7 +83,7 @@ class AutoGraphTests(unittest.TestCase):
         self.graph.create_snapshot('g', 'p')
         self.store.create_snapshot('k', 'p')
         self.store.start_run('r', 'p', None, 'en', 'zh', 'k', mode='game_resources')
-        self.retriever = GraphRetriever(self.graph, self.memory, GraphConfig(max_characters=50000))
+        self.retriever = GraphRetriever(self.graph, self.memory, GraphConfig(max_characters=50000, max_soft_tokens=None))
         return a, b
 
     def commit(self, occurrence, target):
@@ -104,6 +97,11 @@ class AutoGraphTests(unittest.TestCase):
             if task == 'discover_graph':
                 rows = json.loads(prompt.split('Rows: ')[1].split('\nExisting catalog: ')[0])
                 self.assertTrue(all(set(row) == {'id', 'source_text', 'text_type', 'context'} for row in rows))
+                self.assertIn('Allowed entity types: ' + ','.join(ENTITY_TYPES), prompt)
+                self.assertIn('Allowed relation types: ' + ','.join(RELATIONS), prompt)
+                catalog = json.loads(prompt.split('\nExisting catalog: ')[1])
+                if rows[0]['id'] == 'l':
+                    self.assertTrue(any(item['name'] == 'Ward' for item in catalog))
         self.assertIn(a.entities[0], b.entities)
         self.assertTrue(any(self.graph.get(r).relation == 'MEMBER_OF' for r in b.edges))
         d, line = self.input.occurrences
@@ -130,30 +128,85 @@ class AutoGraphTests(unittest.TestCase):
         self.assertFalse(self.store.is_valid(saved.ref))
         self.assertTrue(all(not self.store.is_valid(r.ref) for r in drafts))
 
-    def test_sequential_session_commits_and_updates_memory_without_reference(self):
+    def test_agent_reviewer_commit_updates_memory_without_duplicate_reviews(self):
         from localization_agent.workflow.game import GameSession
         self.build()
-        outcome = GameSession(self.retriever).translate_one(self.input.occurrences[1], 'r', 'g')
+        session=GameSession(self.retriever)
+        pending=session.translate_one(self.input.occurrences[1], 'r', 'g', selected_ids=())
+        self.assertEqual(pending.status,'review_pending')
+        self.assertFalse(self.store.visible(self.store.view('r')))
+        draft=self.store.get(pending.draft)
+        check=TranslationCheck('l',1,text_hash(pending.target),draft.content['context_hash'],'fixture-AgentReviewer',True)
+        outcome=session.complete_review(pending.draft,check)
         self.assertEqual(outcome.status, 'committed')
         self.assertTrue(outcome.translation)
+        self.assertFalse(self.store.get(outcome.translation).content['context_manifest']['items'])
+        context=self.store.get(outcome.translation).content['context_manifest']['model_context']
+        prompts=[prompt for task,prompt in self.model.calls if task in {'translate_game','check_game_translation'}]
+        self.assertEqual(len(prompts),1)
+        self.assertTrue(all('Selected context: '+context in prompt for prompt in prompts))
+        current=self.store.get(outcome.translation).content['context_manifest']['current_source_context']
+        self.assertTrue(all('Current resource context: '+current in prompt for prompt in prompts))
         self.assertEqual({self.store.get(r).kind for r in outcome.memories}, {'term', 'summary', 'style'})
+        self.assertFalse({'check_game_translation','review_memory','review_style'} & {task for task,_ in self.model.calls})
 
-    def test_format_failure_never_becomes_tm_even_if_model_passes(self):
+    def test_format_warning_is_given_to_reviewer_without_local_rejection(self):
         from localization_agent.workflow.game import GameSession
         self.build()
         self.model.bad_target = True
-        outcome = GameSession(self.retriever).translate_one(self.input.occurrences[1], 'r', 'g')
-        self.assertEqual(outcome.status, 'failed_check')
+        session=GameSession(self.retriever)
+        outcome = session.translate_one(self.input.occurrences[1], 'r', 'g')
+        self.assertEqual(outcome.status, 'review_pending')
+        self.assertIn('Placeholder/tag mismatch',outcome.issues)
         self.assertIsNone(outcome.translation)
         self.assertFalse(self.store.visible(self.store.view('r')))
+        draft=self.store.get(outcome.draft)
+        check=TranslationCheck('l',1,text_hash(outcome.target),draft.content['context_hash'],'fixture-AgentReviewer',False)
+        self.assertEqual(session.complete_review(outcome.draft,check).status,'needs_revision')
+        self.assertFalse(self.store.visible(self.store.view('r')))
 
-    def test_unknown_review_creates_no_approved_graph(self):
-        self.model.reject = True
+    def test_term_failure_does_not_prevent_summary_and_style_updates(self):
+        from localization_agent.workflow.game import GameSession
+        self.build()
+        original=self.memory.chat
+        self.memory.chat=lambda task,prompt:ModelReply('not JSON','fixture') if task=='extract_terms' else original(task,prompt)
+        session=GameSession(self.retriever)
+        pending=session.translate_one(self.input.occurrences[1],'r','g')
+        draft=self.store.get(pending.draft)
+        check=TranslationCheck('l',1,text_hash(pending.target),draft.content['context_hash'],'fixture-AgentReviewer',True)
+        result=session.complete_review(pending.draft,check)
+        self.assertTrue(result.translation)
+        self.assertEqual(result.status,'committed_with_warnings')
+        self.assertTrue(any(issue.startswith('term:') for issue in result.issues))
+        self.assertEqual({self.store.get(r).kind for r in result.memories},{'summary','style'})
+
+    def test_unreviewed_trial_records_memory_without_faking_reviewer_pass(self):
+        from localization_agent.workflow.game import GameSession
+        self.build()
+        result=GameSession(self.retriever,require_reviewer=False).translate_one(self.input.occurrences[1],'r','g')
+        self.assertEqual(result.status,'recorded_unreviewed')
+        saved=self.store.get(result.translation)
+        self.assertFalse(saved.content['check']['passed'])
+        self.assertEqual(saved.content['verification'],'unreviewed')
+        self.assertEqual({self.store.get(ref).kind for ref in result.memories},{'term','summary','style'})
+        self.assertTrue(all(self.store.get(ref).content['verification']=='unreviewed' for ref in result.memories))
+        pool=self.retriever.retrieve(self.input.occurrences[1],self.store.view('r'),'g')
+        self.assertTrue(any(c.memory_ref and '[Unreviewed trial memory]' in c.text for c in pool.candidates))
+        self.store.create_snapshot('after-trial','p')
+        self.store.start_run('other','p',None,'en','zh','after-trial',mode='game_resources')
+        self.assertFalse(self.memory.read(self.input.occurrences[1],self.store.view('other')).refs)
+        self.assertFalse({'check_game_translation','review_memory','review_style'} & {task for task,_ in self.model.calls})
+
+    def test_one_extraction_call_and_explicit_program_validation(self):
         result = self.builder.build(self.input.batches[0])
-        self.assertFalse(result.entities)
-        self.assertFalse(result.edges)
-        self.assertTrue(result.review_call)
-        self.assertEqual(result.decisions['entity:ward']['status'], 'unknown')
+        self.assertEqual([task for task, _ in self.model.calls], ['discover_graph'])
+        self.assertTrue(result.entities)
+        self.assertTrue(result.edges)
+        self.assertEqual(result.verification, 'program_only')
+        edge = self.graph.get(result.edges[0])
+        self.assertEqual(edge.attributes['verification'], 'program_only')
+        self.assertEqual(edge.reviewer, 'program:graph-contract')
+        self.assertNotIn('review_call', edge.attributes)
 
     def test_invalid_quotes_fail_before_writes(self):
         self.model.bad_quote = True

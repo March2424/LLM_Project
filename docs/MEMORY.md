@@ -115,7 +115,7 @@ SQLite 中目前有六张表：
 
 `approve(ref, reviewer)` 是明确批准动作，不是自动判断证据语义正确。引文存在只是最低结构检查；角色推断、术语正确性及摘要忠实性仍由人工或独立审核器判断。样例里的 reviewer 和 `passed=True` 是离线夹具，不能用于正式质量结论。
 
-如两个已批准术语同时适用但译名不同，`MemoryBundle.conflicts` 返回源词，保留双方记录。M3/M5 应进入冲突处理，不能静默挑一个。
+如两个强制术语同时适用但译名不同，MemoryBundle.conflicts 返回源词，保留双方记录。run 自动提取名称默认 mandatory=false，多个软译法并存不触发冲突；项目预置术语默认仍是硬项。统一语义检查和名称记忆更新见 [当前简化接口](REVIEWER_MEMORY_FLOW.md)。
 
 ## 6. 怎样运行
 

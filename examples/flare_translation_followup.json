@@ -1,0 +1,34 @@
+[
+  {
+    "source_id": "flr_8cb04fa628a6c13476fa",
+    "purpose": "修复回归：Guill 姓名与职务；人工核对专名译法。"
+  },
+  {
+    "source_id": "flr_9836ae33730a2f4d70a1",
+    "purpose": "修复回归：Guill 自我介绍；核对称谓、Order 与 Ancelot，观察角色笔记。"
+  },
+  {
+    "source_id": "flr_3cac68251f0f740784fa",
+    "purpose": "修复回归：同一人物/条件的地点介绍；检查后续角色笔记与译例读取。"
+  },
+  {
+    "source_id": "flr_dc7a973ef487f0a4e6bd",
+    "purpose": "修复回归：Grisbon 敌人名称；为后续专名检查建立译例。"
+  },
+  {
+    "source_id": "flr_c97d5fcb259fe28ead41",
+    "purpose": "修复回归：Grisbon 的钥匙；核对后续专名一致性。"
+  },
+  {
+    "source_id": "flr_ff0bafaed6c7365e3158",
+    "purpose": "修复回归：Grisbon 日记式独白；核对角色表达与引号。"
+  },
+  {
+    "source_id": "flr_aa4f991cd3c6c57b4c14",
+    "purpose": "修复回归：低阶 Freeze 描述；条件不同不能直接复用高阶效果。"
+  },
+  {
+    "source_id": "flr_ffab4a1527c532c8f666",
+    "purpose": "修复回归：低阶 Freeze 名称；观察译例与主题摘要写回。"
+  }
+]

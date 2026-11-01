@@ -32,7 +32,8 @@ def main():
         store.start_run('run', 'demo', None, 'en', 'zh', 'knowledge', mode='game_resources')
         memory = MemoryService(store, MemoryConfig(summary_step=1),
             chat=lambda task, prompt: ModelReply('offline fixture: ' + task, 'offline-fixture'))
-        retrieval = GraphRetriever(graph, memory, GraphConfig(max_characters=50000))
+        # Offline fixture has no model tokenizer; production game runs require one.
+        retrieval = GraphRetriever(graph, memory, GraphConfig(max_characters=50000, max_soft_tokens=None))
         pack = retrieval.build_context(retrieval.retrieve(definition, store.view('run'), 'graph'))
         target = '余烬护盾吸收伤害。'
         check = TranslationCheck(definition.occurrence_id, 1, text_hash(target), pack.context_hash, 'offline-fixture', True)

@@ -1,0 +1,10 @@
+[
+  {"id":"freeze-high","source_id":"flr_a1c57677a23454fe259e","expected_sources":["flr_3bb73bcfb46d9549ad5e","flr_aa4f991cd3c6c57b4c14"],"note":"Freeze 名称应找到两个版本的描述；条件作为参考保留，不能认定两版本效果相同。"},
+  {"id":"freeze-low","source_id":"flr_ffab4a1527c532c8f666","expected_sources":["flr_aa4f991cd3c6c57b4c14"],"note":"独立出现位置的 Freeze 找到描述。"},
+  {"id":"burn","source_id":"flr_aac79243031e0b803697","expected_sources":["flr_0b4e5bf18c3ac12ccdd6","flr_66676414a7c70c1594d3"],"note":"Burn 找到远程范围火焰描述。"},
+  {"id":"cleave","source_id":"flr_370f255aacc80828122d","expected_sources":["flr_3d765caa330daf54cdb8"],"note":"Cleave 找到相同 mp=8 的描述；其余版本只能作为带条件资料。"},
+  {"id":"teleport","source_id":"flr_1c4af80ff7be7cc0a51b","expected_sources":["flr_dd0d4cafe3c68770ec38"],"note":"Teleport 找到技能描述；大量同名选项不应挤掉描述。"},
+  {"id":"warden-notes","source_id":"flr_f02bc79f03f45773ad5a","expected_sources":["flr_fa2551cb3c665001c022"],"note":"Warden's Notes 经已有 MENTIONS 找到 The Warden 名称。"},
+  {"id":"multi-character-quest","source_id":"flr_d387c49371da88dc592b","expected_sources":["flr_a7dd96d92cbdca9177ad"],"note":"三个死灵法师的任务文本，应找到 Grisbon；不要求任意指定单个 topic。"},
+  {"id":"lexical-only","source_id":"flr_0198a0ebbce37f65622c","expect_lexical":true,"expected_sources":[],"note":"没有实体边的导弹描述仍能执行词法回退；不据此声称回退结果都相关。"}
+]
