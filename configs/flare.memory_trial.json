@@ -1,0 +1,40 @@
+{
+  "project": "flare",
+  "graph_snapshot": "graph",
+  "source_db": "outputs/flare_full_2026-10-31/graph.sqlite",
+  "samples": "examples/flare_memory_trial.json",
+  "tokenizer": "artifacts/retrieval_tokenizer/tokenizer.json",
+  "graph_config": "configs/graph.json",
+  "seed": 20261101,
+  "selection": "seeded_random_up_to_5_within_budget",
+  "memory": {
+    "stm_size": 3,
+    "ltm_top_k": 2,
+    "summary_step": 2
+  },
+  "model": {
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-flash",
+    "api_key_env": "LLM_API_KEY",
+    "max_output_tokens": 1536,
+    "context_tokens": 32768,
+    "temperature": 0,
+    "timeout": 90,
+    "input_price_per_million": 0.3,
+    "output_price_per_million": 1.2,
+    "extra_body": {
+      "thinking": {
+        "type": "disabled"
+      }
+    }
+  },
+  "budget": {
+    "max_calls": 120,
+    "max_tokens": 400000,
+    "max_cost": 0.5
+  },
+  "pricing_source": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "pricing_note": "2026-11-01 verified; conservative peak cache-miss rates in USD, not actual billing. No automatic API retry.",
+  "require_reviewer": false,
+  "purpose": "User-requested unreviewed trial of memory generation, persistence and reuse; isolated DB/run; no semantic Reviewer calls."
+}

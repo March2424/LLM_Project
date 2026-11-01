@@ -2,6 +2,8 @@
 
 更新：2026-10-28。状态：已实现标准库 SQLite 图存储、CSV 源文导入、可扩展实体关系、固定图检索与上下文包、M2 联查和提交。已完成离线验证；尚无真实游戏语料或模型质量实验。
 
+2026-11-01 更新：已有三款游戏真实提取图和源侧召回诊断，尚无真实翻译质量实验。下文主要介绍原文档模式；当前游戏模式的无别名名称匹配、内存索引、16 项软池/0–5 项选择/1024 token 以 [LIGHTWEIGHT_RETRIEVAL.md](LIGHTWEIGHT_RETRIEVAL.md) 为准。
+
 ## 1. 设计与文件
 
 借鉴 [TransGraph 第 2 节](https://aclanthology.org/2026.eacl-long.75.pdf) 的文本块关系及带关系标签的上下文。游戏实体、版本、作用域、审批与 DelTA 联查属于本项目适配，未移植论文代码，不是原方法等价复现。
@@ -59,7 +61,7 @@ graph.register_type(RelationType(
                                                     → 本 run 的兼容译例
 ```
 
-`GraphRetriever.retrieve(occurrence, view, graph_snapshot)` 返回 CandidatePool。它沿有向边进行有界广度遍历，并按 IN_BLOCK 反向获取块成员。默认最多 4 跳、40 个节点、30 个软候选；不会通过文档或场景节点无界扩展全文。结果含 MemoryRef、原文证据、图路径版本和关系标签，截断在 unresolved 中明示。
+`GraphRetriever.retrieve(occurrence, view, graph_snapshot)` 返回 CandidatePool。文档模式沿有向边进行有界广度遍历，并按 IN_BLOCK 反向获取块成员。默认最多 4 跳、40 个节点、16 个软候选；不会通过文档或场景节点无界扩展全文。游戏模式另有三个名称入口/实体一跳约束。结果含 MemoryRef、原文证据、图路径版本和关系标签，截断在 unresolved 中明示。
 
 M2 的 `eligible()` 提供未经过 LTM top-k 裁剪的有效记忆。图能沿相关 occurrence 找到历史窗口之外的译例；目标侧仍要求当前 run、既定知识快照、固定水位、早于当前位置、元数据兼容且未失效。图中的 memory 代理也必须通过这一检查。未命中译例时只返回原文。
 
@@ -71,9 +73,9 @@ M2 的 `eligible()` 提供未经过 LTM top-k 裁剪的有效记忆。图能沿�
 
 ## 4. 输入包、预算与提交
 
-`build_context(pool, selected_ids=None)` 使用固定顺序选择。显式 ID 必须来自候选池且不重复；候选中的 mandatory 项始终保留。当前批准术语和 content/edge.attributes 中显式 mandatory 项属于硬项。这不是完整的格式、占位符或关系冲突解析器；候选召回的完整性仍需上层处理，尤其应检查截断标志。
+`build_context(pool, selected_ids=None)` 使用固定顺序选择。显式 ID 必须来自候选池且不重复；mandatory 项始终保留。项目预置术语默认硬项，run 中自动名称默认软项；content/edge.attributes 可显式设置 mandatory。自动译法变体不产生硬冲突。这不是完整的格式、占位符或关系冲突解析器；候选召回的完整性仍需上层处理，尤其应检查截断标志。
 
-预算是序列化候选的**字符数**，包括 ID、来源和关系标签；不是 token 计数，也不包括未来 Translator 的系统提示词与输出预留。硬项超预算返回 budget_conflict，术语冲突返回 conflict，不允许提交。soft 项不会截断正文，只整项选取。
+文档模式保留字符预算；游戏模式增加已冻结 tokenizer 的 1024 软 token 预算及五项选择上限，二者都不含系统提示词、当前原文和输出预留。硬项超字符预算返回 budget_conflict，术语冲突返回 conflict，不允许提交。soft 项不会截断正文，只整项选取；显式超预算动作报错。model_context 与 manifest 保留实际执行内容及来源映射。
 
 ContextPack 保存 selected、manifest、context_hash 和 characters。manifest 只记录实际选中项；完整 pool 是检索日志，应由调用方另外持久化。图关系及原文使用各自类型的引用，不冒充 MemoryRef。
 

@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "game-graph/1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entities",
+    "relations"
+  ],
+  "properties": {
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "name",
+          "entity_type",
+          "reuse_id",
+          "evidence"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entity_type": {
+            "enum": [
+              "character",
+              "skill",
+              "item",
+              "location",
+              "organization",
+              "quest"
+            ]
+          },
+          "reuse_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "field",
+                "quote"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "field": {
+                  "enum": [
+                    "source",
+                    "context"
+                  ]
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "source",
+          "target",
+          "relation",
+          "conditions",
+          "evidence"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(text|entity):.+"
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^entity:.+"
+          },
+          "relation": {
+            "enum": [
+              "MENTIONS",
+              "DEFINES",
+              "SPOKEN_BY",
+              "ADDRESSED_TO",
+              "MEMBER_OF",
+              "LOCATED_IN",
+              "COUNTERS",
+              "USES",
+              "PART_OF"
+            ]
+          },
+          "conditions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "field",
+                "quote"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "field": {
+                  "enum": [
+                    "source",
+                    "context"
+                  ]
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "basis": {
+            "enum": [
+              "direct",
+              "inferred"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "basis"
+              ],
+              "properties": {
+                "basis": {
+                  "const": "inferred"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "reason"
+              ],
+              "properties": {
+                "reason": {
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

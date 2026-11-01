@@ -1,11 +1,14 @@
-"""Bounded relation-guided retrieval and a deterministic character-budget context builder."""
+"""Bounded graph/lexical retrieval and auditable context selection."""
 import json
 from dataclasses import asdict, dataclass, replace
+from typing import Callable
 
 from localization_agent.memory import MemoryService
-from localization_agent.schemas.memory import Evidence, MemoryRecord, MemoryRef, Occurrence, ReadView, TranslationCheck, scope_match, text_hash
+from localization_agent.memory.service import _tokens
+from localization_agent.schemas.memory import Evidence, MemoryRecord, MemoryRef, Occurrence, ReadView, Scope, TranslationCheck, scope_match, text_hash, is_mandatory
 from localization_agent.schemas.graph import Candidate, CandidatePool, ContextPack, GraphEdge, GraphNode, GraphRef
 from .graph import GraphStore
+from .game_index import GameIndex
 
 
 @dataclass(frozen=True)
@@ -13,13 +16,19 @@ class GraphConfig:
     max_neighbors: int = 6
     max_hops: int = 4
     max_nodes: int = 40
-    max_candidates: int = 30
+    max_candidates: int = 16
     max_characters: int = 6000
+    max_entity_seeds: int = 3
+    max_entity_hops: int = 1
+    max_selected: int = 5
+    max_soft_tokens: int | None = 1024
     source_visibility: str = 'previous'  # 'all' requires an explicitly supplied game source script
 
     def __post_init__(self):
         if min(self.max_neighbors, self.max_hops, self.max_nodes, self.max_candidates, self.max_characters) < 1:
             raise ValueError('Positive retrieval limits required')
+        if min(self.max_entity_seeds,self.max_selected)<1 or self.max_entity_hops<0 or (self.max_soft_tokens is not None and self.max_soft_tokens<1):
+            raise ValueError('Invalid game retrieval/selection budget')
         if self.source_visibility not in {'previous', 'all'}:
             raise ValueError('Unknown source visibility')
 
@@ -34,19 +43,54 @@ def canonical(value):
 
 
 def candidate_from_memory(record, *, mandatory=False, path=(), relations=()):
+    content=record.content
+    if record.kind in {'term','translation'}:
+        label=('Mandatory term: ' if mandatory else 'Term suggestion: ') if record.kind=='term' else 'Translation: '
+        text='Source: '+content['source']+'\n'+label+content['target']
+    elif record.kind=='summary':
+        text='Source overview: '+content['source']+'\nTarget usage: '+content['target']
+    else:text=content['note']
+    if content.get('verification')=='unreviewed':text='[Unreviewed trial memory]\n'+text
+    conditions={k:v for k,v in record.scope.conditions.items() if k not in {'speaker_id','topic_id'}}
+    if conditions:text+='\nConditions: '+canonical(conditions)
     return Candidate('memory:' + record.record_id + '@' + str(record.version), record.kind,
-                     canonical({k: v for k, v in record.content.items() if k in {'source', 'target', 'note', 'metadata', 'summary_mode'}}), mandatory, record.ref, record.evidence, path, relations)
+                     text, mandatory, record.ref, record.evidence, path, relations)
 
 
 class GraphRetriever:
-    def __init__(self, graph: GraphStore, memory: MemoryService, config: GraphConfig | None = None):
+    def __init__(self, graph: GraphStore, memory: MemoryService, config: GraphConfig | None = None, *,
+                 token_counter: Callable[[str], int] | None = None):
         if graph.memory is not memory.store:
             raise ValueError('Graph and memory service must share a MemoryStore')
         self.graph, self.memory = graph, memory
         self.config = config or GraphConfig()
+        self.token_counter=token_counter
+        self._game_indexes={}
 
-    def _source_allowed(self, occurrence, evidence, game=False):
-        source = self.graph.memory.source(occurrence.project_id, evidence)
+    query_tokens=staticmethod(_tokens)
+
+    def game_index(self, snapshot_id: str) -> GameIndex:
+        project=(self._game_indexes[snapshot_id][1].snapshot.project_id if snapshot_id in self._game_indexes
+                 else self.graph.snapshot(snapshot_id).project_id)
+        epoch=(self.graph.db.execute('SELECT COUNT(*) FROM sources WHERE project=?',(project,)).fetchone()[0],
+               self.graph.db.execute('SELECT COUNT(*) FROM graph_invalidations').fetchone()[0],
+               self.graph.db.execute('SELECT COUNT(*) FROM invalidations').fetchone()[0])
+        if snapshot_id not in self._game_indexes or self._game_indexes[snapshot_id][0]!=epoch:
+            self._game_indexes[snapshot_id]=(epoch,GameIndex(self.graph,snapshot_id))
+        return self._game_indexes[snapshot_id][1]
+
+    @staticmethod
+    def reference_match(scope: Scope, occurrence: Occurrence) -> bool:
+        # Raw appearance conditions are shown with soft evidence, not asserted as current facts.
+        scope=replace(scope,document_id=None,conditions={k:v for k,v in scope.conditions.items() if k!='requirements'})
+        return scope_match(scope,occurrence)=='match'
+
+    def _source_allowed(self, occurrence, evidence, game=False, *, reference=False):
+        if game and reference:
+            source=self.game_index_current.sources.get(evidence.occurrence_id) if hasattr(self,'game_index_current') else None
+            if source is None or source.source_version!=evidence.source_version:return False
+        else:
+            source = self.graph.memory.source(occurrence.project_id, evidence)
         if (source.source_lang, source.target_lang) != (occurrence.source_lang, occurrence.target_lang):
             return False
         if not game and source.document_id != occurrence.document_id:
@@ -55,21 +99,19 @@ class GraphRetriever:
         for key in ('branch_id', 'phase_id'):
             if source.metadata.get(key) != occurrence.metadata.get(key):
                 return False
-        if source.metadata.get('requirements') and source.metadata['requirements'] != occurrence.metadata.get('requirements'):
+        if not reference and source.metadata.get('requirements') and source.metadata['requirements'] != occurrence.metadata.get('requirements'):
             return False
         return game or self.config.source_visibility == 'all' or source.position <= occurrence.position
 
     def bindings(self, occurrence: Occurrence, snapshot_id: str) -> tuple[dict[str, str], tuple[GraphRef, ...]]:
         """Resolve only visible, approved direct links; never modify registered source."""
-        snapshot = self.graph.snapshot(snapshot_id)
-        if snapshot.project_id != occurrence.project_id:
+        index=self.game_index(snapshot_id)
+        if index.snapshot.project_id != occurrence.project_id:
             raise ValueError('Graph snapshot belongs to another project')
-        nodes = {r: self.graph.get(r) for r in snapshot.refs if r.kind == 'node' and self.graph.valid(r)}
+        nodes=index.nodes
         speakers, topics = {}, {}
-        for r in snapshot.refs:
-            if r.kind != 'edge' or not self.graph.valid(r):
-                continue
-            edge = self.graph.get(r)
+        current=index.occurrences.get(occurrence.occurrence_id)
+        for edge in index.outgoing.get(current,()):
             if edge.source not in nodes or edge.target not in nodes:
                 continue
             left, right = nodes[edge.source], nodes[edge.target]
@@ -85,18 +127,22 @@ class GraphRetriever:
             if edge.relation in {'DEFINES', 'MENTIONS'} and right.attributes['entity_type'] != 'character':
                 topics[right.id] = (0 if edge.relation == 'DEFINES' else 1, refs)
         metadata, used = {}, []
-        if len(speakers) == 1:
+        if len(speakers) == 1 and not occurrence.metadata.get('speaker_id'):
             identity, refs = next(iter(speakers.items()))
             metadata['speaker_id'] = identity
             used.extend(refs)
-        if topics:
-            identity = min(topics, key=lambda k: (topics[k][0], k))
+        if len(topics)==1 and not occurrence.metadata.get('topic_id'):
+            identity = next(iter(topics))
             metadata['topic_id'] = identity
             used.extend(topics[identity][1])
         return metadata, tuple(dict.fromkeys(used))
 
     def retrieve(self, occurrence: Occurrence, view: ReadView, snapshot_id: str) -> CandidatePool:
         game = self.memory.store.run(view.run_id)['mode'] == 'game_resources'
+        if game:
+            from .game_retrieval import retrieve_game
+            self.game_index_current=self.game_index(snapshot_id)
+            return retrieve_game(self,occurrence,view,snapshot_id)
         snapshot = self.graph.snapshot(snapshot_id)
         if snapshot.project_id != occurrence.project_id:
             raise ValueError('Graph snapshot belongs to another project')
@@ -115,7 +161,7 @@ class GraphRetriever:
         candidates = {}
         initial = (*baseline.terms, *baseline.styles) if game else (*baseline.terms, *baseline.styles, *baseline.stm, *baseline.ltm, *baseline.summaries)
         for record in initial:
-            item = candidate_from_memory(record, mandatory=record.kind == 'term' or bool(record.content.get('mandatory')))
+            item = candidate_from_memory(record, mandatory=is_mandatory(record))
             candidates[item.id] = item
         nodes = {}
         edges = []
@@ -188,7 +234,7 @@ class GraphRetriever:
                 candidates.setdefault(item.id, item)
             if allowed and node.kind == 'memory':
                 record = by_ref[MemoryRef(**node.attributes['memory_ref'])]
-                item = candidate_from_memory(record, mandatory=record.kind == 'term' or bool(record.content.get('mandatory')),
+                item = candidate_from_memory(record, mandatory=is_mandatory(record),
                                              path=graph_refs, relations=labels)
                 item = Candidate(**{**item.__dict__, 'sources': tuple(dict.fromkeys(item.sources + path_sources))})
                 candidates[item.id] = item
@@ -250,45 +296,91 @@ class GraphRetriever:
         values = hard + soft[:self.config.max_candidates]
         by_term = {}
         for item in values:
-            if item.category == 'term':
+            if item.category == 'term' and item.mandatory:
                 record = by_ref[item.memory_ref]
                 by_term.setdefault(record.content['source'], set()).add(record.content['target'])
         conflicts = tuple(k for k, targets in by_term.items() if len(targets) > 1)
         return CandidatePool(occurrence.occurrence_id, occurrence.source_version, view, snapshot_id,
                              tuple(values), conflicts, tuple(dict.fromkeys(unresolved)), resolved, binding_refs)
 
+    @staticmethod
+    def _render(pool, items):
+        short={c.id:'c%02d'%(i+1) for i,c in enumerate(c for c in pool.candidates if not c.mandatory)}
+        return canonical([{'id':short.get(c.id,'h'+str(i+1)),'ref':c.id,'category':c.category,'text':c.text}
+                          for i,c in enumerate(items)])
+
+    def selector_observation(self, pool: CandidatePool) -> dict:
+        project=self.memory.store.run(pool.view.run_id)['project']
+        source=self.graph.memory.source(project,Evidence(pool.occurrence_id,pool.source_version,''))
+        soft=[c for c in pool.candidates if not c.mandatory]
+        return {'pool_hash':text_hash(canonical(asdict(pool))), 'source':source.source,
+            'source_id':source.occurrence_id,'source_lang':source.source_lang,'target_lang':source.target_lang,
+            'source_version':pool.source_version,'metadata':{**source.metadata,**pool.resolved_metadata},
+            'max_selected':self.config.max_selected,'soft_token_budget':self.config.max_soft_tokens,
+            'hard_context':self._render(pool,[c for c in pool.candidates if c.mandatory]),
+            'candidates':[{'id':'c%02d'%(i+1),'category':c.category,'text':c.text,'relations':c.relations,
+                'standalone_tokens':self.token_counter(self._render(pool,[c])) if self.token_counter else None}
+                for i,c in enumerate(soft)]}
+
+    def select_context(self, pool: CandidatePool, selected_ids: tuple[str, ...]) -> ContextPack:
+        mapping={'c%02d'%(i+1):c.id for i,c in enumerate(c for c in pool.candidates if not c.mandatory)}
+        if any(i not in mapping for i in selected_ids):raise ValueError('Unknown selector candidate ID')
+        return self.build_context(pool,tuple(mapping[i] for i in sorted(selected_ids)))
+
     def build_context(self, pool: CandidatePool, selected_ids: tuple[str, ...] | None = None) -> ContextPack:
-        lookup = {c.id: c for c in pool.candidates}
-        ids = selected_ids if selected_ids is not None else tuple(lookup)
-        if len(set(ids)) != len(ids) or any(i not in lookup for i in ids):
+        lookup={c.id:c for c in pool.candidates}
+        ids=selected_ids if selected_ids is not None else tuple(lookup)
+        if len(set(ids))!=len(ids) or any(i not in lookup for i in ids):
             raise ValueError('Selection must contain distinct allowed candidate IDs')
-        mandatory = [c for c in pool.candidates if c.mandatory]
-        selected = list(mandatory)
-        def size(items):
-            # Includes item identifiers, provenance and labels. This is NOT a tokenizer.
-            return len(canonical([asdict(c) for c in items]))
-        status = 'conflict' if pool.conflicts else 'ready'
-        if size(selected) > self.config.max_characters:
-            status = 'budget_conflict'
-        else:
-            for item_id in ids:
-                item = lookup[item_id]
-                if not item.mandatory and size(selected + [item]) <= self.config.max_characters:
-                    selected.append(item)
-        refs = tuple(dict.fromkeys(pool.binding_refs + tuple(r for c in selected for r in c.graph_refs)))
-        sources = tuple(dict.fromkeys(tuple(e for c in selected for e in c.sources) +
-                    tuple(e for r in pool.binding_refs for e in self.graph.get(r).evidence)))
-        manifest = {'occurrence_id': pool.occurrence_id, 'source_version': pool.source_version,
-                    'view': asdict(pool.view), 'graph_snapshot': pool.graph_snapshot,
-                    'resolved_metadata': pool.resolved_metadata,
-                    'source_visibility': 'all' if self.memory.store.run(pool.view.run_id)['mode'] == 'game_resources' else self.config.source_visibility,
-                    'items': [asdict(c) for c in selected],
-                    'memory_refs': [asdict(c.memory_ref) for c in selected if c.memory_ref],
-                    'graph_refs': [asdict(r) for r in refs], 'sources': [asdict(e) for e in sources]}
-        return ContextPack(pool, tuple(selected), status, text_hash(canonical(manifest)), manifest, size(selected))
+        game=self.memory.store.run(pool.view.run_id)['mode']=='game_resources'
+        if game and self.config.max_soft_tokens is not None and self.token_counter is None:
+            raise ValueError('Game context needs a configured budget tokenizer; configure token_counter')
+        hard=[c for c in pool.candidates if c.mandatory]
+        selected=list(hard)
+        soft=[]
+        status='conflict' if pool.conflicts else 'ready'
+        if len(self._render(pool,hard))>self.config.max_characters:status='budget_conflict'
+        requested=[lookup[i] for i in ids if not lookup[i].mandatory]
+        if game and selected_ids is not None and len(requested)>self.config.max_selected:
+            raise ValueError('Selection exceeds maximum soft candidates')
+        for item in requested:
+            if game and len(soft)>=self.config.max_selected:break
+            next_soft=soft+[item]
+            fits_char=len(self._render(pool,hard+next_soft))<=self.config.max_characters
+            fits_tokens=(not game or self.config.max_soft_tokens is None or
+                self.token_counter(self._render(pool,next_soft))<=self.config.max_soft_tokens)
+            if not fits_char or not fits_tokens:
+                if selected_ids is not None:raise ValueError('Selection exceeds context budget')
+                continue
+            soft=next_soft
+        selected+=soft
+        model_context=self._render(pool,selected)
+        soft_tokens=self.token_counter(self._render(pool,soft)) if self.token_counter else None
+        tokens=self.token_counter(model_context) if self.token_counter else None
+        project=self.memory.store.run(pool.view.run_id)['project']
+        source=self.graph.memory.source(project,Evidence(pool.occurrence_id,pool.source_version,''))
+        source_context=canonical({'id':source.occurrence_id,'version':source.source_version,
+            'metadata':{**source.metadata,**pool.resolved_metadata}})
+        refs=tuple(dict.fromkeys(pool.binding_refs+tuple(r for c in selected for r in c.graph_refs)))
+        sources=tuple(dict.fromkeys(tuple(e for c in selected for e in c.sources)+
+            tuple(e for r in pool.binding_refs for e in self.graph.get(r).evidence)))
+        manifest={'occurrence_id':pool.occurrence_id,'source_version':pool.source_version,
+            'view':asdict(pool.view),'graph_snapshot':pool.graph_snapshot,'resolved_metadata':pool.resolved_metadata,
+            'source_visibility':'all' if game else self.config.source_visibility,
+            'items':[asdict(c) for c in selected], 'memory_refs':[asdict(c.memory_ref) for c in selected if c.memory_ref],
+            'graph_refs':[asdict(r) for r in refs],'sources':[asdict(e) for e in sources],
+            'model_context':model_context,'tokens':tokens,'soft_tokens':soft_tokens,
+            'current_source_context':source_context,
+            'tokenizer':getattr(self.token_counter,'name',None) if self.token_counter else None,
+            'selection_limits':{'max_selected':self.config.max_selected if game else None,
+                                'max_soft_tokens':self.config.max_soft_tokens if game else None},
+            'unselected_ids':[c.id for c in pool.candidates if not c.mandatory and c not in selected],
+            'pool_hash':text_hash(canonical(asdict(pool)))}
+        return ContextPack(pool,tuple(selected),status,text_hash(canonical(manifest)),manifest,
+            len(model_context),model_context,tokens,soft_tokens)
 
     def update_memory(self, occurrence: Occurrence, view: ReadView, snapshot_id: str, *,
-                      flush: bool = False) -> tuple[MemoryRecord, ...]:
+                      flush: bool = False, kind: str | None = None) -> tuple[MemoryRecord, ...]:
         """Produce topic/role drafts using the same visible graph as translation."""
         pool = self.retrieve(occurrence, view, snapshot_id)
         pack = self.build_context(pool)
@@ -296,7 +388,8 @@ class GraphRetriever:
             raise ValueError('Memory update needs a ready context pack')
         effective = replace(occurrence, metadata={**occurrence.metadata, **pool.resolved_metadata})
         source_items = [c for c in pool.candidates if c.category == 'source' and any(
-            r.kind == 'node' and r.id == pool.resolved_metadata.get('topic_id') for r in c.graph_refs)]
+            r.kind == 'node' and r.id == pool.resolved_metadata.get('topic_id') for r in c.graph_refs)
+            and all(self._source_allowed(effective,e,True) for e in c.sources)]
         sources = tuple(dict.fromkeys(e for c in source_items for e in c.sources))
         # Include current source: after commit, a topic update must cover that new TM.
         sources = tuple(dict.fromkeys(sources + (Evidence(occurrence.occurrence_id, occurrence.source_version, occurrence.source),)))
@@ -304,12 +397,12 @@ class GraphRetriever:
             pool.binding_refs + tuple(r for c in source_items for r in c.graph_refs))],
             'sources': [asdict(e) for e in sources]}
         summary = self.memory.summarize_topic(effective, view, flush=flush, sources=sources,
-                                              context_manifest=memory_manifest)
-        style = self.memory.extract_style(effective, view, context_manifest=pack.manifest)
+                                              context_manifest=memory_manifest) if kind in {None,'summary'} else None
+        style = self.memory.extract_style(effective, view, context_manifest=pack.manifest) if kind in {None,'style'} else None
         return tuple(r for r in (summary, style) if r is not None)
 
     def commit(self, occurrence: Occurrence, target: str, check: TranslationCheck, pack: ContextPack,
-               *, expected_version: int = 0):
+               *, expected_version: int = 0, allow_unreviewed: bool = False):
         """Single-thread run: revalidate the actual input before delegating the TM transaction."""
         if pack.status != 'ready' or check.context_hash != pack.context_hash:
             raise ValueError('Check must bind a ready context pack')
@@ -329,4 +422,4 @@ class GraphRetriever:
                         tuple(Evidence(**e) for e in pack.manifest['sources']) +
                         tuple(e for c in pack.selected for ref in c.graph_refs
                               for e in self.graph.get(ref).evidence))),
-                    context_manifest=pack.manifest)
+                    context_manifest=pack.manifest,allow_unreviewed=allow_unreviewed)

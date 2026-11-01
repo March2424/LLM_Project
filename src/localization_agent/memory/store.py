@@ -172,10 +172,10 @@ class MemoryStore:
               *, dependencies: tuple[MemoryRef, ...] = (), run_id: str | None = None,
               position: int | None = None, record_id: str | None = None,
               expected_version: int = 0) -> MemoryRecord:
-        required = {"term": ("source", "target"), "summary": ("source", "target"), "style": ("note",)}
+        required = {"translation": ("source", "target"), "term": ("source", "target"), "summary": ("source", "target"), "style": ("note",)}
         if kind not in required or any(not isinstance(content.get(k), str) or not content[k].strip()
                                        for k in required[kind]):
-            raise ValueError("Draft requires term/source+target, summary/source+target, or style/note")
+            raise ValueError("Draft requires source+target or style/note")
         if kind == "summary" and (run_id is None or not dependencies):
             raise ValueError("Bilingual summaries require run-local verified translation dependencies")
         if kind == "summary" and not any(self.get(ref).kind == "translation" for ref in dependencies):
@@ -187,10 +187,14 @@ class MemoryStore:
         with self.db:
             return self._insert(record, expected_version)
 
-    def approve(self, ref: MemoryRef, reviewer: str) -> MemoryRecord:
+    def approve(self, ref: MemoryRef, reviewer: str, *, verification: str | None = None) -> MemoryRecord:
         record = self.get(ref)
+        if record.kind=='translation':
+            raise ValueError('Use commit_translation with the Agent Reviewer result')
         if record.status != "draft" or not reviewer.strip() or not self.is_valid(ref):
             raise ValueError("Approve a valid draft with an explicit reviewer")
+        if verification is not None:
+            record=replace(record,content={**record.content,'verification':verification})
         with self.db:
             return self._insert(replace(record, status="approved", reviewer=reviewer), ref.version)
 
@@ -198,8 +202,8 @@ class MemoryStore:
                            check: TranslationCheck, *, used: tuple[MemoryRef, ...] = (),
                            expected_version: int = 0, view: ReadView | None = None,
                            context_sources: tuple[Evidence, ...] = (),
-                           context_manifest: dict | None = None) -> MemoryRecord:
-        if (not check.passed or not check.reviewer.strip() or not check.context_hash
+                           context_manifest: dict | None = None, allow_unreviewed: bool = False) -> MemoryRecord:
+        if ((not check.passed and not allow_unreviewed) or not check.reviewer.strip() or not check.context_hash
                 or check.occurrence_id != occurrence.occurrence_id
                 or check.source_version != occurrence.source_version
                 or check.target_hash != text_hash(target) or not target.strip()):
@@ -232,6 +236,7 @@ class MemoryStore:
         record = MemoryRecord(record_id, 0, "translation", self.game_scope(occurrence) if game else Scope.for_occurrence(occurrence),
                               {"source": occurrence.source, "target": target,
                                "metadata": effective.metadata, "check": asdict(check),
+                               "verification": "unreviewed" if allow_unreviewed else "reviewed",
                                "knowledge_snapshot": run["snapshot"], "input_view": asdict(view),
                                "context_manifest": context_manifest or {}},
                               tuple(dict.fromkeys((evidence,) + context_sources)), used,

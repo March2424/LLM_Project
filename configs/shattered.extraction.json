@@ -1,0 +1,35 @@
+{
+  "model": {
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-flash",
+    "api_key_env": "LLM_API_KEY",
+    "max_output_tokens": 12288,
+    "context_tokens": 32768,
+    "temperature": 0.1,
+    "timeout": 120,
+    "input_price_per_million": 0.3,
+    "output_price_per_million": 1.2,
+    "extra_body": {
+      "thinking": {
+        "type": "disabled"
+      }
+    }
+  },
+  "budget": {
+    "max_calls": 300,
+    "max_tokens": 5000000,
+    "max_cost": 3
+  },
+  "batch": {
+    "max_rows": 64,
+    "input_tokens": 5000,
+    "output_tokens": 12288
+  },
+  "catalog_limit": 48,
+  "catalog_tokens": 1200,
+  "max_batches": 0,
+  "pricing_note": "USD; conservative peak input cache-miss/output rates checked 2026-10-31; actual billed cost may be lower.",
+  "pricing_source": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "keep_valid_items": true,
+  "budget_note": "User authorized 2026-11-01: combined 15 USD; shattered 3 USD and naev 12 USD."
+}

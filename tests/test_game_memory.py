@@ -29,7 +29,7 @@ class GameMemoryTests(unittest.TestCase):
         self.store.start_run('r', 'p', None, 'en', 'zh', 'k', mode='game_resources')
         self.memory = MemoryService(self.store, MemoryConfig(stm_size=1, ltm_window=1, summary_step=1),
                                     chat=lambda task, prompt: ModelReply('fixture ' + task, 'fixture'))
-        self.retriever = GraphRetriever(self.graph, self.memory, GraphConfig(max_characters=50000))
+        self.retriever = GraphRetriever(self.graph, self.memory, GraphConfig(max_characters=50000, max_soft_tokens=None))
 
     def commit(self, o, target, run='r'):
         pack = self.retriever.build_context(self.retriever.retrieve(o, self.store.view(run), 'g'))

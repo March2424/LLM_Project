@@ -110,6 +110,11 @@ class MemoryRecord:
         return MemoryRef(self.record_id, self.version)
 
 
+def is_mandatory(record: MemoryRecord) -> bool:
+    """Project glossary is hard by default; run-learned terminology is a suggestion."""
+    return bool(record.content.get('mandatory',record.kind=='term' and record.run_id is None))
+
+
 @dataclass(frozen=True)
 class MemoryBundle:
     view: ReadView

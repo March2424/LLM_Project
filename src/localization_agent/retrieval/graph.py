@@ -1,5 +1,6 @@
 """Small versioned SQLite graph sharing a connection and sources with M2."""
 import json
+from contextlib import contextmanager
 from dataclasses import asdict, replace
 
 from localization_agent.memory.store import MemoryStore, VersionConflict
@@ -15,6 +16,7 @@ class GraphStore:
     def __init__(self, memory: MemoryStore):
         self.memory = memory
         self.db = memory.db
+        self._atomic_depth = 0
         self.db.executescript('''
             CREATE TABLE IF NOT EXISTS graph_types (name TEXT PRIMARY KEY, payload TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS graph_items (
@@ -47,6 +49,29 @@ class GraphStore:
                                   ('LOCATED_IN', (), ('location',)),
                                   ('COUNTERS', ('skill', 'item'), ('skill', 'item'))]:
             self.register_type(RelationType(name, ('entity',), ('entity',), name, left, right))
+        self.register_type(RelationType('USES', ('entity',), ('entity',),
+            'Actor or physical object uses a skill or physical object',
+            ('character', 'organization', 'item'), ('skill', 'item')))
+        self.register_type(RelationType('PART_OF', ('entity',), ('entity',),
+            'Component belongs to a larger whole; not ownership or membership'))
+
+    @contextmanager
+    def atomic(self):
+        """Keep graph writes and a caller's batch checkpoint in one transaction."""
+        self._atomic_depth += 1
+        try:
+            with self.db:
+                yield
+        finally:
+            self._atomic_depth -= 1
+
+    @contextmanager
+    def _write(self):
+        if self._atomic_depth:
+            yield
+        else:
+            with self.db:
+                yield
 
     def register_type(self, definition: RelationType):
         """Definitions are immutable; changed semantics require a new relation name."""
@@ -138,7 +163,7 @@ class GraphStore:
             record = self.memory.get(MemoryRef(**node.attributes['memory_ref']))
             if record.scope != node.scope or record.status != 'approved' or not self.memory.is_valid(record.ref):
                 raise ValueError('Memory proxy must refer to approved memory with identical scope')
-        with self.db:
+        with self._write():
             return self._save(node, 'node', expected_version)
 
     def put_edge(self, edge: GraphEdge, *, expected_version: int = 0) -> GraphEdge:
@@ -173,7 +198,7 @@ class GraphStore:
             if not any(e.occurrence_id == s.occurrence_id and e.source_version == s.source_version
                        for e in edge.evidence for s in left.evidence):
                 raise ValueError('Mention evidence must identify its source node')
-        with self.db:
+        with self._write():
             return self._save(edge, 'edge', expected_version)
 
     def approve(self, ref: GraphRef, reviewer: str) -> GraphEdge:

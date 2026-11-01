@@ -15,7 +15,7 @@ M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/me
 | `MemoryRecord` | kind 为 term / summary / translation / style；带 scope、content、evidence、dependencies、状态和可选 run/position |
 | `MemoryBundle` | 按类别返回适用记忆及冲突；是候选集合，不是 ContextPack 或实际输入 manifest |
 
-`MemoryRecord.content` 的必需字段：term 为 source/target，summary 为 source/target，style 为 note；translation 由 `commit_translation` 统一产生，包含源译文、检查记录、元数据、知识快照和输入 view。源侧/目标侧摘要正文同存于一条记录，生成时分别调用模型。
+`MemoryRecord.content` 的必需字段：term 为 source/target，summary 为 source/target，style 为 note；translation 可由 draft 保存待 Reviewer 草稿，正式版本仍由 commit_translation 根据 Reviewer 回执产生。正式记录包含源译文、检查记录、元数据、知识快照和输入 view。源侧/目标侧摘要正文同存于一条记录，生成时分别调用模型。
 
 写入与读取接口：
 
@@ -44,9 +44,17 @@ M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/me
 - GraphSnapshot：固定项目图引用；源更新和显式失效仍会阻止使用旧记录。
 - CandidatePool：当前 occurrence/源版本、ReadView、图快照、候选、冲突和未解决项。
 - Candidate：正文、类别、mandatory、MemoryRef（可选）、源文 Evidence、GraphRef 路径和关系标签。
-- ContextPack：实际 selected、状态、manifest、context_hash、characters。字符预算不是 token 预算。
+- ContextPack：实际 selected、状态、manifest、context_hash、characters、model_context、tokens、soft_tokens。tokens 按已冻结预算 tokenizer 统计，非闭源 API 账单；游戏默认软预算 1024，文档模式仍可按字符运行。
 - MemoryService.eligible()：公开读取未经过 top-k 的有效记忆，用于图联查；保留原隔离规则。
 - MemoryStore.commit_translation()：新增可选 context_sources/context_manifest。图调用方使用 GraphRetriever.commit() 验证图及输入包；旧 M2 调用保持兼容。
+
+2026-11-01 游戏召回补充：SQLite 是运行时存储；按类型＋casefold/空白处理后的名称汇总命中，不建立别名/身份映射，不合并节点。池默认 16 个软项，最多三个名称入口、一跳实体关系；select_context(pool, short_ids) 接受 c01…c16 的 0–5 项合法动作。selector_observation 返回 pool_hash、硬项、可读软项和 token 成本；显式动作超预算直接失败。源侧软参考展示原条件，正式记忆仍严格检查。完整约定见 [LIGHTWEIGHT_RETRIEVAL.md](LIGHTWEIGHT_RETRIEVAL.md)。
+
+真实试跑补充：`GameSession.translate_one(..., selected_ids=None)` 可传实际 Candidate.id tuple，执行显式动作，空 tuple 仅保留硬项；不传仍使用固定装填。短 ID 动作先经 GraphRetriever 映射，不能直接把 c01 传给 GameSession。模型 JSON 回复支持单层完整 Markdown JSON 围栏，剥离后仍执行原结构/证据检查；不从混合自由文本中猜取 JSON。记忆审查使用精简知识/作用域/证据及依赖源译对，完整 manifest 留审计，不递归送进审查 prompt。实际入口见 [TRANSLATION_PILOT.md](TRANSLATION_PILOT.md)。
+
+当前简化约定替代上述旧试跑审查步骤：translate_one 只生成并保存草稿，GameOutcome 新增 draft 引用，状态 review_pending；complete_review(draft_ref, TranslationCheck) 消费 Agent Reviewer 的一次结果，再提交和独立更新记忆。不再本地调用三类 Reviewer。自动术语 mandatory=false，项目预置术语默认硬项；schemas.memory.is_mandatory 统一判定。格式差异仅给 Reviewer 提示，软术语变体不产生硬冲突。部分更新提示返回 committed_with_warnings，正式 TM 不接受未审草稿。详见 [REVIEWER_MEMORY_FLOW.md](REVIEWER_MEMORY_FLOW.md)。
+
+用户临时授权的记忆试跑：GameSession(..., require_reviewer=False) 立即记录未审译例和派生软记忆，返回 recorded_unreviewed[_with_warnings]。content.verification=unreviewed，TranslationCheck.passed=false，不伪造 Reviewer。GraphRetriever.commit / MemoryStore.commit_translation 新增 allow_unreviewed=false 的显式开关；MemoryStore.approve 可通过 verification 参数保留衍生记忆未审标签。默认正式路径不变，未审记录仅在本 run 内读取，不进入项目快照。候选正文明确显示 Unreviewed trial memory。
 
 CSV 的 document/scene/block 为结构归属；branch/phase/speaker/addressee/text_type 进入兼容元数据。没有场景时保持未知；技术块不构成语义关系。CSV 工作流使用 GraphRetriever 以启用未知顺序保护，详见 [CSV_IMPORT.md](CSV_IMPORT.md)。
 
@@ -124,8 +132,24 @@ source 只含四个核心字段；后台保存原 CSV 文件/行、额外列与�
 
 ## 自动建图接入（2026-10-30）
 
-新增 `schemas.benchmark.BenchmarkInput/BuildResult`；`data.import_benchmark()` 只读 `id,source_text,text_type,context` 四列源 CSV，登记 Occurrence 并按行数分批；不接受 group_id，不增加外层分组。`retrieval.AutoGraphBuilder.build()` 返回实体/边引用、逐项审查状态及调用ID。CandidatePool新增默认空的resolved_metadata与binding_refs；实际输入清单保存派生身份与图引用，原始Occurrence不改写。GraphRetriever.update_memory返回待批准草稿；GameSession提供最小顺序翻译集成，状态和模型调用约定见 [AUTO_GRAPH.md](AUTO_GRAPH.md)。提取与复核模型输入仅含上述四个字段，文件来源留在后台。旧四列通用 CSV 入口保持原用途，其列名和参考侧约定不同，不能混用。
+新增 `schemas.benchmark.BenchmarkInput/BuildResult`；`data.import_benchmark()` 只读 `id,source_text,text_type,context` 四列源 CSV，登记 Occurrence 并按行数分批；不接受 group_id，不增加外层分组。`retrieval.AutoGraphBuilder.build()` 返回实体/边引用、program_only 检查标记及提取调用 ID。CandidatePool新增默认空的resolved_metadata与binding_refs；实际输入清单保存派生身份与图引用，原始Occurrence不改写。GraphRetriever.update_memory返回待批准草稿；GameSession提供最小顺序翻译集成，状态和模型调用约定见 [AUTO_GRAPH.md](AUTO_GRAPH.md)。提取模型输入仅含上述四个字段，文件来源留在后台。旧四列通用 CSV 入口保持原用途，其列名和参考侧约定不同，不能混用。
 
 ## Naev 数据视图的离线参考扩展
 
 Naev 源侧沿用 `id,source_text,text_type,context` 四列，模型接口不接收中文状态。[Naev 参考伴随文件](NAEV_DATA.md#中文参考状态) 使用 `record_id` 对应 CSV 的 `id`，每条源侧行都有参考状态记录：`status=translated|missing|fuzzy`，以及 `reference_text`、`fuzzy`、`reference_available`、`flags`、`match`、`source_form`、`reference_plural_index`。missing 时可为空；fuzzy 不等于批准或质量通过；单／复数源行共享中文复数索引 0 时显式标记。该扩展仅属于本数据 profile 的离线参考，不改变源侧四列契约，不应被导入批准 TM 或传回模型。其他已有参考格式保持原义。
+
+## 提取协议与模型接入定稿（2026-10-31）
+
+`game-graph/1.1` 的实体/关系枚举、证据和推断字段见 [EXTRACTION_SCHEMA.md](EXTRACTION_SCHEMA.md)。保留六种通用实体类型，关系支持 USES/PART_OF；关系可附 basis=direct/inferred 与 reason，推断关系必须有简短解释。已通过程序检查的推断与直接关系均可入图，图属性保留 schema_version、basis、reason。独立模型复核已删除；程序检查端点、来源和已知条件，语义正确性仍需人工验收。
+
+`BenchmarkInput` 新增默认空的 skipped_formatting_ids；纯空白且 text_type=formatting 的记录不登记为待提取源文，单列返回其 ID，原 CSV 不修改。默认最多 64 行，行输入预算 5,000、预计输出预算 8,192 估算 token；格式不符、其他空原文或单行超限仍明确报错。`read_benchmark()` 只读取与规划，供 CLI dry-run 使用。
+
+`ChatCompletionsModel` 实现既有 ChatModel 协议，返回 ModelReply 的服务 usage 与按配置价格计算的 cost。提取使用 CallBudget，发送前预留，成功后按 usage 回填；无用量或失败保留预留。金额上限需要配置模型价格，未知费用不写成零。旧工厂模式继续由调用方管理模型预算。完整配置和限制见 [EXTRACTION_RUN.md](EXTRACTION_RUN.md)。
+
+### 单次提取与程序准入（2026-10-31）
+
+AutoGraphBuilder 不再接收 reviewer，只使用 memory 中的 ChatModel，每批一次提取调用。BuildResult 为 entities、edges、extraction_call、verification=program_only，移除 decisions/review_call。新建实体与边保留 verification 标记，边以 reviewer=program:graph-contract 准入。此处 approved 表示程序检查后可检索，不是模型或人工的语义确认。实体关系复核 prompt、JSON Schema、reviewer 配置和 --reviewer-factory 已删除；CLI dry-run 的 graph_calls_upper_bound 等于计划批次数。已有翻译/记忆工作流的审校不属于本次实体关系复核删除范围。
+
+## 全量提取检查点（2026-10-31）
+
+AutoGraphBuilder 新增 reuse_logged_calls 与 keep_valid_items（均默认 false）。前者仅重放完整 prompt 哈希匹配的成功响应，后者逐项保留通过现有结构/来源检查的结果，将拒绝项原提议和原因写入 BuildResult.rejected（默认空元组）。原模型输出 schema 不变，不降低单项校验标准。CLI --resume 检查数据/模型/提示词/批次指纹并恢复累计预算；图写入和 extraction_batches 检查点共同提交。专用 Flare 配置启用逐项模式，--split-failures 对完整响应无效或截断批次拆分，预算仍共享。详见 [全量运行说明](EXTRACTION_RUN.md)。

@@ -1,0 +1,14 @@
+Select useful evidence for translating the current game resource. Output only one JSON object
+with rationale first, then selected_ids. rationale must be an explicit natural-language
+decision analysis, normally 1–3 sentences: name the current translation need, describe
+the relevant candidate content (names, suggested translations, facts or expression style),
+and explain its usefulness or redundancy. IDs may accompany this prose but cannot replace
+the description: "select c02 because it is relevant" is insufficient. Do not invent evidence.
+selected_ids must be an array of distinct candidate IDs, ordered as in the observation.
+Choose zero to max_selected soft candidates within soft_token_budget. Hard context is fixed.
+Prefer evidence that resolves meaning, terminology or voice; avoid redundant or irrelevant items.
+Related source records are not preceding story events. Same-name matches do not prove identity.
+Keep raw conditions and variants distinct; program_only/inferred relations are fallible references.
+Use only listed IDs. Do not translate, add facts, edit evidence, or add text outside the JSON.
+Standalone token costs are guidance; the executor checks the serialized combination exactly.
+Observation: {observation}

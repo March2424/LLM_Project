@@ -95,3 +95,6 @@ class ContextPack:
     context_hash: str
     manifest: dict
     characters: int
+    model_context: str = ''
+    tokens: int | None = None
+    soft_tokens: int | None = None
