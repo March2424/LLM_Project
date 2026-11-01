@@ -75,7 +75,7 @@ PYTHONPATH=src python scripts/validate_game_retrieval.py \
 1. **分组划分**：用现有 provenance 的资源对象/任务/场景和重复源文关联生成稳定 `train/dev/test` manifest，不改 occurrence ID，不随机按 CSV 行划分。参考译文单独保存；Naev fuzzy、缺译不能直接充当确认参考。先明确全项目源侧是否共同可见；允许共同可见时只共享原文/源图，各划分的目标记忆仍分别隔离，不必重新提取全图。
 2. **生成基线历史并冻结状态**：各划分独立 run，顺序生成历史，保留当前翻译之前的 ReadView、水位、完整候选池和哈希。冷状态与相关记忆充足的状态都保留；不使用当前或未来译文填充过去。按用户当前要求可跳过 Reviewer，但统一标记 unreviewed，不声称语义验收通过。
 3. **接 teacher 动作**：复用 `selector_observation`、teacher 模板、HTTP 适配和 `select_context`，保存完整 `rationale + selected_ids`、实际 prompt、模型版本、预算、失败和实际输入清单。当前观察把 STM/LTM 都标为 translation，接五类提示前需补充类别来源标签；不增加类别配额。学生 prompt 使用通用模板，reference 不进入观察或在线记忆。
-4. **导出 teacher trajectory**：保存 source ID、split、冻结状态/候选、teacher 理由与动作、译文、记忆增量和调用成本，支持逐条恢复。先做少量真实样本确认后再扩量，明确 teacher/translator 模型、费用上限与输出位置。若继续构造 DPO，再对同一冻结状态采样多种动作并做独立评分；原始 teacher 轨迹不自动等于偏好对。
+4. **导出 teacher trajectory**：保存 source ID、split、冻结状态/候选、teacher 理由与动作、译文、记忆增量和调用成本，支持逐条恢复。先做少量真实样本确认后再扩量，明确 teacher/translator 模型、费用上限与输出位置。Teacher 合成译文另行调用与保存，仅用于示范检查；SFT label 只有自然语言分析＋ID。先导出筛选后的 teacher 示范并训练、冻结 pi_SFT，再由 pi_SFT 自采样多种动作，经固定外部翻译器和独立评分构建 DPO；主偏好对两侧都来自同一冻结学生，不能直接把原始 teacher 轨迹当 DPO。
 
 此顺序的最小代码缺口是划分脚本、状态导出、teacher 采样/恢复与轨迹导出，不需要先引入图数据库、向量服务或全套 LangGraph Reviewer。训练协议和理由参与 SFT/DPO 的约定继续以 [TRAINING.md](TRAINING.md) 为准。
 

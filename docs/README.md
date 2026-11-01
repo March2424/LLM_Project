@@ -24,7 +24,7 @@
 | [SHATTERED_DATA.md](SHATTERED_DATA.md) | 破碎的像素地牢固定快照、原生上下文与复现 | A |
 | [NAEV_DATA.md](NAEV_DATA.md) | Naev 生成资源、四列输入、独立缺译／fuzzy 状态 | A |
 | [LOONG_RL_PLAN.md](LOONG_RL_PLAN.md) | Loong 论文分析与四卡48GB/32小时训练建议（未执行） | B/C/D |
-| [TRAINING.md](TRAINING.md) | 上下文选择器采样、偏好、SFT/DPO 协议 | B |
+| [TRAINING.md](TRAINING.md) | Teacher 选择示范蒸馏、pi_SFT 自采样和 DPO 协议（待实现） | B |
 | [EVALUATION.md](EVALUATION.md) | 指标定义、Judge、基线与统一评测口径 | D |
 | [EXPERIMENTS.md](EXPERIMENTS.md) | 已执行实验的配置、产物、结果和失败记录 | 实验执行者，D 汇总 |
 | [SETUP.md](SETUP.md) | 经验证的环境、依赖、模型服务和运行方式 | C 牵头，各模块补充 |

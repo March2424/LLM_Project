@@ -8,13 +8,15 @@
 
 2026-11-01 后续修订：用户要求将简短思考内容纳入轨迹并参与 SFT/DPO。输出协议现为 rationale＋selected_ids，理由 tokens 不屏蔽；这替代早期“只训练 ID”的设计。Qwen3-8B 为新增可选方案，见 §6.1.1；此前 4B 和时间表只是旧容量假设，8B 的显存及耗时需实测，不据此承诺 32 小时完成。
 
+2026-11-01 最新路线（替代此前混合动作冷启动）：先闭源 teacher 选择示范蒸馏得到 pi_SFT，再由冻结 pi_SFT 自采样构建 DPO。用户明确学生只负责选择，teacher 合成译文不是学生标签或人工参考；详见 §3.3、§5、§6 与 [TRAINING.md](TRAINING.md)。此前 4B、混合四方案和 32 小时表不能直接作为新路线的执行配置。
+
 资源目标：4 张每卡 48GB GPU，在最多 32 小时 GPU 实验窗口内完成一次小规模、可解释的选择器 SFT＋DPO 实验。32 小时包含建运行记忆、采样、评分、训练及有限评测；代码开发、数据授权、人工标注和大文件下载应提前完成。若要求从当前代码状态开始连开发也全部包含在 32 小时内，不能可靠承诺训练和质量评测都完成。
 
 论文输入校验：`2026.emnlp-main.329.pdf`，27页，SHA-256 `4afe7a2f9db7d6a449edda38fab8eb0d87890c03d99d01ba775dc3b6fa077fbf`。本报告未启动模型服务、采样或训练；外部实现资料核对日期为2026-10-28。
 
 ## 1. 建议采用什么方案
 
-**只训练 M4 的上下文选择器；拟使用 Qwen3-4B-Instruct-2507 做 LoRA SFT，再做 LoRA DPO；翻译器固定为闭源 LLM（具体服务/版本与调用预算在真实闭环前冻结）。首轮只做 En→Zh、约 2,000 个选择状态、每状态最多 4 个合法选择方案；最终规模须服从 API 预算。**
+**只训练 M4 上下文选择器：闭源 teacher 先生成 Observe-and-Act 显式分析与选择示范，外部 teacher 另行生成合成译文用于质量检查；用筛选后的分析＋动作做 LoRA SFT，得到 pi_SFT。随后冻结 pi_SFT，由它为同一状态自行采样 2–4 个选择方案，经固定外部翻译器和独立评分后，在 pi_SFT 上做 LoRA DPO。翻译能力不进入学生训练目标。**
 
 训练问题是：面对同一个原文、图检索候选池、记忆快照和预算，选择哪些软证据，能让固定翻译器产出更好的译文？
 
@@ -50,7 +52,7 @@ Occurrence + 固定知识/图快照 + ReadView
     → M3 召回与作用域检查
     → CandidatePool（冻结候选正文、ID/版本、顺序、来源）
     → 硬项由程序保留；软项交给 M4
-    → M4 选择器输出 selected_ids
+    → M4 选择器输出自然语言 rationale＋selected_ids
     → Context Builder 验证并生成真实输入包
     → 固定 Translator → 硬检查/必要审校 → 提交
 ```
@@ -109,14 +111,17 @@ Teacher 完整模板见 [teacher_context_selector.txt](../prompts/selection/teac
 
 提示词按阶段使用：
 
-| 阶段 | 使用的输入 | 类别引导与标签 |
+| 阶段 | 生成器与输入 | 输出及用途 |
 | --- | --- | --- |
-| Teacher 候选动作生成 | 通用任务与 observation，加 teacher 检查建议 | 有软引导；输出简短 rationale＋selected_ids |
-| SFT | 通用策略 prompt 与相同 observation | 无类别优先建议；label 是下游验证后的完整理由＋ID JSON，而非默认照抄 teacher |
-| DPO | 与部署一致的通用策略 prompt 与 observation | 无类别优先建议；同一 prompt 下比较两个合法动作 |
-| 最终 Agent／后续在线 RL（若另行实现） | 通用策略 prompt 与当前 observation | 无类别配额、固定先后或覆盖奖励；策略自主取舍 |
+| Teacher SFT 示范 | 闭源强模型，冻结 observation＋类别软提示 | 自然语言 rationale＋selected_ids，筛选后作为 SFT label |
+| Teacher 合成译文 | 外部闭源模型，当前源文＋实际选中证据 | 单独保存 teacher_translation，仅用于示范检查和审计 |
+| SFT | 开源选择器，通用策略 prompt＋相同 observation | 学习 teacher 的分析与动作，全部 completion tokens 参与 loss |
+| DPO 数据采样 | 冻结 pi_SFT，通用策略 prompt＋相同 observation | 自行采样多条分析＋动作；不混入 teacher／原始学生／固定基线作为主偏好对 |
+| DPO 训练与最终 Agent | 初始化为 pi_SFT，通用策略 prompt | 无类别配额或覆盖奖励；始终由外部 LLM 翻译 |
 
-这样让 SFT 学到 teacher 动作中经下游验证的选择模式，同时避免训练时依赖部署时不存在的类别提示。移除提示并不保证模型没有 teacher 偏差，因此采样中保留无引导动作和基线竞争，评测时单列带提示与不带提示的结果。
+Teacher 选择与合成译文可复用同一闭源后端，但使用独立任务调用；选择任务不输出译文，译文任务使用 [teacher_translation.txt](../prompts/selection/teacher_translation.txt) 和实际 ContextPack，不读取参考、选择理由或未选证据。完整 teacher 轨迹绑定两次调用的来源和上下文 hash。同一服务也可承担固定下游翻译器，但模型、参数、prompt 与各阶段角色须分别登记。
+
+SFT 不再要求 teacher 在旧的混合四方案里获胜，而是筛选 teacher 示范的格式、证据与下游质量。筛选不能只看 JSON 合法便宣称高质量；保留检查依据和少量人工抽查，当前不接运行时 Reviewer。学生 prompt 不含 teacher 类别指导，输出保留 teacher 实际自然语言分析。蒸馏偏差可能存在，自采样 DPO 能针对学生实际输出构造偏好，但不保证优于旧路线，需以同预算 dev 和最终测试验证。
 
 候选池应让相关五类记忆有机会被观察，不能在召回阶段被图资料完全挤掉；这不代表最终必须选齐五类。当前代码只分四组装填，term/style 合组，STM/LTM 均展示为 translation。采样前需要在观察导出中保留术语、角色、摘要、STM、LTM 的类别/召回来源，STM/LTM 继续引用同一份去重译例，不复制存储；该观察扩展尚未实现，实施时同步公共接口。Teacher 与学生都应能看到这些标签。缺失类别保持缺失，不补造记忆。
 
@@ -130,7 +135,7 @@ Teacher 完整模板见 [teacher_context_selector.txt](../prompts/selection/teac
 
 主训练来源建议是 News Commentary v18.1 的 En–Zh 文档对齐数据，延续项目与 Loong 的训练路线。数据入口见论文和作者采样说明；本次未下载核验实际文件及文档边界。若拿到的版本仅剩随机句对且无法恢复真实文档 ID，不允许拼成伪文档，应先解决边界或换可追溯的文档训练源。
 
-游戏数据必须同时具有可用于离线评分的人工参考与源侧信息。当前无参考的解包 CSV 可以用于真实源图/导入诊断，不能直接用 sCOMET 构造可靠偏好。模型自己生成的“参考”只能用于独立标记的蒸馏试验，不能混作人工金标准。
+游戏数据必须同时具有可用于离线评分的人工参考与源侧信息。当前无参考的解包 CSV 可以用于真实源图/导入诊断，不能直接用 sCOMET 构造可靠偏好。Teacher 合成译文允许用于独立标记的 SFT 示范检查，但不是学生训练标签，不能混作人工金标准或正式质量评测参考。无人工参考时不直接用它替代主 DPO 质量信号；若另做合成参考实验，应单列而非混入主实验。
 
 | 划分 | 首轮目标 | 处理方式 |
 | --- | --- | --- |
@@ -145,30 +150,29 @@ Teacher 完整模板见 [teacher_context_selector.txt](../prompts/selection/teac
 
 ### 4.2 如何构建可信的状态与记忆
 
-对每篇训练文档顺序执行一个固定基线，使用其生成、实际检查通过的译例构建 M2。某个状态的多种动作都读取这份固定历史与同一个候选池；评分后不把 best-of-4 译文写回该基线 run。这样避免同一比较因历史不同而不公平，也避免训练参考通过“挑最高分历史”持续影响候选状态。
+对每篇训练文档顺序执行一个固定基线，使用其生成、实际检查通过的译例构建 M2。先在每个独立序列处理约 10 条相关资源形成冷启动，再导出目标状态；短组允许较少历史，不跨划分凑数。某个状态的多种动作都读取这份固定历史与同一个候选池；评分后不把最佳译文写回该基线 run。这样避免同一比较因历史不同而不公平，也避免训练参考通过“挑最高分历史”持续影响候选状态。
 
 每个状态冻结：occurrence/source version、知识快照、图快照、ReadView、完整候选正文/版本/顺序、源侧可见范围、模型/提示词/tokenizer 版本。冻结导出物须自包含，不能只留下日后可能失效的数据库引用；实时在线运行仍拒绝过期证据。
 
-首轮允许类型缺失：没有批准摘要就不放摘要，没有已验证 TM 就只用源文；不能为完整复现 3E 而降低审批要求。源关系图先用可解释的结构关系和少量批准语义边，不在 32 小时窗口内全量模型抽图。公共语料无人物/分支时保留未知。
+首轮允许类型缺失。按当前用户约定跳过 Reviewer，隔离 run 中程序记录的译例和派生记忆保留 unreviewed，不伪造语义通过；摘要无满足条件的译例则为空，冷启动 10 条不保证五类记忆齐全。每步只按预先固定基线推进一次历史，teacher 合成译文文件本身不作为 seed TM 导入；若同一调用兼作基线写回，也须在评分前确定并保留未审标记。源关系图先用可解释的结构关系和少量批准语义边，不在 32 小时窗口内全量模型抽图。公共语料无人物/分支时保留未知。
 
 目标最多处理约 8,000 条训练源句形成历史，从中选择 2,000 个状态；若实际文档更长，按完整文档减少文档数。每篇依赖前序提交，但可在不同文档之间并行。无序 CSV 不自动形成历史记忆，遵守 [CSV_IMPORT.md](CSV_IMPORT.md) 的未知顺序保护。
 
 ## 5. 低成本采样与偏好构造
 
-### 5.1 每状态最多四个不同方案
+### 5.1 两阶段数据生成：Teacher SFT 示范 → pi_SFT 自采样
 
-1. 当前固定排序选择器，作为基线。
-2. 图证据优先的确定性方案；约 10% 状态可替换为“仅硬项”对照。它只是对照，不是学习策略的规则。
-3. Teacher 使用 §3.3 的类别软提示生成一个方案；服务/模型、温度和模板版本在 pilot 前冻结。
-4. 4B 选择器使用通用策略 prompt、按温度约 0.7 采样一个无类别引导的方案。首轮用未训练模型，后续另有预算时可用冻结的 SFT checkpoint 补采并单独版本化。
+阶段 A：在训练侧冻结状态上，由闭源 teacher 输出自然语言 rationale＋selected_ids，程序严格验证动作并构建实际 ContextPack，再由外部 teacher 生成合成译文。保留检查与质量依据，筛选后导出通用学生 prompt → teacher 分析＋动作；合成译文、参考路径和评分不进入学生输入或 label。固定／图优先／仅硬项动作可作诊断，不再是 SFT 轨迹的必需竞争者。
 
-去重后不足四个就保留实际数目，不为凑数反复调用。每方案让固定翻译器生成一次译文，temperature=0；记录后端版本、seed 和实际随机性设置。确定性设置降低噪声，但不保证 GPU 计算逐位确定。
+阶段 B：完成 SFT，在 dev 选择并冻结一个 pi_SFT checkpoint，同时作为 DPO 的采样策略、初始化和 reference。对每个 DPO 训练状态，由 pi_SFT 在同一个通用 prompt 下独立采样最多 2–4 次自然语言分析＋动作，不加入 teacher 类别指导。按 selected_ids 集合去重，只有理由措辞不同的动作不构成新的质量方案；每个保留动作携带自己的完整分析，不补写或拼接 teacher 理由。少于两个有效不同动作时记录原因，首版不无限重采。
 
-轨迹记录统一为“冻结状态 → 候选选择动作 → 实际 ContextPack → 固定翻译器输出 → 检查与离线评分”。Teacher 只提出其中一个动作，不预先标为 chosen。图优先、无引导或空选择的下游结果更好时，同样可以获胜；不能因未遵循 teacher 建议而过滤它们。
+每个不同动作交给同一个冻结外部 Translator，按 §5.2 的动作、硬约束、质量及成本规则评分；从同一状态选择一对可靠优劣动作。主 DPO 数据两侧都必须由同一冻结 pi_SFT 生成。Teacher 和固定基线只作诊断，不能冒充学生自采样；以后若采用混合来源，要另设版本和实验。
 
-每状态的两次模型选择输出现在分别来自 teacher 与 4B 学生，总动作生成上限不变；teacher 若走付费 API，其费用单列并计入采样总成本，不能按本地 4B 的成本估算。Teacher 失败保留失败记录，其他合法方案继续评分，不伪造 teacher 动作或为补齐数量反复请求。
+SFT 与 DPO 可复用同一 train 状态，也可在 train 内扩充 DPO 状态，绝不能使用 dev/test 训练。两阶段导出物分别管理：teacher_demonstrations、teacher_translations、sft_dataset、student_rollouts、preference_pairs；这些是拟定逻辑产物，不是已有命令。DPO 不能直接复用 teacher 阶段的旧 chosen/rejected；即使 observation 相同，也必须在 SFT 完成后重新采样动作并获取下游反馈。
 
-最多 `2,000 × 4 = 8,000` 次翻译，加至多约 4,000 次短选择输出。对接近阈值、疑似评分噪声的少量状态，可额外复测最多 1,000 次翻译；若复测没有稳定差异就丢弃该偏好，不因预算紧而强行排名。与论文三阶段 105 次相比，这里基础翻译采样数约缩小到 1/26；这不是质量等价结论。论文通常以5句片段采样，本方案以occurrence为主，生成长度也不同，不能把调用次数比例当成实测吞吐加速比。
+每个序列在当前位置先冻结历史，再比较候选；结束后只将预先指定的固定基线结果写入一次历史。所有候选及 teacher 合成译文不得一起写回，不按参考分选最高结果推进历史。DPO 状态可复用阶段 A 的自包含历史快照，以便先隔离策略变化；顺序端到端评测再让各策略独立演化目标记忆。
+
+新调用预算须分阶段核算：N_SFT 个示范约需 N_SFT 次 teacher 选择＋N_SFT 次 teacher 译文；N_DPO 个状态最多 K×N_DPO 次学生选择＋至多 K×N_DPO 次外部翻译，K=2–4。另计冷启动、逐步基线写回、复测与评测，完全相同请求可缓存但不提前假定命中率。先分别小样本试跑两阶段，再冻结正式规模和费用；旧的“总计最多 8,000 次翻译＋4,000 次选择”不再是本路线总预算。
 
 ### 5.2 评分按约束、质量、成本依次决定
 
@@ -180,7 +184,7 @@ Teacher 完整模板见 [teacher_context_selector.txt](../prompts/selection/teac
 - 若差值在噪声带内，首版默认不形成质量 pair。若已复核质量相当，且软上下文节省 ≥20% 且至少 128 tokens，可形成单独标记的成本 pair，最多占 20%。
 - 有语义错误迹象或必要证据缺失时，不因文本更短而判 preferred。
 - 每状态最多一对；避免把同一状态所有两两比较当成独立数据。
-- 不按类别齐全、术语/角色优先、图证据占比或模仿 teacher 程度加减分；这些只用于行为诊断。Teacher 方案可以成为 rejected，无引导方案也可以成为 chosen。
+- 不按类别齐全、术语/角色优先、图证据占比或模仿 teacher 程度加减分；这些只用于行为诊断。主 DPO 的 chosen/rejected 均由 pi_SFT 自采样产生，优劣来自下游结果，不来自 teacher 身份。
 
 目标得到约 600–1,400 对仅是规划区间，实际取决于合格率。pilot 若可用偏好占比 <25%，先分析候选质量、上下文是否必要和评分噪声；不要简单放宽阈值。总计不足约 400 个有差异状态时，以 SFT 和数据诊断交付为主，DPO 只做探索性小试，不主张可靠收益。
 
@@ -193,7 +197,7 @@ Teacher 完整模板见 [teacher_context_selector.txt](../prompts/selection/teac
 | 角色 | 首选 | 原因与边界 |
 | --- | --- | --- |
 | 选择器 | Qwen3-4B-Instruct-2507 | 4B、非思考输出，适合短结构化动作；官方为 Apache-2.0；能力需本任务验证 |
-| 轨迹 teacher | 强模型，具体服务/版本在采样前冻结 | 仅生成带软引导的候选动作，可复用已有强模型后端；独立调用，不默认作为质量裁判，费用单列 |
+| 轨迹 teacher | 闭源强模型，具体服务/版本在采样前冻结 | 生成 SFT 分析＋选择示范，另行调用生成合成译文；不训练学生翻译，不默认作为质量裁判，费用单列 |
 | 固定翻译器 | 闭源 LLM，服务/模型版本待真实闭环前冻结 | 所有对照相同；记录 API 参数、usage、费用、限流与失败，不占本地 7B 部署卡 |
 | 偏好 scorer | wmt22-comet-da | 批量、离线参考式质量反馈 |
 | Judge | 预先固定的独立后端或人工盲评 | 若无独立模型/API，明确 Judge 尚未完成，不用翻译器自评冒充独立结论 |
@@ -214,11 +218,11 @@ LoRA SFT 通常可行；LoRA DPO 也有可行配置，但需避免额外常驻�
 
 ### 6.2 SFT：学习输出有用的选择
 
-从通过检查的状态中取获胜合法动作。优先使用有明确质量差的胜者；质量持平状态可少量补充规范输出和空选择，但不要宣称这些标签有翻译增益。目标约 1,000–2,000 条，实际不足时照实记录。
+从闭源 teacher 的示范中筛选证据可追溯、动作合法、分析与证据一致且下游质量合格的样本，不再从未训练学生/基线的混合方案里挑 winner 作为主 SFT label。目标约 1,000–2,000 个示范仅为容量建议，实际不足时照实记录。Teacher 输出质量仍需验证，不因模型闭源或规模大而自动认定正确。
 
-SFT 的 label 是完整的 rationale＋selected_ids JSON，不是目标译文或参考译文；只对 assistant completion 计算 loss，理由与 ID 均参与。Teacher 的实际理由随其动作保留，学生同理；不能把 teacher 理由拼给不同动作。基线无模型理由时仅作评分对照；若导出训练样本，必须有明确标为 program_trace 的真实程序选择依据，不能补写虚构的模型思考。
+SFT 的 label 是完整的 rationale＋selected_ids JSON，不是目标译文或参考译文；只对 assistant completion 计算 loss，理由与 ID 均参与。Teacher 的实际理由随其动作保留，不能把 teacher 理由拼给不同动作。Teacher 译文只保留在单独审计中，不进入选择器 prompt 或 completion；固定基线只作诊断，不为训练伪造其思考。
 
-导出时重新用通用策略模板和冻结 observation 构造学生 prompt，配对同一状态的获胜动作。Teacher 的类别建议、生成 prompt 和模型信息仅保留在独立采样审计中，不进入学生输入或 label；不把带引导的 teacher 原始对话直接当 SFT 样本。标签仍须通过相同动作验证与下游筛选。
+导出时重新用通用策略模板和冻结 observation 构造学生 prompt，配对同一状态经筛选的 teacher 示范。Teacher 的类别建议、生成 prompt 和模型信息仅保留在独立采样审计中，不进入学生输入或 label；不把带引导的 teacher 原始对话直接当 SFT 样本。标签仍须通过相同动作验证与下游筛选。
 
 建议起点：LoRA rank=16、alpha=32、dropout=0.05，注意力和 MLP 线性层；BF16、gradient checkpointing；学习率 1e-4、warmup 0.05、最多 2 epochs、有效 batch=32。四卡每卡 micro-batch=1、累积 8 步得到 32；实际序列上限在完整候选观察的长度测量后确定，原 2,176 仅为早期估算，不能截掉合法候选/动作来凑长度。训练框架字段以实际固定版本为准。
 
@@ -226,9 +230,9 @@ SFT 的 label 是完整的 rationale＋selected_ids JSON，不是目标译文或
 
 ### 6.3 DPO：偏好更好的选择动作
 
-同一个 prompt 的 chosen/rejected 是两个完整的“理由＋选择 ID”JSON，绝不能填两个译文。理由不屏蔽，和 ID 一起参与 DPO；相同 ID 但仅措辞不同不单独构造质量偏好。SFT 与 DPO 可复用同一 train 状态的胜者和 pair；这属于标准离线偏好路线，不必为了“在线”再生成全量数据。所有 dev/test 状态仍隔离。
+同一个 prompt 的 chosen/rejected 是两个完整的“理由＋选择 ID”JSON，绝不能填两个译文。理由不屏蔽，和 ID 一起参与 DPO；相同 ID 但仅措辞不同不单独构造质量偏好。SFT 与 DPO 可复用同一 train 状态，但 DPO 的动作和偏好反馈必须在 SFT 完成后重新生成；不能沿用 teacher 动作对。所有 dev/test 状态仍隔离。
 
-这里的 prompt 是与 SFT、部署共用的通用策略 prompt，不含 teacher 的类别建议。两个动作可来自不同生成器，但导出时必须绑定同一个 observation、pool_hash 和 ID 映射；保留各自动作来源，不把两个不同 teacher/student prompt 直接拼成一对。若将来另行实现在线 RL，同样不加入类别提示、类别配额或类别覆盖奖励。
+这里的 prompt 是与 SFT、部署共用的通用策略 prompt，不含 teacher 的类别建议。两个动作均来自同一冻结 pi_SFT，绑定同一个 observation、pool_hash 和 ID 映射，并保存 sampling_policy_version 与生成参数。首轮在整个 DPO 数据集采样完成后再训练，不边更新策略边混用不同版本的动作；这是学生自采样的离线 DPO，不是在线 GRPO/PPO。若将来另行实现在线 RL，同样不加入类别提示、类别配额或类别覆盖奖励。
 
 DPO 最小化：
 
@@ -243,7 +247,7 @@ pi_ref 必须是**完成 SFT 后冻结的策略**。推荐把 SFT LoRA 合并导
 
 起点：beta=0.1、学习率 5e-6、rank=8、alpha=16、dropout=0.05、1 epoch、有效 pair batch=16（四卡 micro=1、累积4）。预计算冻结 reference log probabilities，缓存绑定 tokenizer/chat template/prompt/chosen/rejected/model hash；DPO 的 chosen/rejected 两条序列会增加显存，不能按 SFT 的 batch 估算。
 
-建议使用 TRL＋PEFT 实现独立选择器，采样通过 vLLM 服务；COMET 单独环境。TRL 支持 PEFT 与 reference log-prob 预计算以减少常驻显存，但与部分配置有兼容限制，实际环境要先跑通最小 batch。[DPOTrainer 官方文档](https://huggingface.co/docs/trl/dpo_trainer)
+按尽量简单的要求，首版优先用 LLaMA-Factory 的配置式 LoRA SFT/DPO；轨迹采样、外部翻译与评分仍由仓库脚本完成。若需要自定义训练或 reference log-prob 预计算，可选 TRL＋PEFT；不能混用两个框架参数，实际环境先跑通最小 batch。COMET 保持独立环境。[DPOTrainer 官方文档](https://huggingface.co/docs/trl/dpo_trainer)
 
 目前仓库没有 GPU 训练锁文件，因此本报告不编造“已验证版本组合”。租卡前准备并固定 torch/CUDA、transformers、trl、peft、accelerate、vllm、unbabel-comet 和各 checkpoint revision；分别保存训练、推理、指标依赖锁文件及一次最小前向/反向记录。
 
@@ -264,25 +268,28 @@ pi_ref 必须是**完成 SFT 后冻结的策略**。推荐把 SFT LoRA 合并导
 | 阶段 | GPU 0–2 | GPU 3 |
 | --- | --- | --- |
 | 历史生成 | 闭源 API 调度，不常驻翻译权重 | COMET/实际QA，按需处理抽查队列 |
-| 动作/翻译采样 | 4B 生成无引导动作，teacher 独立生成带软提示动作，闭源 API 翻译；按实际服务配额限并发 | COMET批量评分 |
+| Teacher SFT 示范 | 闭源 API 生成分析＋动作及独立合成译文；可与阶段历史生成调度 | 程序检查、可用训练参考评分及抽查 |
+| SFT 后学生自采样 | 冻结 pi_SFT 生成 2–4 个动作，固定闭源 API 分别翻译；按服务配额限并发 | COMET批量评分，输出学生偏好对 |
 | SFT/DPO | 四卡 DDP LoRA，共同训练同一策略；停止其他 GPU 服务 | 同左 |
 | 评测 | 同配置闭源翻译 API，4B 选择器按阶段加载 | 指标评分；Judge另按资源登记 |
 
 本轮不安排本地翻译副本；采样时间同时受 API 配额、费用和本地评分吞吐约束。DDP仍需通信；若四卡跨机或PCIe条件较差，要实测吞吐，不能按4倍单卡速度估算。旧 32 小时表只作规划，须按实际 API 试跑吞吐复核。
 
-### 7.2 严格的时间预算表
+### 7.2 两阶段路线的候选时间预算（未实测）
 
-| 墙钟时间 | 任务 | 时间上限与停止点 |
+下面仅保留 32 小时目标的示意分配，必须用实际 teacher API、学生模型、长度和有效偏好率重估；8B 及分析输出不沿用旧 4B 吞吐。依赖安装、数据准备和权重下载应提前完成。
+
+| 墙钟时间 | 任务 | 停止点 |
 | --- | --- | --- |
-| 0–2h | 启动验证、128个训练pilot状态、显存与端到端吞吐测量 | 超时或资源不匹配，立即切缩减档 |
-| 2–7h | 最多8,000条训练源句的固定历史、轻量QA与状态导出 | 按完整文档截止，失败留日志，不强行写入TM |
-| 7–16h | 最多2,000状态×4动作的翻译、评分，最多1,000次复测 | 16h必须停止扩样，保留已完成的有效pairs |
-| 16–19h | SFT、dev检查及保存 | 最多两轮，无多学习率搜索 |
-| 19–23h | SFT reference预计算、DPO、dev选模 | 最多一轮，保存SFT回退 |
-| 23–28h | 固定快照对照＋小型完整文档顺序运行 | 评测样本事先冻结，不能只保留成功项 |
-| 28–32h | 故障缓冲、导出、人工复核、结果汇总 | 有余量才补样本，不新增大训练 |
+| 0–2h | 检查配置与隔离，teacher 训练侧约 128 状态试采样及吞吐检查 | 数据/服务不匹配则缩减规模 |
+| 2–8h | 基线历史、状态导出、teacher 示范与合成译文筛选 | 按完整资源组截止，保留失败 |
+| 8–11h | LoRA SFT、dev 检查与冻结 pi_SFT | 保存可重放的采样策略与 reference |
+| 11–21h | pi_SFT 小试后扩样，外部翻译/评分与偏好导出 | 到点停止扩样，不回填 teacher 动作凑 pair |
+| 21–25h | SFT reference 检查/预计算（框架支持时）、DPO、dev 选模 | 数据无可靠偏好则保留 SFT，DPO 标为未执行 |
+| 25–29h | 固定快照对照及有限完整序列评测 | 提前冻结文档，不只保留成功样本 |
+| 29–32h | 故障缓冲、导出、抽查、结果汇总 | 不新增大训练 |
 
-总上限32墙钟小时，即最多128 GPU小时租用容量；这不是128 GPU小时始终有效满载。价格未知，费用按 `128 × 单卡小时价格` 加存储/传输计算；API Judge费用单独列，不假定免费。
+总目标为 32 墙钟小时、四卡最多 128 GPU 小时租用容量，不代表始终满载或已测可完成。费用按实际 GPU 单价加 teacher 选择、teacher 合成译文、学生采样、外部翻译、评分与评测分别统计。SFT 不完成并冻结前不能启动主 DPO 自采样。
 
 ### 7.3 怎样判断能否按时完成
 
@@ -290,18 +297,17 @@ pi_ref 必须是**完成 SFT 后冻结的策略**。推荐把 SFT LoRA 合并导
 
 对某阶段：`预计时间 = 请求总数 / 实测端到端有效完成率 + 启停/重试开销`。流水线评分与生成可以重叠，整体吞吐取瓶颈；串行处理则相加，不能只统计decode tokens/s。
 
-- 历史8,000条在5h内，系统有效完成率需 ≥0.444条/s；还要包含QA和依赖等待。
-- 采样上限9,000次翻译在9h内需 ≥0.278次/s，扣除动作生成/服务切换后门槛更高。
-- 作为示意，若采样有效完成率0.5次/s，9,000次约5h；若0.2次/s，则约12.5h，必须缩样。这里不是硬件测速结论。
-- 训练按实测每optimizer step耗时、实际steps、保存与验证耗时外推；偏好数据reference预计算另计。
+- 分别测量 teacher 选择/译文、基线历史、SFT、pi_SFT 采样、外部翻译/COMET 和 DPO，不能只用一次动作采样速度估计两阶段总时间。
+- N_SFT 和 N_DPO 可不同，按 §5.1 分阶段请求数量、实际完成率和费用外推。重复动作减少实际翻译量，但不能据此预设会形成足够偏好。
+- 训练按实际序列长度、每步耗时、有效 steps、保存与验证外推；SFT 完成前只能粗估学生采样质量，之后必须再做小试。
 
 缓存键包含原文、实际selected IDs/正文hash、硬项、模型参数及prompt版本。缓存只去掉完全相同请求；不能把不同上下文或不同方法的目标记忆混用。
 
-缩减档：1,000个状态、每状态3方案、最多4,000条历史，约300–700有效pairs；保留dev和完整文档评测，减少训练数据而不是删评测。最低诊断档：512状态、每状态2方案；若有效pairs不足400，明确为可行性试验。缩减选择只能看train/pilot吞吐和质量，不能看test结果再调整。
+缩减档分别减少 teacher 示范数和 DPO 状态数，学生每状态先用 2 个动作；保留 dev 和完整资源组评测，减少训练量而非删除评测。有效 pairs 不足约 400 时，DPO 只作探索性小试或保留 SFT，不承诺可靠增益。缩减选择只能看train/pilot吞吐和质量，不能看test结果再调整。
 
 ## 8. 评测与“有效”的判断
 
-固定同一个候选池、硬项、Translator、token预算、生成参数和检查流程，对照：固定选择器、未训练4B提示式选择器、SFT、SFT＋DPO。可额外记录仅硬项，但不挤占四个主要对照。先看首次翻译，不先用多轮修复掩盖选择差异。
+固定同一个候选池、硬项、Translator、token预算、生成参数和检查流程，对照：固定选择器、同规模未训练提示式选择器、SFT、SFT＋DPO。可额外记录仅硬项，但不挤占四个主要对照。先看首次翻译，不先用多轮修复掩盖选择差异。
 
 四个主要对照中的模型选择器统一用通用策略模板，无 teacher 类别建议。在预留的小型 dev 诊断中，可让同一 teacher 使用有/无类别建议、相同 observation 和预算各生成动作，比较下游质量及选择分布；仅解释提示的作用，不把 teacher 大模型对学生小模型的差异当作提示收益。记录每类候选可用率、入选率及 token 占比，区分“没有召回”与“策略未选”；没有选齐五类本身不算失败。诊断规模和费用在采样前计入总预算，不另行全量扩样。
 
@@ -327,12 +333,13 @@ DPO未优于SFT时保留SFT为部署策略，报告DPO无增益；不因已经�
 | P0 | retrieval/service.py | 模型展示层、token预算、冻结候选验证，实际执行动作与label一致 |
 | P0 | models/、evaluation/ | 真实翻译适配、usage日志、COMET隔离scorer、最小真实QA |
 | P0 | training/export_states.py | 分组划分、固定历史与候选导出、参考隔离 |
-| P1 | training/sample_actions.py | 固定/图优先基线、带软提示 teacher 与无引导 4B 的四方案采样；记录生成来源、翻译缓存和失败 |
-| P1 | training/build_preferences.py | 合法性、分差、噪声过滤；以通用策略 prompt 导出 SFT/DPO，teacher 信息仅作审计 |
+| P1 | training/sample_teacher.py | 闭源 Teacher 分析＋动作、独立合成译文与质量记录，导出选择器 SFT 示范 |
+| P1 | training/sample_actions.py | 只在 SFT 后加载冻结 pi_SFT，自采样 2–4 个动作；外部翻译、缓存、失败与版本记录 |
+| P1 | training/build_preferences.py | 验证两侧同源 pi_SFT，合法性/分差/噪声过滤，以通用 prompt 导出完整分析＋动作 DPO pair |
 | P1 | training/train_selector.py | SFT/DPO LoRA、SFT reference、checkpoint恢复 |
 | P1 | evaluation/selector_benchmark.py | 固定快照与独立run评测，质量/成本分开汇总 |
 
-训练样本逻辑字段：
+学生自采样 DPO 样本逻辑字段（Teacher SFT 另行保存 prompt/completion 与合成译文审计）：
 
 ```json
 {
@@ -350,19 +357,18 @@ DPO未优于SFT时保留SFT为部署策略，报告DPO无增益；不因已经�
   "audit": {
     "observation_hash": "...",
     "policy_prompt_version": "...",
-    "teacher_prompt_version": "...",
-    "teacher_model_version": "...",
-    "chosen_action_origin": "teacher",
-    "rejected_action_origin": "student_unguided"
+    "chosen_action_origin": "pi_sft",
+    "rejected_action_origin": "pi_sft",
+    "sampling_policy_version": "冻结的 SFT checkpoint revision"
   }
 }
 ```
 
-示例分数仅说明格式，不是实验结果。训练器只读取prompt/chosen/rejected，评分与reference路径属于隔离的审计数据。导出具体TRL数据格式时匹配固定版本，不混用LLaMA-Factory配置字段。
+示例分数仅说明格式，不是实验结果。DPO 训练器只读取 prompt/chosen/rejected，SFT 训练器只读取通用 prompt/teacher completion；评分、teacher 合成译文与 reference 路径属于隔离审计。按冻结的 LLaMA-Factory 或 TRL 版本导出格式，不混用字段。
 
 上述 audit 也是待实现的轨迹导出字段，不表示现有公共 schema 已扩展；teacher/student 各次生成的实际 prompt、hash、参数、动作和费用单独保留在 selection attempts 中。进入训练器前明确投影为所需输入字段，避免整条审计记录被意外序列化进模型 prompt。
 
-至少保存：split manifest、候选快照、actual context manifests、selection attempts、translations、checks、scores、preference过滤统计、SFT与DPO adapters、SFT合并基座标识、依赖锁文件、运行计时/显存/用量、评测失败清单。大数据和模型留在artifacts或外部存储，Git只保存代码、配置和摘要。
+至少保存：split manifest、候选快照、teacher 示范及独立合成译文、SFT 数据、冻结 pi_SFT 标识、学生 rollouts、actual context manifests、selection attempts、translations、checks、scores、preference过滤统计、SFT与DPO adapters、SFT合并基座标识、依赖锁文件、运行计时/显存/用量、评测失败清单。大数据和模型留在artifacts或外部存储，Git只保存代码、配置和摘要。
 
 ## 10. 开跑前的决策清单
 
@@ -375,4 +381,4 @@ DPO未优于SFT时保留SFT为部署策略，报告DPO无增益；不因已经�
 - 最小真实QA和人工核验能力，避免用演示回执制造“已验证”记忆。
 - 是否有独立Judge资源；没有则保留人工盲评并标注指标缺口。
 
-推荐执行顺序：先在当前仓库补齐严格选择接口与最小真实模型闭环，准备128状态pilot；确认吞吐、动作多样性和奖励差异后，按表启动单方向SFT＋DPO。训练规模由实测门槛决定，评测预算提前保留。
+推荐执行顺序：先补齐状态/记忆隔离和 teacher 示范导出，以训练侧约 128 状态 pilot 冻结 SFT 数据生成配置；完成 SFT 并冻结 pi_SFT 后，再验证学生动作多样性、偏好与调用成本，最后扩量构造 DPO。训练规模由实测门槛决定，评测预算提前保留。
