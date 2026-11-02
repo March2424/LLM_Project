@@ -3,7 +3,9 @@ import json
 import math
 import os
 import threading
+import ssl
 from dataclasses import dataclass
+from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -17,6 +19,14 @@ def estimate_tokens(text: str) -> int:
 
 class BudgetExceeded(RuntimeError):
     pass
+
+
+class RetryableModelError(RuntimeError):
+    """Temporary service/transport failure; another attempt may incur another charge."""
+
+
+class ModelResponseError(RuntimeError):
+    """A received response is unusable; retrying the same limits is not a repair."""
 
 
 @dataclass
@@ -113,9 +123,19 @@ class ChatCompletionsModel:
                 result = json.load(response)
         except HTTPError as error:
             # Do not expose provider response bodies, which may echo sensitive input.
+            if error.code in {408, 429, 500, 502, 503, 504}:
+                raise RetryableModelError(f'Model HTTP {error.code}') from None
             raise RuntimeError(f'Model HTTP {error.code}; request not automatically retried') from None
-        except (URLError, TimeoutError) as error:
-            raise RuntimeError(f'Model transport failure: {type(error).__name__}; not retried') from None
+        except (URLError, TimeoutError, ConnectionError, IncompleteRead, ssl.SSLError) as error:
+            reason = error.reason if isinstance(error, URLError) else error
+            detail = type(reason).__name__
+            if isinstance(reason, ssl.SSLCertVerificationError):
+                raise RuntimeError('Model TLS certificate verification failed') from None
+            raise RetryableModelError(f'Model transport failure: {detail}') from None
+        except json.JSONDecodeError:
+            raise RetryableModelError('Model returned invalid JSON') from None
+        if not isinstance(result, dict):
+            raise ModelResponseError('Model response is not an object')
         usage = result.get('usage') or {}
         actual_input, actual_output = usage.get('prompt_tokens'), usage.get('completion_tokens')
         if actual_input is not None and actual_output is not None:
@@ -124,10 +144,13 @@ class ChatCompletionsModel:
                                actual_input + actual_output, actual_cost)
         else:
             actual_cost = None
-        choice = result['choices'][0]
+        choices = result.get('choices')
+        if not choices or not isinstance(choices, list) or not isinstance(choices[0], dict):
+            raise ModelResponseError('Model response has no completion choices')
+        choice = choices[0]
         if choice.get('finish_reason') == 'length':
-            raise RuntimeError('Model output truncated; reduce batch size or increase output limit')
-        content = choice['message'].get('content')
+            raise ModelResponseError('Model output truncated; reduce batch size or increase output limit')
+        content = (choice.get('message') or {}).get('content')
         if not isinstance(content, str) or not content.strip():
-            raise RuntimeError('Model response has no text content')
+            raise ModelResponseError('Model response has no text content')
         return ModelReply(content, result.get('model', self.model), actual_input, actual_output, actual_cost)

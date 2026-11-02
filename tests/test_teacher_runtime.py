@@ -1,5 +1,6 @@
 """Offline concurrency/recovery checks; no external model, weights or tokenizer download."""
 import json
+import io
 import sqlite3
 import tempfile
 import threading
@@ -8,9 +9,10 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from pathlib import Path
 from unittest.mock import patch
+from urllib.error import URLError
 
 from localization_agent.memory import MemoryStore
-from localization_agent.models.chat_completions import CallBudget, BudgetExceeded
+from localization_agent.models.chat_completions import CallBudget, BudgetExceeded, RetryableModelError
 from localization_agent.models.protocols import ModelReply
 from localization_agent.retrieval import GraphStore, GraphConfig
 from localization_agent.schemas.graph import GraphNode
@@ -79,6 +81,50 @@ class RuntimeModel:
 
 
 class TeacherRuntimeTests(unittest.TestCase):
+    @patch.dict('os.environ', {'TEST_LLM_KEY':'fixture'})
+    @patch('localization_agent.selection.teacher.time.sleep')
+    def test_transport_retries_preserve_all_charges_then_cache_success(self, sleep):
+        with tempfile.TemporaryDirectory() as tmp:
+            spec={'endpoint':'https://example.invalid','model':'fixture','api_key_env':'TEST_LLM_KEY',
+                  'max_output_tokens':128,'input_price_per_million':1,'output_price_per_million':2}
+            budget=CallBudget(max_calls=8,max_tokens=10000,max_cost=1)
+            chat=DurableChat(Path(tmp),{'selection':spec,'translation':spec},budget)
+            response=io.BytesIO(json.dumps({'choices':[{'finish_reason':'stop','message':{'content':'ok'}}],
+                'usage':{'prompt_tokens':12,'completion_tokens':8}}).encode())
+            with patch('localization_agent.models.chat_completions.urlopen',
+                       side_effect=[URLError(TimeoutError()),URLError(ConnectionResetError()),response]) as send:
+                self.assertEqual(chat('teacher_select','fixture prompt').text,'ok')
+                before=budget.snapshot()
+                self.assertEqual(chat('teacher_select','fixture prompt').text,'ok')
+                self.assertEqual(send.call_count,3)
+            self.assertEqual(budget.calls,3)
+            self.assertEqual(budget.estimated_usage_calls,2)  # Unknown charges stay reserved.
+            self.assertEqual(budget.snapshot(),before)
+            self.assertEqual([c.args[0] for c in sleep.call_args_list],[5,10])
+            self.assertEqual(chat.db.execute('select count(*) from call_attempts').fetchone()[0],3)
+            chat.db.close()
+
+    @patch('localization_agent.selection.collector.LocalTokenCounter',return_value=len)
+    def test_exhausted_transient_failure_does_not_stop_later_targets(self, _):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)/'run';fixture_folder(folder,games=('flare',),targets=2)
+            config=json.loads((folder/'config.json').read_text())
+            config['request_retry']={'max_attempts':3,'initial_delay_seconds':0}
+            write_json(folder/'config.json',config)
+            RuntimeModel.calls=[];RuntimeModel.folder=folder;RuntimeModel.barriers={}
+            attempts=[]
+            class Model(RuntimeModel):
+                def __call__(self,task,prompt):
+                    if task=='teacher_select' and json.loads(prompt.split('Observation: ',1)[1])['source_id']=='flare-1':
+                        self.budget.reserve(10,.000001);attempts.append(task)
+                        raise RetryableModelError('fixture temporary network outage')
+                    return super().__call__(task,prompt)
+            state=run(folder,Model)
+            self.assertEqual(len(attempts),3)
+            self.assertEqual(state['status'],'complete_with_failures')
+            self.assertEqual([j['status'] for j in state['jobs']],['complete','failed','complete'])
+            self.assertNotIn('baseline_translation_ref',state['jobs'][1])
+
     @patch('localization_agent.selection.collector.LocalTokenCounter',return_value=len)
     def test_parallel_games_with_selection_before_translation_and_memory(self, _):
         with tempfile.TemporaryDirectory() as tmp:

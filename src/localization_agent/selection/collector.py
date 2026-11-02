@@ -32,7 +32,9 @@ class Collector:
         self.budget = CallBudget(**json.loads((self.folder/'budget.json').read_text()))
         # Budget callbacks never serialize trajectories or touch game SQLite connections.
         self.budget.on_change = lambda: write_json(self.folder/'budget.json',self.budget.snapshot())
-        self.chat = DurableChat(self.folder,config['models'],self.budget,factory)
+        self.chat = DurableChat(self.folder,config['models'],self.budget,factory,
+            max_attempts=config.get('request_retry',{}).get('max_attempts',8),
+            retry_delay=config.get('request_retry',{}).get('initial_delay_seconds',5))
         self.chat.capacity = threading.BoundedSemaphore(http_workers)
         self.game_workers = game_workers
         self.token_counter = LocalTokenCounter(config['tokenizer'])

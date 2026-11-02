@@ -26,6 +26,8 @@
 
 服务器迁移见 [SERVER_HANDOFF.md](docs/SERVER_HANDOFF.md)。新增 [CPU 准备入口](docs/CPU_PREPARATION.md)，可在无 GPU 时生成分组划分草案、冷启动顺序和 128 条 teacher 试采样目标；源图库与预算 tokenizer 单独同步。Teacher采样、冻结历史与选择数据导出已实现，服务器已有旧协议付费运行；当前选择上限8，独立翻译仅更新记忆，见 [轨迹入口](docs/TEACHER_TRAJECTORIES.md)。SFT/DPO训练尚未执行。
 
+2026-11-02：SFT采集已处理2020步（20冷启动＋2000目标），得到1967条程序有效选择，运行保留失败与旧基线历史标记；尚未完成全量语义筛选、真实模板长度验收或SFT训练。检查结果与限制见 [SFT采集检查](docs/SFT_COLLECTION_REVIEW.md)。
+
 ## 1. 我们要实现什么
 
 系统接收游戏台词、剧情文本、UI 字符串及可用的角色资料、术语表与风格要求，完成三个相互衔接的过程：

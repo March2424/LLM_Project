@@ -14,7 +14,8 @@ from hashlib import sha256
 from pathlib import Path
 
 from localization_agent.memory import MemoryConfig, MemoryService, MemoryStore
-from localization_agent.models.chat_completions import CallBudget, ChatCompletionsModel, BudgetExceeded
+from localization_agent.models.chat_completions import (CallBudget, ChatCompletionsModel, BudgetExceeded,
+                                                       RetryableModelError, ModelResponseError)
 from localization_agent.models.protocols import ModelReply
 from localization_agent.models.structured import parse_json_reply
 from localization_agent.models.token_count import LocalTokenCounter
@@ -26,6 +27,10 @@ from .checkpoints import JobCheckpoints, load_state, write_json
 
 class UncertainCall(RuntimeError):
     pass
+
+
+class CallFailed(RuntimeError):
+    """A bounded request failure; record the affected item and continue the stream."""
 
 
 def read_lines(path):
@@ -176,15 +181,43 @@ def prepare(folder, plan, model_config, max_cost, max_calls=10000, max_tokens=10
 
 
 class DurableChat:
-    """Persist successful responses; never retry an uncertain or failed request implicitly."""
-    def __init__(self, folder, models, budget, factory=ChatCompletionsModel, on_task=None):
+    """Cache successes, retry transient failures, and stop on interrupted unknown requests."""
+    def __init__(self, folder, models, budget, factory=ChatCompletionsModel, on_task=None,
+                 max_attempts=8, retry_delay=5):
         self.db = sqlite3.connect(folder / 'calls.sqlite', check_same_thread=False)
         self.db.execute('CREATE TABLE IF NOT EXISTS calls (key TEXT PRIMARY KEY, task TEXT, prompt TEXT, status TEXT, reply TEXT, error TEXT)')
+        self.db.execute('CREATE TABLE IF NOT EXISTS call_attempts (key TEXT,attempt INTEGER,status TEXT,error TEXT,at_unix REAL)')
         self.models = {key: factory(**value, budget=budget) for key, value in models.items()}
         self.on_task = on_task
         self.lock = threading.RLock()
         self.pending = {}
         self.capacity = threading.BoundedSemaphore(4)
+        if max_attempts < 1 or retry_delay < 0:
+            raise ValueError('Invalid request retry limits')
+        self.max_attempts, self.retry_delay = max_attempts, retry_delay
+
+    def request(self, key, task, prompt):
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                with self.capacity:
+                    reply = self.models['selection' if task == 'teacher_select' else 'translation'](task, prompt)
+            except (RetryableModelError, ModelResponseError) as error:
+                with self.lock:
+                    self.db.execute('INSERT INTO call_attempts VALUES (?,?,?,?,?)',
+                                    (key,attempt,'failed',str(error),time.time()))
+                    self.db.commit()
+                if isinstance(error, ModelResponseError) or attempt == self.max_attempts:
+                    raise CallFailed(f'{task} failed after {attempt} attempt(s): {error}') from error
+                delay = min(60, self.retry_delay * 2 ** (attempt - 1))
+                print(f'[retry] {task} {key[:12]} attempt {attempt}/{self.max_attempts}: '
+                      f'{error}; waiting {delay}s', flush=True)
+                time.sleep(delay)
+            else:
+                with self.lock:
+                    self.db.execute('INSERT INTO call_attempts VALUES (?,?,?,?,?)',
+                                    (key,attempt,'complete',None,time.time()))
+                    self.db.commit()
+                return reply
 
     def __call__(self, task, prompt):
         key = text_hash(task + '\n' + prompt)
@@ -195,6 +228,8 @@ class DurableChat:
             if key in self.pending:
                 future, owner = self.pending[key], False
             elif row:
+                if row[0] == 'failed' and (row[2] or '').startswith('handled_failure: '):
+                    raise CallFailed(row[2])
                 raise UncertainCall(f'Call {key[:12]} is {row[0]}; inspect calls.sqlite before any manual retry')
             else:
                 future, owner = Future(), True
@@ -206,11 +241,18 @@ class DurableChat:
         try:
             if self.on_task is not None:
                 self.on_task(task)
-            with self.capacity:
-                reply = self.models['selection' if task == 'teacher_select' else 'translation'](task, prompt)
+            reply = self.request(key, task, prompt)
         except BudgetExceeded as error:
             with self.lock:
                 self.db.execute('DELETE FROM calls WHERE key=?', (key,))
+                self.db.commit()
+                self.pending.pop(key)
+                future.set_exception(error)
+            raise
+        except CallFailed as error:
+            with self.lock:
+                self.db.execute('UPDATE calls SET status=?,error=? WHERE key=?',
+                                ('failed','handled_failure: '+str(error),key))
                 self.db.commit()
                 self.pending.pop(key)
                 future.set_exception(error)

@@ -59,7 +59,7 @@ def main():
         if args.resume:
             (Path(args.output)/'STOP').unlink(missing_ok=True)
         result = run(args.output,game_workers=args.game_workers,http_workers=args.http_workers)
-        if result['status'] != 'complete':
+        if result['status'] not in {'complete','complete_with_warnings','complete_with_failures'}:
             raise SystemExit(2)
     else:
         print('Exported program-checked SFT candidates:', export(args.output, args.dataset_dir))

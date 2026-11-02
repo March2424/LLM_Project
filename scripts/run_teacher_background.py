@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import resource
 from pathlib import Path
 import subprocess
 import sys
@@ -52,8 +53,11 @@ def main():
                     pass
                 time.sleep(5)
             code = worker.wait()
+            child_peak = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+            peak_rss = max(peak_rss, int(child_peak / 1024 if sys.platform == 'darwin' else child_peak))
+            worker_status = json.loads((output/'state.json').read_text())['status']
             record.update(status='worker_exited', returncode=code,
-                          sampled_peak_rss_kib=peak_rss, exited_at_unix=time.time())
+                          worker_status=worker_status, peak_rss_kib=peak_rss, exited_at_unix=time.time())
             write(output/'launcher.json', record)
             if code != 0:
                 for name in ('state.json', 'progress.json'):
@@ -62,7 +66,7 @@ def main():
                     if value['status'] == 'running':
                         value.update(status='worker_exited', worker_returncode=code)
                         write(path, value)
-            print(f'Worker exited: returncode={code}, peak_rss={peak_rss} KiB; no automatic retry',
+            print(f'Worker finished: status={worker_status}, returncode={code}, peak_rss={peak_rss} KiB',
                   file=log, flush=True)
 
 
