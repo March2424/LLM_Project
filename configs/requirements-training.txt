@@ -1,0 +1,9 @@
+# Linux training environment validated for imports/parser/tokenization on CPU only.
+# Reuse the server's torch 2.8.0+cu128; GPU training remains unverified.
+torch==2.8.0
+torchaudio==2.8.0
+llamafactory==0.9.5
+transformers==5.6.0
+trl==0.24.0
+peft==0.18.1
+accelerate==1.11.0

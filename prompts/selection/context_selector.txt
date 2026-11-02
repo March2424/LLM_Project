@@ -6,6 +6,7 @@ and explain its usefulness or redundancy. IDs may accompany this prose but canno
 the description: "select c02 because it is relevant" is insufficient. Do not invent evidence.
 selected_ids must be an array of distinct candidate IDs, ordered as in the observation.
 Choose zero to max_selected soft candidates within soft_token_budget. Hard context is fixed.
+Select up to eight soft contexts under the observation's limits; do not fill unused slots.
 Prefer evidence that resolves meaning, terminology or voice; avoid redundant or irrelevant items.
 Related source records are not preceding story events. Same-name matches do not prove identity.
 Keep raw conditions and variants distinct; program_only/inferred relations are fallible references.

@@ -26,6 +26,9 @@ class MemoryConfig:
     ltm_window: int = 20
     ltm_top_k: int = 2
     summary_step: int = 20
+    style_min_examples: int = 1
+    style_update_step: int = 2
+    style_window: int = 6
     retrieval: str = "lexical"
     recency_weight: float = 0.0
     prompt_dir: Path = Path(__file__).resolve().parents[3] / "prompts" / "memory"
@@ -35,6 +38,8 @@ class MemoryConfig:
             raise ValueError("Invalid memory window or summary interval")
         if self.retrieval not in {"lexical", "agent", "embedding"} or not 0 <= self.recency_weight <= 1:
             raise ValueError("Invalid retrieval mode or recency weight")
+        if min(self.style_min_examples,self.style_update_step)<1 or self.style_window<self.style_min_examples:
+            raise ValueError('Invalid style evidence window')
 
     @classmethod
     def from_file(cls, path: str | Path) -> "MemoryConfig":
@@ -284,7 +289,8 @@ class MemoryService:
             source_texts.append(e.quote)
         result, calls = {}, []
         for side, texts in [('source', source_texts), ('target', [r.content['target'] for r in records])]:
-            result[side], call = self._call('topic_' + side, 'topic.txt', side=side, topic=topic,
+            result[side], call = self._call('topic_' + side, 'topic.txt', side=side,
+                                           topic=occurrence.metadata.get('topic_name',topic),
                                            texts=json.dumps(texts, ensure_ascii=False))
             calls.append(call)
         return self.store.draft('summary', scope, {**result, 'summary_mode': 'topic','verification':'program_only',
@@ -305,15 +311,34 @@ class MemoryService:
             raise ValueError('Automatic role notes require game_resources mode')
         key = 'style:' + text_hash(json.dumps([view.run_id, speaker, asdict(self.store.game_scope(occurrence))], sort_keys=True))
         version = self.store.latest_version(key)
-        if version and self.store.is_valid(MemoryRef(key, version)):
+        records=[r for r in self.store.visible(view) if r.kind=='translation'
+                 and r.content.get('metadata',{}).get('speaker_id')==speaker
+                 and self.store.game_compatible(r,occurrence) and scope_match(r.scope,occurrence)=='match']
+        records.sort(key=lambda r:r.commit_seq)
+        evidence={r.evidence[0].occurrence_id:r.evidence[0] for r in records}
+        evidence[occurrence.occurrence_id]=Evidence(occurrence.occurrence_id,occurrence.source_version,occurrence.source)
+        distinct={}
+        for item in evidence.values():
+            distinct.setdefault(text_hash(item.quote),item)
+        evidence=tuple(list(distinct.values())[-self.config.style_window:])
+        if len(evidence)<self.config.style_min_examples:
             return None
-        note, call = self._call('extract_style', 'style.txt', speaker=speaker,
-                               source=occurrence.source, context=occurrence.metadata.get('native_context', ''))
+        previous=self.store.get(MemoryRef(key,version)) if version and self.store.is_valid(MemoryRef(key,version)) else None
+        old=previous.content.get('covered_source_ids',[e.occurrence_id for e in previous.evidence]) if previous else []
+        if previous and sum(e.occurrence_id not in old for e in evidence)<self.config.style_update_step:
+            return None
+        source=json.dumps([{'source_id':e.occurrence_id,'source':self.store.source(occurrence.project_id,e).source}
+                           for e in evidence],ensure_ascii=False)
+        speaker_name=occurrence.metadata.get('speaker_name',speaker)
+        note, call = self._call('extract_style', 'style.txt', speaker=speaker_name,
+                               source=source, context=occurrence.metadata.get('native_context', ''))
         base = self.store.game_scope(occurrence)
         scope = Scope(base.project_id, conditions={**base.conditions, 'speaker_id': (speaker,)},
                       source_lang=base.source_lang, target_lang=base.target_lang)
         return self.store.draft('style', scope, {'note': note, 'model_calls': [call],
+            'speaker_id':speaker,'speaker_name':speaker_name,
             'verification':'program_only',
+            'covered_source_ids':[e.occurrence_id for e in evidence],
             'context_manifest': context_manifest or {}},
-            (Evidence(occurrence.occurrence_id, occurrence.source_version, occurrence.source),),
+            evidence, dependencies=tuple(r.ref for r in records if r.evidence[0].occurrence_id in {e.occurrence_id for e in evidence}),
             run_id=view.run_id, position=occurrence.position, record_id=key, expected_version=version)

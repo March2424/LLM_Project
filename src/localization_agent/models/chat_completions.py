@@ -2,7 +2,10 @@
 import json
 import math
 import os
+import threading
+import ssl
 from dataclasses import dataclass
+from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -18,6 +21,14 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
+class RetryableModelError(RuntimeError):
+    """Temporary service/transport failure; another attempt may incur another charge."""
+
+
+class ModelResponseError(RuntimeError):
+    """A received response is unusable; retrying the same limits is not a repair."""
+
+
 @dataclass
 class CallBudget:
     max_calls: int = 20
@@ -30,10 +41,15 @@ class CallBudget:
     unpriced_calls: int = 0
 
     def __post_init__(self):
+        self._lock = threading.RLock()
         if min(self.max_calls, self.max_tokens) < 0 or (self.max_cost is not None and self.max_cost < 0):
             raise ValueError('Budget limits cannot be negative')
 
     def reserve(self, tokens: int, cost: float | None):
+        with self._lock:
+            self._reserve(tokens, cost)
+
+    def _reserve(self, tokens: int, cost: float | None):
         if self.max_cost is not None and cost is None:
             raise ValueError('A money limit needs input/output prices for every model')
         if (self.calls >= self.max_calls or self.tokens + tokens > self.max_tokens
@@ -46,6 +62,20 @@ class CallBudget:
         self.unpriced_calls += cost is None
         if callback := getattr(self, 'on_change', None):
             callback()
+
+    def settle(self, reserved_tokens: int, reserved_cost: float | None,
+               actual_tokens: int, actual_cost: float | None):
+        with self._lock:
+            self.tokens += actual_tokens - reserved_tokens
+            self.cost += (actual_cost or 0) - (reserved_cost or 0)
+            self.estimated_usage_calls -= 1
+            if callback := getattr(self, 'on_change', None):
+                callback()
+
+    def snapshot(self):
+        from dataclasses import asdict
+        with self._lock:
+            return asdict(self)
 
 
 class ChatCompletionsModel:
@@ -93,24 +123,34 @@ class ChatCompletionsModel:
                 result = json.load(response)
         except HTTPError as error:
             # Do not expose provider response bodies, which may echo sensitive input.
+            if error.code in {408, 429, 500, 502, 503, 504}:
+                raise RetryableModelError(f'Model HTTP {error.code}') from None
             raise RuntimeError(f'Model HTTP {error.code}; request not automatically retried') from None
-        except (URLError, TimeoutError) as error:
-            raise RuntimeError(f'Model transport failure: {type(error).__name__}; not retried') from None
+        except (URLError, TimeoutError, ConnectionError, IncompleteRead, ssl.SSLError) as error:
+            reason = error.reason if isinstance(error, URLError) else error
+            detail = type(reason).__name__
+            if isinstance(reason, ssl.SSLCertVerificationError):
+                raise RuntimeError('Model TLS certificate verification failed') from None
+            raise RetryableModelError(f'Model transport failure: {detail}') from None
+        except json.JSONDecodeError:
+            raise RetryableModelError('Model returned invalid JSON') from None
+        if not isinstance(result, dict):
+            raise ModelResponseError('Model response is not an object')
         usage = result.get('usage') or {}
         actual_input, actual_output = usage.get('prompt_tokens'), usage.get('completion_tokens')
         if actual_input is not None and actual_output is not None:
             actual_cost = self._cost(actual_input, actual_output)
-            self.budget.tokens += actual_input + actual_output - inputs - self.max_output_tokens
-            self.budget.cost += (actual_cost or 0) - (reserved_cost or 0)
-            self.budget.estimated_usage_calls -= 1
+            self.budget.settle(inputs + self.max_output_tokens, reserved_cost,
+                               actual_input + actual_output, actual_cost)
         else:
             actual_cost = None
-        if callback := getattr(self.budget, 'on_change', None):
-            callback()
-        choice = result['choices'][0]
+        choices = result.get('choices')
+        if not choices or not isinstance(choices, list) or not isinstance(choices[0], dict):
+            raise ModelResponseError('Model response has no completion choices')
+        choice = choices[0]
         if choice.get('finish_reason') == 'length':
-            raise RuntimeError('Model output truncated; reduce batch size or increase output limit')
-        content = choice['message'].get('content')
+            raise ModelResponseError('Model output truncated; reduce batch size or increase output limit')
+        content = (choice.get('message') or {}).get('content')
         if not isinstance(content, str) or not content.strip():
-            raise RuntimeError('Model response has no text content')
+            raise ModelResponseError('Model response has no text content')
         return ModelReply(content, result.get('model', self.model), actual_input, actual_output, actual_cost)

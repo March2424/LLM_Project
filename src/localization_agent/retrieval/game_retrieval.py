@@ -13,6 +13,8 @@ def retrieve_game(service, occurrence, view, snapshot_id):
     if index.snapshot.project_id!=occurrence.project_id:raise ValueError('Graph snapshot belongs to another project')
     if occurrence.occurrence_id not in index.occurrences:raise ValueError('Snapshot needs a current valid occurrence node')
     current=Evidence(occurrence.occurrence_id,occurrence.source_version,occurrence.source)
+    if service.allowed_source_ids is not None and occurrence.occurrence_id not in service.allowed_source_ids:
+        raise ValueError('Current source is outside the declared source visibility')
     if index.sources.get(occurrence.occurrence_id)!=occurrence:raise ValueError('Current occurrence differs from registered source')
     resolved,bindings=service.bindings(occurrence,snapshot_id)
     effective=replace(occurrence,metadata={**occurrence.metadata,**resolved})
@@ -89,9 +91,14 @@ def retrieve_game(service, occurrence, view, snapshot_id):
     for ref in index.lexical(effective.source,service.config.max_nodes):
         source_item(ref)
     bundle=service.memory.read(effective,view,related_ids=related)
-    memory_records=(*bundle.terms,*bundle.styles,*bundle.stm,*bundle.ltm,*bundle.summaries)
-    for record in memory_records:
-        put(candidate_from_memory(record,mandatory=is_mandatory(record)))
+    for kind, records in (('term',bundle.terms),('style',bundle.styles),('stm',bundle.stm),
+                          ('ltm',bundle.ltm),('summary',bundle.summaries)):
+        for record in records:
+            if service.allowed_source_ids is not None and any(
+                    e.occurrence_id not in service.allowed_source_ids for e in record.evidence):
+                continue
+            item=candidate_from_memory(record,mandatory=is_mandatory(record))
+            put(replace(item,relations=('MEMORY_'+kind.upper(),)))
     hard=[c for c in candidates.values() if c.mandatory]
     soft=[c for c in candidates.values() if not c.mandatory]
     query=service.query_tokens(effective.source)

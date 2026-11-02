@@ -48,7 +48,7 @@ M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/me
 - MemoryService.eligible()：公开读取未经过 top-k 的有效记忆，用于图联查；保留原隔离规则。
 - MemoryStore.commit_translation()：新增可选 context_sources/context_manifest。图调用方使用 GraphRetriever.commit() 验证图及输入包；旧 M2 调用保持兼容。
 
-2026-11-01 游戏召回补充：SQLite 是运行时存储；按类型＋casefold/空白处理后的名称汇总命中，不建立别名/身份映射，不合并节点。池默认 16 个软项，最多三个名称入口、一跳实体关系；select_context(pool, short_ids) 接受 c01…c16 的 0–5 项合法动作。selector_observation 返回 pool_hash、硬项、可读软项和 token 成本；显式动作超预算直接失败。源侧软参考展示原条件，正式记忆仍严格检查。完整约定见 [LIGHTWEIGHT_RETRIEVAL.md](LIGHTWEIGHT_RETRIEVAL.md)。
+2026-11-01 游戏召回补充：SQLite 是运行时存储；按类型＋casefold/空白处理后的名称汇总命中，不建立别名/身份映射，不合并节点。池默认 16 个软项，最多三个名称入口、一跳实体关系；select_context(pool, short_ids) 接受 c01…c16 的 0–8 项合法动作。selector_observation 返回 pool_hash、硬项、可读软项和 token 成本；显式动作超预算直接失败。源侧软参考展示原条件，正式记忆仍严格检查。完整约定见 [LIGHTWEIGHT_RETRIEVAL.md](LIGHTWEIGHT_RETRIEVAL.md)。
 
 真实试跑补充：`GameSession.translate_one(..., selected_ids=None)` 可传实际 Candidate.id tuple，执行显式动作，空 tuple 仅保留硬项；不传仍使用固定装填。短 ID 动作先经 GraphRetriever 映射，不能直接把 c01 传给 GameSession。模型 JSON 回复支持单层完整 Markdown JSON 围栏，剥离后仍执行原结构/证据检查；不从混合自由文本中猜取 JSON。记忆审查使用精简知识/作用域/证据及依赖源译对，完整 manifest 留审计，不递归送进审查 prompt。实际入口见 [TRANSLATION_PILOT.md](TRANSLATION_PILOT.md)。
 
@@ -153,3 +153,30 @@ AutoGraphBuilder 不再接收 reviewer，只使用 memory 中的 ChatModel，每
 ## 全量提取检查点（2026-10-31）
 
 AutoGraphBuilder 新增 reuse_logged_calls 与 keep_valid_items（均默认 false）。前者仅重放完整 prompt 哈希匹配的成功响应，后者逐项保留通过现有结构/来源检查的结果，将拒绝项原提议和原因写入 BuildResult.rejected（默认空元组）。原模型输出 schema 不变，不降低单项校验标准。CLI --resume 检查数据/模型/提示词/批次指纹并恢复累计预算；图写入和 extraction_batches 检查点共同提交。专用 Flare 配置启用逐项模式，--split-failures 对完整响应无效或截断批次拆分，预算仍共享。详见 [全量运行说明](EXTRACTION_RUN.md)。
+
+
+## CPU 训练准备接口（2026-11-01）
+
+`GraphRetriever.selector_observation()` 的软候选新增 `memory_kind`，来自本次召回的 MEMORY_TERM/STYLE/SUMMARY/STM/LTM 标签；源文/关系候选回退到原 category。`category=translation`、memory_ref 与版本不变，STM/LTM 继续引用同一份去重译例，不按类别强制入选。标签属于观察的来源说明，不代表知识语义已核验。
+
+新增 `scripts/prepare_training_data.py` 输出划分草案、源侧输入、隔离的 `offline/references.jsonl`、资源组序列与 pilot 计划，格式和边界见 [CPU_PREPARATION.md](CPU_PREPARATION.md)。这些不是带历史记忆的冻结状态或真实 teacher 轨迹。跨划分原生 context 与图遍历的可见范围仍待采样器冻结并执行；不能直接把全库检索当作训练侧隔离已经完成。
+
+
+## Teacher 采样接口（2026-11-02）
+
+GraphRetriever 可选 allowed_source_ids 冻结源侧可见集合，默认None保留原行为；游戏模式拒绝集合外当前任务，过滤集合外来源的节点路径、原文及记忆证据。采样只读取计划中的train IDs，native_context仍是该源记录的既有源侧字段。新CLI generate_teacher_trajectories.py 提供prepare/run/export，输出state.json、calls.sqlite、预算、progress.json/HTML与program_only SFT候选；调用/恢复和输入绑定见 [TEACHER_TRAJECTORIES.md](TEACHER_TRAJECTORIES.md)。
+
+
+2026-11-02选择协议v2：selection_checks_passed与memory_status分开；selected_contexts保存所选软证据正文，teacher_context保留完整ContextPack与来源，Teacher不生成最终译文。基线翻译仅更新记忆，SFT输出仅rationale/selected_ids。最大8项，旧协议通过migrate保留费用/记忆，新默认导出排除legacy标签；相关CLI见 [TEACHER_TRAJECTORIES.md](TEACHER_TRAJECTORIES.md)。
+
+
+2026-11-02持续游戏记忆：CPU sequences按(game,split)生成唯一stream，memory_scope=game_split；group_id仅用于划分/溯源。Teacher config记录memory_policy=per_game_split_stage_v1和collection_stage=teacher_sft，job.run_id固定为teacher_sft:<game>:train，跨资源组不变。每个stream只有一次warmup，后续目标按源侧position顺序继续。prepare拒绝旧多资源组计划；run/export拒绝未采用该记忆策略的历史批次。新SFT元数据记录memory_policy；旧多run状态只保留审计，不自动合并。DPO阶段同样按游戏/划分独立run一次冷启动，采样器仍待实现。
+
+
+原生身份覆盖扩展（2026-11-02）：GraphRetriever增加可选source_annotations，默认无绑定保持原行为；数据由native_bindings.json提供，按source_id保留source_version、source_hash、metadata及源侧evidence。应用前验证源版本/hash，显式身份冲突时报错；绑定不改源记录，完整native_binding写入ContextPack.manifest。Teacher config冻结绑定文件path/sha256并设置style_min_examples=2；MemoryConfig新增style_min_examples、style_update_step、style_window。角色内容保留speaker_id/name、covered_source_ids及证据依赖；新摘要内容通过metadata.topic_name展示原生主题。progress/export增加按memory_kind的目标可见计数，注册coverage训练集前要求角色/摘要确实出现过，不要求它们被选中。
+
+
+并发运行接口（2026-11-02）：state.json的storage_format=per_job_v1时jobs是轻量索引，完整状态用selection.checkpoints.load_state读取；原子检查点位于jobs/<index>.json，格式仍为原完整job。Game SQLite只在对应game worker中访问，HTTP请求共享受锁保护的DurableChat与CallBudget，单条Teacher/基线请求完成并缓存后才提交译例。CallBudget新增原子settle和snapshot，不把锁存入数据。CLI新增upgrade/retry-call/stop、run的--resume/--game-workers/--http-workers；授权重试将旧不确定调用存入call_retry_audit，保留原费用。业务字段/选择标签/记忆顺序不变，参见TEACHER_RUNTIME.md。
+
+
+Teacher 采集检查点补充（2026-11-02）：`translation_context_policy` 区分 `teacher_selected_v1`、`warmup_fixed_baseline` 和 `legacy_fixed_baseline`。新目标的 `translation_context` 保存实际翻译 ContextPack（与 `teacher_context` 一致），`translation_prompt` 保存实际翻译输入；`baseline_translation_ref` 沿用旧字段名保存记忆译例引用，不代表采用默认候选。导出报告按实际流程分别计数，译文不进入选择器标签。

@@ -6,6 +6,6 @@
   "source_visibility": "previous",
   "max_entity_seeds": 3,
   "max_entity_hops": 1,
-  "max_selected": 5,
+  "max_selected": 8,
   "max_soft_tokens": 1024
 }

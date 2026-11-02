@@ -19,15 +19,15 @@
 | max_neighbors | 6 | 每节点各类邻接查找的上限；定义优先，描述优先于裸名称 |
 | max_hops / max_nodes | 4 / 40 | 单次图探索总深度和节点上限 |
 | max_candidates | 16 | 软候选池上限；硬项另计 |
-| max_selected | 5 | 选择器输出 0–5 条软候选；固定基线按池顺序装填 |
+| max_selected | 8 | 当前选择器输出0–8条软候选；硬项另计；旧运行保留其冻结参数 |
 | max_soft_tokens | 1024 | 选中软上下文序列化后的预算，包含短 ID、记录引用、类别和正文 |
 | max_characters | 6000 | 全部上下文包的附加字符上限，硬项超限返回 budget_conflict |
 
 流程是当前 occurrence → 直接图边/完整名称 → 同名节点的定义、提及及一跳关系 → 词法补充 → 五类记忆联查。词法使用源词倒排索引和 IDF 加权重叠，不引入 embedding；图探索和词法候选共用总节点预算。无实体时仍能执行词法回退；返回空候选也合法。实体名称只负责定位，不单独占一个软候选位。
 
-候选池优先保留定义、关系及图关联原文，再补词法结果；源资料、术语/角色、译例、摘要轮流装填，避免图资料挤掉自动名称与角色笔记。排序是固定启发式基线，尚未证明是最优策略。截断写入 `pool.unresolved`。
+候选池优先保留定义、关系及图关联原文，再补词法结果；源资料、术语/角色、STM/LTM、摘要四组轮流装填；用户明确允许后两种合组。每项仍分别标注memory_kind；合组内某细类可被截断，不保证五类各占一位。最终选择无类别配额。排序是固定启发式基线，尚未证明是最优策略。截断写入 `pool.unresolved`。
 
-**翻译器为闭源 LLM，选择器为独立 4B 模型。暂不扩大 1024。** 这不是翻译器或选择器的总窗口：当前原文、硬术语、系统指令、选择器看到的完整 16 项观察及输出预留另计。短定义通常能容纳多条；真实收益应由后续翻译闭环验证。长候选整项跳过、不截断证据。日志记录未选 ID、单项 token、超大候选和期望证据是否被最终选入，便于区分池缺失、排序/五项限制和 token 限制。
+**翻译器为闭源LLM，当前学生选择器为Qwen3-8B。暂不扩大1024。** 这不是翻译器或选择器的总窗口：当前原文、硬术语、系统指令、选择器看到的完整 16 项观察及输出预留另计。短定义通常能容纳多条；真实收益应由后续翻译闭环验证。长候选整项跳过、不截断证据。日志记录未选 ID、单项 token、超大候选和期望证据是否被最终选入，便于区分池缺失、排序/八项限制和 token 限制。
 
 `LocalTokenCounter` 从调用方提供的 `tokenizer.json` 计算文本 token，固定文件 SHA256 并关闭内置截断/填充。1024 对这个固定预算 tokenizer 严格执行。闭源服务如提供适配的 tokenizer 应优先使用；不可取得时声明采用哪个代理 tokenizer，固定对照口径，不能称为该服务的精确计费 token。实际 API 成本仍根据服务 usage 记录；例如 [DeepSeek 官方说明](https://api-docs.deepseek.com/quick_start/token_usage/) 也区分离线计算与 API 返回用量。当前诊断使用 Qwen2.5 的公开 tokenizer，只下载分词文件，无模型权重；不代表实际翻译器或 4B 选择器已确定为该模型。真实闭环前需确认服务/模型、预算 tokenizer 和费用配置。
 
@@ -53,7 +53,7 @@ speaker/topic 在源数据未提供明确值时，才从当前直接、适用、
 
 完整观察也保留原生 context/text_type、已知条件和语言方向，不只给派生的 speaker/topic。[选择器提示模板](../prompts/selection/context_selector.txt) 输出简短自然语言 `rationale` 和 `selected_ids`；理由与动作一起参与训练，执行器只使用 ID，详见 [训练协议](TRAINING.md)。当前源记录的 ID/版本与元数据单独送翻译/审校，并绑定在 manifest.current_source_context；不挤占 1024 软证据预算。
 
-`select_context(pool, ('c02','c05'))` 只接受该池短 ID，按池顺序规范化，固定保留全部硬项。空动作合法；重复、池外、超过五项或超预算的动作直接报错，不能偷偷裁掉动作中的一项。训练/采样方必须把动作和 observation 的 pool_hash、ReadView、图快照绑定。当前提供接口与固定基线，尚未实现 4B 选择器服务、SFT/DPO 采样或奖励。
+`select_context(pool, ('c02','c05'))` 只接受该池短 ID，按池顺序规范化，固定保留全部硬项。空动作合法；重复、池外、超过八项或超预算的动作直接报错，不能偷偷裁掉动作中的一项。训练/采样方必须把动作和 observation 的 pool_hash、ReadView、图快照绑定。当前已实现Teacher采样、冷启动记忆更新与SFT候选导出；开源学生自采样、DPO评分/配对及在线选择器服务尚未实现。
 
 `ContextPack.model_context` 是实际给翻译器和审校器的同一份正文，包含短 ID 与原始记录引用/版本；manifest 保留完整来源、关系路径、记忆版本、未选 ID、预算与 tokenizer 标识，并与正文共同生成 context_hash。`tokens` 为全上下文计数，`soft_tokens` 为软部分计数；它们都不含系统提示词、当前原文和输出。提交前重建输入并比对，过期验证不能复用。
 
@@ -78,3 +78,6 @@ PYTHONPATH=artifacts/retrieval_deps:src python3 scripts/validate_game_retrieval.
 ```
 
 脚本只读打开原库，备份到内存后创建诊断运行；不读取独立参考，不调用模型，不向正式库写译文。输出 summary.json、完整 cases.jsonl 和 REPORT.md。期望证据来自少量人工检查的原文案例，不拿现有图自动生成的关系充当语义金标准；其余均匀抽样只做结构、预算和性能检查。它不输出翻译精度、收益或训练结果。当前结果与剩余任务见 [PRE_RL_ALIGNMENT.md](PRE_RL_ALIGNMENT.md)。
+
+
+2026-11-02：当前Teacher/SFT协议上限统一为8项，保留1024软token；上文历史随机五项试跑的产物与结果不重写。Teacher不生成最终译文，外部翻译只用于记忆推进，见 [TEACHER_TRAJECTORIES.md](TEACHER_TRAJECTORIES.md)。
