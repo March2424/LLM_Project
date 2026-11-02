@@ -11,6 +11,22 @@ from localization_agent.schemas.memory import Occurrence, Evidence, Scope
 
 
 class LightweightRetrievalTests(unittest.TestCase):
+    def test_native_profile_keeps_unknown_speaker_unknown(self):
+        from localization_agent.schemas.memory import text_hash
+        source=self.rows['q']
+        actor=self.graph.put_node(GraphNode('actor','entity',Scope('p'),
+            {'entity_type':'character','name':'Arin'},self.nodes['q'].evidence))
+        self.graph.put_edge(GraphEdge('speaker','SPOKEN_BY',self.nodes['q'].ref,actor.ref,Scope('p'),
+            self.nodes['q'].evidence,status='approved',reviewer='fixture'))
+        self.graph.create_snapshot('speaker-profile','p')
+        self.retriever.source_annotations={'q':{'source_version':1,'source_hash':text_hash(source.source),
+            'metadata':{'topic_id':'native:topic:ward','identity_origin':'native_source_provenance'}}}
+        metadata,_=self.retriever.bindings(source,'speaker-profile')
+        self.assertNotIn('speaker_id',metadata)
+        self.retriever.source_annotations={}
+        metadata,_=self.retriever.bindings(source,'speaker-profile')
+        self.assertEqual(metadata['speaker_id'],'actor')
+
     def setUp(self):
         self.store = MemoryStore()
         self.addCleanup(self.store.close)
@@ -96,10 +112,12 @@ class LightweightRetrievalTests(unittest.TestCase):
     def test_selector_actions_exact_pack_and_hard_items(self):
         pool=self.pool()
         hard=Candidate('hard@1','style','Keep tags.',True)
-        soft=tuple(Candidate('s%d@1'%i,'source','Context '+str(i)) for i in range(6))
+        soft=tuple(Candidate('s%d@1'%i,'source','Context '+str(i)) for i in range(9))
         pool=replace(pool,candidates=(hard,)+soft)
         observation=self.retriever.selector_observation(pool)
-        self.assertEqual([c['id'] for c in observation['candidates']],['c01','c02','c03','c04','c05','c06'])
+        self.assertEqual([c['id'] for c in observation['candidates']],['c%02d'%i for i in range(1,10)])
+        eight=tuple(c['id'] for c in observation['candidates'][:8])
+        self.assertEqual(len(self.retriever.select_context(pool,eight).selected),9)  # eight soft plus hard
         pack=self.retriever.select_context(pool,('c02','c04'))
         self.assertEqual([c.id for c in pack.selected],['hard@1','s1@1','s3@1'])
         self.assertEqual(pack.model_context,pack.manifest['model_context'])

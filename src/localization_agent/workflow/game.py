@@ -25,6 +25,13 @@ class GameSession:
         self.placeholder_pattern = re.compile(placeholder_pattern)
         self.require_reviewer=require_reviewer
 
+    def placeholders(self, text: str) -> list[str]:
+        # "50% durability" is prose, not a printf space-flag conversion "% d".
+        return [match.group() for match in self.placeholder_pattern.finditer(text)
+                if not (match.group().startswith('%') and ' ' in match.group()
+                        and match.end() < len(text) and text[match.end()].isascii()
+                        and text[match.end()].isalpha())]
+
     def translate_one(self, occurrence: Occurrence, run_id: str, snapshot_id: str, *,
                       selected_ids: tuple[str, ...] | None = None) -> GameOutcome:
         """Persist a draft and warnings; do not call a second semantic reviewer here."""
@@ -38,7 +45,7 @@ class GameSession:
             source_lang=occurrence.source_lang, target_lang=occurrence.target_lang, contexts=pack.model_context,
             source_context=pack.manifest['current_source_context'])
         warnings=[]
-        if Counter(self.placeholder_pattern.findall(occurrence.source)) != Counter(self.placeholder_pattern.findall(target)):
+        if Counter(self.placeholders(occurrence.source)) != Counter(self.placeholders(target)):
             warnings.append('Placeholder/tag mismatch')
         for item in pack.selected:
             if item.mandatory and item.category=='term':

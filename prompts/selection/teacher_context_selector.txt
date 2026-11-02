@@ -9,6 +9,9 @@ prose but cannot replace it: "select c02 because it is relevant" is insufficient
 selected_ids must be an array of distinct candidate IDs, ordered as in the observation.
 Choose zero to max_selected soft candidates within
 soft_token_budget. Hard context is fixed and cannot be removed.
+The current protocol allows up to eight selected soft contexts, never more than the
+observation limit or budget. Output only the decision analysis and selected IDs;
+do not generate a final translation. Translation for memory updates is a separate task.
 
 Use these task-dependent hints when inspecting the available evidence:
 - For specialized names or recurring terminology, inspect applicable term suggestions first.

@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import threading
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -30,10 +31,15 @@ class CallBudget:
     unpriced_calls: int = 0
 
     def __post_init__(self):
+        self._lock = threading.RLock()
         if min(self.max_calls, self.max_tokens) < 0 or (self.max_cost is not None and self.max_cost < 0):
             raise ValueError('Budget limits cannot be negative')
 
     def reserve(self, tokens: int, cost: float | None):
+        with self._lock:
+            self._reserve(tokens, cost)
+
+    def _reserve(self, tokens: int, cost: float | None):
         if self.max_cost is not None and cost is None:
             raise ValueError('A money limit needs input/output prices for every model')
         if (self.calls >= self.max_calls or self.tokens + tokens > self.max_tokens
@@ -46,6 +52,20 @@ class CallBudget:
         self.unpriced_calls += cost is None
         if callback := getattr(self, 'on_change', None):
             callback()
+
+    def settle(self, reserved_tokens: int, reserved_cost: float | None,
+               actual_tokens: int, actual_cost: float | None):
+        with self._lock:
+            self.tokens += actual_tokens - reserved_tokens
+            self.cost += (actual_cost or 0) - (reserved_cost or 0)
+            self.estimated_usage_calls -= 1
+            if callback := getattr(self, 'on_change', None):
+                callback()
+
+    def snapshot(self):
+        from dataclasses import asdict
+        with self._lock:
+            return asdict(self)
 
 
 class ChatCompletionsModel:
@@ -100,13 +120,10 @@ class ChatCompletionsModel:
         actual_input, actual_output = usage.get('prompt_tokens'), usage.get('completion_tokens')
         if actual_input is not None and actual_output is not None:
             actual_cost = self._cost(actual_input, actual_output)
-            self.budget.tokens += actual_input + actual_output - inputs - self.max_output_tokens
-            self.budget.cost += (actual_cost or 0) - (reserved_cost or 0)
-            self.budget.estimated_usage_calls -= 1
+            self.budget.settle(inputs + self.max_output_tokens, reserved_cost,
+                               actual_input + actual_output, actual_cost)
         else:
             actual_cost = None
-        if callback := getattr(self.budget, 'on_change', None):
-            callback()
         choice = result['choices'][0]
         if choice.get('finish_reason') == 'length':
             raise RuntimeError('Model output truncated; reduce batch size or increase output limit')

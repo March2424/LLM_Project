@@ -1,0 +1,31 @@
+{
+  "student_model": "Qwen/Qwen3-8B",
+  "llamafactory_release": "v0.9.5",
+  "sft_valid_examples_target": 2000,
+  "sft_epochs": 2,
+  "development_set": false,
+  "checkpoint_selection": "final_epoch_2_fixed_before_test",
+  "dpo_epochs_initial": 1,
+  "teacher_translation_is_student_target": false,
+  "rationale_participates_in_loss": true,
+  "native_thinking": false,
+  "rationale_format": "explicit_natural_language_in_json",
+  "gpu_verified": false,
+  "max_selected": 8,
+  "teacher_translation_generated": false,
+  "translation_purpose": "memory_update_only_during_sft_collection",
+  "trajectory_schema_version": 2,
+  "memory_policy": "per_game_split_stage_v1",
+  "warmup_per_game": 10,
+  "reset_memory_on_resource_change": false,
+  "dpo_memory_writeback": "fixed_baseline_once",
+  "dpo_collection_implemented": false,
+  "sft_sampling_policy": "native_identity_compatible_memory_blocks_plus_balanced_targets",
+  "role_evidence_min_distinct_sources": 2,
+  "summary_min_committed_examples": 5,
+  "candidate_exposure_required_before_registered_export": [
+    "style",
+    "summary"
+  ],
+  "selector_category_quotas": false
+}

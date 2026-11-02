@@ -20,7 +20,7 @@ class GraphConfig:
     max_characters: int = 6000
     max_entity_seeds: int = 3
     max_entity_hops: int = 1
-    max_selected: int = 5
+    max_selected: int = 8
     max_soft_tokens: int | None = 1024
     source_visibility: str = 'previous'  # 'all' requires an explicitly supplied game source script
 
@@ -49,7 +49,12 @@ def candidate_from_memory(record, *, mandatory=False, path=(), relations=()):
         text='Source: '+content['source']+'\n'+label+content['target']
     elif record.kind=='summary':
         text='Source overview: '+content['source']+'\nTarget usage: '+content['target']
-    else:text=content['note']
+        if content.get('metadata',{}).get('topic_name'):
+            text='Topic: '+content['metadata']['topic_name']+'\n'+text
+    else:
+        text=content['note']
+        if content.get('speaker_name'):
+            text='Role note for '+content['speaker_name']+': '+text
     if content.get('verification')=='unreviewed':text='[Unreviewed trial memory]\n'+text
     conditions={k:v for k,v in record.scope.conditions.items() if k not in {'speaker_id','topic_id'}}
     if conditions:text+='\nConditions: '+canonical(conditions)
@@ -59,12 +64,16 @@ def candidate_from_memory(record, *, mandatory=False, path=(), relations=()):
 
 class GraphRetriever:
     def __init__(self, graph: GraphStore, memory: MemoryService, config: GraphConfig | None = None, *,
-                 token_counter: Callable[[str], int] | None = None):
+                 token_counter: Callable[[str], int] | None = None,
+                 allowed_source_ids: frozenset[str] | None = None,
+                 source_annotations: dict | None = None):
         if graph.memory is not memory.store:
             raise ValueError('Graph and memory service must share a MemoryStore')
         self.graph, self.memory = graph, memory
         self.config = config or GraphConfig()
         self.token_counter=token_counter
+        self.allowed_source_ids=allowed_source_ids
+        self.source_annotations=source_annotations or {}
         self._game_indexes={}
 
     query_tokens=staticmethod(_tokens)
@@ -86,6 +95,8 @@ class GraphRetriever:
         return scope_match(scope,occurrence)=='match'
 
     def _source_allowed(self, occurrence, evidence, game=False, *, reference=False):
+        if self.allowed_source_ids is not None and evidence.occurrence_id not in self.allowed_source_ids:
+            return False
         if game and reference:
             source=self.game_index_current.sources.get(evidence.occurrence_id) if hasattr(self,'game_index_current') else None
             if source is None or source.source_version!=evidence.source_version:return False
@@ -126,12 +137,23 @@ class GraphRetriever:
                 speakers[right.id] = refs
             if edge.relation in {'DEFINES', 'MENTIONS'} and right.attributes['entity_type'] != 'character':
                 topics[right.id] = (0 if edge.relation == 'DEFINES' else 1, refs)
+        annotation=self.source_annotations.get(occurrence.occurrence_id)
         metadata, used = {}, []
-        if len(speakers) == 1 and not occurrence.metadata.get('speaker_id'):
+        if annotation:
+            if (annotation['source_version'] != occurrence.source_version
+                    or annotation['source_hash'] != text_hash(occurrence.source)):
+                raise ValueError('Native binding no longer matches its source version/text')
+            metadata.update(annotation['metadata'])
+            for field in ('speaker_id','topic_id'):
+                if occurrence.metadata.get(field) and field in metadata:
+                    if metadata[field] != occurrence.metadata[field]:
+                        raise ValueError('Native binding conflicts with explicit source identity')
+        if (not annotation and len(speakers) == 1
+                and not (occurrence.metadata.get('speaker_id') or metadata.get('speaker_id'))):
             identity, refs = next(iter(speakers.items()))
             metadata['speaker_id'] = identity
             used.extend(refs)
-        if len(topics)==1 and not occurrence.metadata.get('topic_id'):
+        if len(topics)==1 and not (occurrence.metadata.get('topic_id') or metadata.get('topic_id')):
             identity = next(iter(topics))
             metadata['topic_id'] = identity
             used.extend(topics[identity][1])
@@ -318,7 +340,9 @@ class GraphRetriever:
             'source_version':pool.source_version,'metadata':{**source.metadata,**pool.resolved_metadata},
             'max_selected':self.config.max_selected,'soft_token_budget':self.config.max_soft_tokens,
             'hard_context':self._render(pool,[c for c in pool.candidates if c.mandatory]),
-            'candidates':[{'id':'c%02d'%(i+1),'category':c.category,'text':c.text,'relations':c.relations,
+            'candidates':[{'id':'c%02d'%(i+1),'category':c.category,
+                'memory_kind':next((r.removeprefix('MEMORY_').lower() for r in c.relations if r.startswith('MEMORY_')),c.category),
+                'text':c.text,'relations':c.relations,
                 'standalone_tokens':self.token_counter(self._render(pool,[c])) if self.token_counter else None}
                 for i,c in enumerate(soft)]}
 
@@ -376,6 +400,8 @@ class GraphRetriever:
                                 'max_soft_tokens':self.config.max_soft_tokens if game else None},
             'unselected_ids':[c.id for c in pool.candidates if not c.mandatory and c not in selected],
             'pool_hash':text_hash(canonical(asdict(pool)))}
+        if source.occurrence_id in self.source_annotations:
+            manifest['native_binding']=self.source_annotations[source.occurrence_id]
         return ContextPack(pool,tuple(selected),status,text_hash(canonical(manifest)),manifest,
             len(model_context),model_context,tokens,soft_tokens)
 

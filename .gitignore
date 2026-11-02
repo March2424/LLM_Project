@@ -8,6 +8,8 @@ __pycache__/
 
 # 本地环境与凭据；示例配置可以提交
 .venv/
+.venv-cpu/
+.venv-training/
 venv/
 .env
 .env.*

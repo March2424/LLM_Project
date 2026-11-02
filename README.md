@@ -22,9 +22,9 @@
 
 当前按用户要求启用显式无 Reviewer 记忆试跑：20 条 Flare 已记录 20 条译例、45 个软条目、2 条摘要和3条角色笔记，70 个返回引用全部落库，38 次 API 调用保守估算 0.0059517 USD。数据标记 unreviewed，仅本次运行可用；配置及结果边界见 [记忆试跑说明](docs/REVIEWER_MEMORY_FLOW.md#临时跳过-reviewer)。
 
-三款游戏统一使用 `id,source_text,text_type,context` 源侧 CSV；中文参考独立存放，缺译／fuzzy 均保留并标明状态。下载后的数据、原生上下文边界、各自依赖与 2026-10-31 复核结果见 [三款游戏数据验收](docs/GAME_SAMPLE_QA.md)。该数据尚未划分训练／开发／测试，也不是已批准 TM。
+三款游戏统一使用 `id,source_text,text_type,context` 源侧 CSV；中文参考独立存放，缺译／fuzzy 均保留并标明状态。下载后的数据、原生上下文边界、各自依赖与 2026-10-31 复核结果见 [三款游戏数据验收](docs/GAME_SAMPLE_QA.md)。已生成按资源组的train/test草案（不设dev），参考质量仍待复核，也不是已批准TM。
 
-服务器迁移见 [SERVER_HANDOFF.md](docs/SERVER_HANDOFF.md)：Git 包含代码和处理后数据，提取 SQLite 与预算 tokenizer 需另行同步；分组划分、teacher 采样和轨迹导出目前仍待实现。
+服务器迁移见 [SERVER_HANDOFF.md](docs/SERVER_HANDOFF.md)。新增 [CPU 准备入口](docs/CPU_PREPARATION.md)，可在无 GPU 时生成分组划分草案、冷启动顺序和 128 条 teacher 试采样目标；源图库与预算 tokenizer 单独同步。Teacher采样、冻结历史与选择数据导出已实现，服务器已有旧协议付费运行；当前选择上限8，独立翻译仅更新记忆，见 [轨迹入口](docs/TEACHER_TRAJECTORIES.md)。SFT/DPO训练尚未执行。
 
 ## 1. 我们要实现什么
 
@@ -139,15 +139,15 @@ flowchart TD
 
 训练路线为 **Loong 启发的 SFT 冷启动 → DPO 偏好优化**：
 
-1. 在独立训练侧构建候选池和可重放的记忆快照，由闭源 Teacher 生成 Observe-and-Act 自然语言分析与选择示范。
-2. 外部 Teacher 基于所选证据生成合成译文用于质量检查；SFT 只学习经筛选的分析＋选择动作，不训练学生翻译，也不将合成译文当人工参考。
-3. 完成 SFT，在开发集选定并冻结 pi_SFT；由它自行观察同一候选池，生成多个分析＋动作，经固定外部翻译器与独立评分构造学生自采样偏好对。
+1. 每游戏/train建立持续记忆run，只翻译约10条原文冷启动一次，之后跨文件/资源组持续积累；由闭源Teacher在冻结历史/候选上生成Observe-and-Act分析与选择示范。
+2. Teacher只输出自然语言分析和最多8项上下文ID；独立外部翻译仅推进记忆，当前译文不作为SFT输入或标签。保存完整选中上下文及其版本/来源，不额外生成Teacher参考译文。
+3. 完成固定 2 个 epoch 的 SFT，采用第 2 轮最终 checkpoint 并冻结 pi_SFT；由它在同一冻结状态下采样多个分析＋动作，经固定外部翻译器与独立评分构造学生偏好对；每游戏在DPO阶段独立冷启动一次，比较后固定基线只写回一次。
 4. 以 pi_SFT 初始化并作为 reference 做 DPO；完整分析与 ID 都参与训练，不混入 Teacher 或固定基线动作作为主偏好对。
 5. 冻结策略后，在测试集执行固定快照与独立记忆的顺序评测。
 
-偏好构造以翻译质量为主；质量差异很小时优先保留上下文更少的方案。非法动作和硬约束违规先行过滤，不能用节省 token 抵消。成本同时统计选择器自身调用与下游翻译开销。初期使用训练集的 sCOMET 反馈，开发集结合 dCOMET 与独立 Judge 检查是否只优化了单一指标。
+偏好构造以翻译质量为主；质量差异很小时优先保留上下文更少的方案。非法动作和硬约束违规先行过滤，不能用节省 token 抵消。成本同时统计选择器自身调用与下游翻译开销。本轮取消独立 dev，以训练侧 sCOMET 反馈构造偏好；固定策略后在测试侧按协议报告 dCOMET 与独立 Judge，不据测试分数回头选模。
 
-Teacher 示范可使用“专业名称优先查看术语、明确人物的对话优先查看角色笔记，以及按需求查看 STM/LTM 和摘要”等软提示；学生 SFT、pi_SFT 自采样、DPO 和最终 Agent 共用无类别偏好的通用选择 prompt，不设最终类别配额或覆盖奖励。当前为“Teacher 蒸馏 → pi_SFT 自采样 → DPO”的设计与模板，采样/训练尚未执行，见 [训练协议](docs/TRAINING.md) 和 [详细方案](docs/LOONG_RL_PLAN.md)。
+Teacher 示范可使用“专业名称优先查看术语、明确人物的对话优先查看角色笔记，以及按需求查看 STM/LTM 和摘要”等软提示；学生 SFT、pi_SFT 自采样、DPO 和最终 Agent 共用无类别偏好的通用选择 prompt，不设最终类别配额或覆盖奖励。Teacher采样与SFT候选导出已实现，pi_SFT自采样/DPO评分尚未实现，训练尚未执行，见 [训练协议](docs/TRAINING.md) 和 [详细方案](docs/LOONG_RL_PLAN.md)。
 
 Loong 原方法涉及上下文选择和利用的联合过程；本项目将其适配为独立选择工具，不能直接视为原方法的完整复现。这里的强化学习相关内容具体落地为 **SFT＋DPO 偏好学习**；若另行实现在线 GRPO/PPO，需要新增训练环境和实验，不能将 DPO 实验标成 GRPO/PPO。
 
