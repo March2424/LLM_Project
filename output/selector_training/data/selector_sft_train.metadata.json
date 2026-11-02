@@ -1,0 +1,15 @@
+{
+  "source_run": "/Users/march/Desktop/LLM Project/LLM_Project/outputs/teacher_2000_2026-11-02_selected",
+  "rows": 1966,
+  "sha256": "aaedc35e6ed14d8dcbdf80c0faa8ce9a2fb082e1f1b846acb99d8966ea299c1a",
+  "quality": "selection_program_only_unreviewed",
+  "trajectory_schema_version": 2,
+  "translation_is_label": false,
+  "max_selected": 8,
+  "dev_enabled": false,
+  "memory_policy": "per_game_split_stage_v1",
+  "semantic_reviewed": false,
+  "semantic_quarantined": 1,
+  "provenance_file": "provenance.json",
+  "candidate_rows": 1967
+}
