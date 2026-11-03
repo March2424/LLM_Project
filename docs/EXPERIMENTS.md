@@ -33,3 +33,10 @@
 - 异常：生成/写回已经全部完成后，最终落库核对遇列表/元组拼接错误。修正脚本并只重做本地后处理，追加费用为 0；postprocess_notes.json 保留原因，原调用/译文未修改。
 - 产物：`outputs/flare_memory_trial_2026-11-01/` 的 MEMORY_REPORT.md、review.html、memory_inventory.json、persistence.json、cases.json、calls.jsonl、run.sqlite、summary.json。
 - 局限：未审试跑只证明生成、存储和读取链路；软提取含一般短语、英文原样和占位符，不等于 45 个高价值术语。语义质量、译名一致性和 DPO 数据有效性仍待后续工作。
+
+
+## 2026-11-03：选择器96GB SFT
+
+Qwen3-8B BF16 LoRA（r16/alpha32/dropout0.05），1966条程序有效训练候选，排除1条已知错误分析；完整语义筛选未完成。4096序列、batch8×累积2、有效batch16、1e-4 cosine/5% warmup、固定2轮无dev。已完成246次更新，epoch2、LR0，最终adapter与完整checkpoint-246存在。
+
+GPU为RTX PRO 6000 Blackwell Server Edition。最长16条压力比较仅8×2开检查点成功；16×1开检查点及4×4关检查点OOM，保留失败记录。正式峰值allocated约77.5GiB、reserved约93.7GiB；前者为张量占用，后者含缓存。实际验证第1/3步完整状态续训；SwanLab记录逐步指标和独立阶段汇总。详见[SFT_96GB.md](SFT_96GB.md)。此为训练运行记录，无翻译质量对照或训练收益结论；DPO、最终离线评测仍待执行。

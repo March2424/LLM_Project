@@ -46,3 +46,8 @@ PYTHONPATH=src .venv-cpu/bin/python scripts/check_training_setup.py \
 
 
 2026-11-02审查修复：Teacher不再生成最终译文，独立翻译只推进记忆；候选池16、选择上限8、软预算1024。export --dataset-dir可直接落到注册的数据路径；check_training_setup.py --verify-tokenization对生成后的真实数据验证完整长度和分析loss mask。当前准备/迁移不代表已有足够训练数据，真实GPU步骤和后续DPO采样/评分仍未实现或执行。
+
+
+## 2026-11-03：96GB真实SFT完成
+
+已使用1966条候选完成Qwen3-8B BF16 LoRA 2轮、246次更新。完整模板最长3862 tokens，4096上限无需截断；SwanLab固定run、周期完整断点与optimizer/学习率恢复已验证。当前方案见 [96GB SFT说明](SFT_96GB.md)。旧CPU检查记录保留历史日期；DPO与最终翻译质量仍待实施，训练完成不等于语义验收通过。
