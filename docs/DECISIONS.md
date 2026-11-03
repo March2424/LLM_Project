@@ -295,3 +295,12 @@ selected 在1058次累计调用后进程消失，缓存恢复复现SIGKILL/137�
 ## M4-017：采集完成检查与主线交付（2026-11-02）
 
 本地已处理2020步，1967条程序有效选择，33条无有效选择，保留29个失败任务；有效选择中336条继承旧基线历史、1631条采用Teacher选中上下文翻译。逐条检查白名单、ID/预算、ReadView与实际上下文，未发现结构边界违规；抽查发现未审译例扩写和分析误述，保留待语义筛选。完成不等于2000条语义合格数据或训练完成，完整统计和验证范围见[SFT_COLLECTION_REVIEW.md](SFT_COLLECTION_REVIEW.md)。本次将有界网络重试、费用审计和失败隔离改动纳入交付，不提交运行产物或凭据。
+
+
+## M4-018：96GB SFT与SwanLab完整续训（2026-11-03）
+
+用户授权真实SFT并指定SwanLab。使用1966条候选，Qwen3-8B BF16 LoRA r16/alpha32、单卡8×累积2、4096 tokens、1e-4 cosine、2轮共246更新、无dev。最长样本比较中8×2开检查点通过，16×1开检查点与4×4关检查点OOM，因此冻结8×2。
+
+每25次更新、epoch末和优雅停止时保存完整adapter、optimizer、scheduler、RNG及Trainer状态，最近3份保留，完成后标记resume_ready。第1步及第3步真实续训均核对optimizer moments、global_step、scheduler步数与恢复LR；总2轮不重走warmup。W&B网络403后按用户要求换SwanLab，固定run ID并审计仅report_to变更；阶段汇总与逐步曲线分开。
+
+实际246/246、epoch2完成，最终adapter及checkpoint-246完整；运行产物与凭据不入Git。数据仍为未全量语义审核的候选，不把train loss或SFT完成当正式翻译质量结果，DPO和测试评测仍待实施。详见[SFT_96GB.md](SFT_96GB.md)。

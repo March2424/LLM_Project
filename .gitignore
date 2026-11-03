@@ -9,7 +9,7 @@ __pycache__/
 # 本地环境与凭据；示例配置可以提交
 .venv/
 .venv-cpu/
-.venv-training/
+.venv-training
 venv/
 .env
 .env.*
@@ -21,3 +21,7 @@ venv/
 
 # 数据查看表与本地交付包（含参考译文）
 /outputs/
+
+/wandb/
+/swanlog/
+/.swanlab/
