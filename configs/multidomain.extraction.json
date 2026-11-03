@@ -1,0 +1,24 @@
+{
+  "model": {
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-flash",
+    "api_key_env": "LLM_API_KEY",
+    "max_output_tokens": 16384,
+    "context_tokens": 32768,
+    "temperature": 0.1,
+    "timeout": 120,
+    "input_price_per_million": 0.3,
+    "output_price_per_million": 1.2,
+    "extra_body": {"thinking": {"type": "disabled"}}
+  },
+  "budget": {"max_calls": 1000000, "max_tokens": 1000000000000, "max_cost": null},
+  "batch": {"max_rows": 64, "input_tokens": 8000, "output_tokens": 14000},
+  "catalog_limit": 48,
+  "catalog_tokens": 1200,
+  "max_batches": 0,
+  "keep_valid_items": true,
+  "budget_note": "No monetary cap configured; execution requires an explicit --execute instruction. Preserve per-shard usage and uncertain-call records.",
+  "pricing_source": "https://api-docs.deepseek.com/quick_start/pricing/",
+  "pricing_note": "2026-11-03 checked official Flash peak cache-miss rates: USD input 0.3/M, output 1.2/M. Cache hits/off-peak may be cheaper; usage estimates are not bills. The 32768 context cap is a project limit, not the provider's full capacity.",
+  "purpose": "Source-only News Commentary and GuoFeng extraction with unchanged game-graph/1.1; never read offline references."
+}

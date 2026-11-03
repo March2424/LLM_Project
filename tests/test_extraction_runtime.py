@@ -11,7 +11,8 @@ from unittest.mock import patch
 
 from localization_agent.data.benchmark import import_benchmark, plan_batches
 from localization_agent.memory import MemoryStore, MemoryService
-from localization_agent.models.chat_completions import ChatCompletionsModel, CallBudget, BudgetExceeded
+from localization_agent.models.chat_completions import (ChatCompletionsModel, CallBudget, BudgetExceeded,
+                                                       RetryableModelError)
 from localization_agent.models.protocols import ModelReply
 from localization_agent.retrieval import GraphStore
 from localization_agent.retrieval.builder import AutoGraphBuilder
@@ -19,6 +20,20 @@ from localization_agent.schemas.extraction import extraction_schema
 
 
 class ExtractionRuntimeTests(unittest.TestCase):
+    @patch.dict('os.environ', {'TEST_LLM_KEY': 'test-only-value'})
+    def test_keepalive_whitespace_cannot_extend_total_deadline(self):
+        model = ChatCompletionsModel(endpoint='https://example.invalid/chat/completions',
+            model='test-model', api_key_env='TEST_LLM_KEY', total_timeout=2)
+        response = self.response()
+        with patch('localization_agent.models.chat_completions.urlopen', return_value=response), \
+             patch('localization_agent.models.chat_completions.time.monotonic', side_effect=[0, 1, 3]), \
+             patch.object(response, 'read1', return_value=b' ') as read:
+            with self.assertRaises(RetryableModelError):
+                model('teacher_select', 'Return JSON')
+            self.assertEqual(read.call_count, 1)
+            self.assertTrue(response.closed)
+            self.assertEqual(model.budget.calls, 1)  # Unknown charge remains reserved.
+
     def response(self, finish='stop', usage=True):
         reply = {'model': 'test-model', 'choices': [
             {'message': {'content': '{"entities":[],"relations":[]}'}, 'finish_reason': finish}]}

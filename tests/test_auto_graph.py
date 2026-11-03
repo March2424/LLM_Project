@@ -60,6 +60,24 @@ class DiscoveryFixture:
 
 
 class AutoGraphTests(unittest.TestCase):
+    def test_unit_topic_binding_preserves_supported_speaker_and_groups_summary(self):
+        self.build()
+        occurrences=self.input.occurrences
+        from localization_agent.schemas.memory import text_hash
+        self.retriever.source_annotations={o.occurrence_id:{'source_version':o.source_version,
+            'source_hash':text_hash(o.source),'metadata':{'topic_id':'unit:source-document'},
+            'allow_graph_speaker':True} for o in occurrences}
+        metadata,_=self.retriever.bindings(occurrences[1],'g')
+        self.assertEqual(metadata['topic_id'],'unit:source-document')
+        self.assertIn('speaker_id',metadata)
+        self.assertNotIn('speaker_id',self.retriever.bindings(occurrences[0],'g')[0])
+        self.commit(occurrences[0],'护盾吸收伤害。')
+        self.commit(occurrences[1],'使用护盾！')
+        summaries=self.retriever.update_memory(occurrences[1],self.store.view('r'),'g',kind='summary')
+        self.assertEqual(len(summaries),1)
+        self.assertEqual(summaries[0].content['metadata']['topic_id'],'unit:source-document')
+        self.assertEqual(len(summaries[0].content['covered_translations']),2)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

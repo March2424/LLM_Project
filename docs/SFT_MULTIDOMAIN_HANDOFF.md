@@ -1,5 +1,9 @@
 # 多领域SFT执行交接
 
+> 最新执行指示：用户已授权开始实体关系提取，已在LLM_Project_main启动本地graph小批，检查后继续全量；Teacher／SFT不启动。旧STOP和launcher已归档，新进度／停止命令见[提取运行说明](MULTIDOMAIN_EXTRACTION_RUNTIME.md)。下文旧停止指示已由本次提取指示替代，仅保留历史。
+
+> 新目录交接：2026-11-03当前工作区为`/Users/march/Desktop/LLM Project/LLM_Project_main`。已完成[实体提取运行前检查与修改](MULTIDOMAIN_EXTRACTION_PREFLIGHT.md)，新配置67批、模型调用0；下文旧目录／服务器状态作为历史保留。本轮未启动建图、Teacher或SFT。
+
 更新：2026-11-03。正式设计见 [SFT_MULTIDOMAIN_DESIGN.md](SFT_MULTIDOMAIN_DESIGN.md)。
 
 **用户最后指示：本次只完成代码和Markdown，不建图、不采样、不做SFT。执行已停止；不得根据下文历史启动命令自动恢复实验。**

@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from localization_agent.selection.teacher import file_hash, read_lines
+from localization_agent.schemas.memory import text_hash
 
 
 def write_lines(path, rows):
@@ -18,11 +19,13 @@ def prepare_plan(sources, output, *, seed=20261103, warmup=10, targets=None):
                           'news_commentary_v18.1/zh-en': 600, 'guofeng_v1_test2/zh-en': 700}
     manifests = read_lines(sources/'sources_manifest.jsonl')
     units = {r['project_id']: r for r in read_lines(sources/'extraction_units.jsonl')}
+    alignment_path = sources/'graph_alignment.json'
+    alignment = json.loads(alignment_path.read_text()) if alignment_path.exists() else {}
     grouped = defaultdict(list)
     for row in manifests:
         if row['sft_allowed']:
             grouped[row['project_id']].append(row)
-    pools, sequences, splits, projects = defaultdict(list), {}, [], {}
+    pools, sequences, splits, projects, bindings = defaultdict(list), {}, [], {}, {}
     for project, rows in sorted(grouped.items()):
         unit = units[project]
         result = json.loads((sources/unit['graph_result']).read_text())
@@ -30,9 +33,19 @@ def prepare_plan(sources, output, *, seed=20261103, warmup=10, targets=None):
         if result.get('status') != 'complete' or result['inputs'].get(csv_path) != file_hash(csv_path):
             raise ValueError(f'Graph not complete or source changed: {project}')
         first = rows[0]
-        projects[project] = {'source_db': str(sources/unit['graph_db']),
+        graph_path = Path(alignment['projects'][project]['source_db']) if alignment else sources/unit['graph_db']
+        if alignment and file_hash(graph_path) != alignment['projects'][project]['sha256']:
+            raise ValueError('Aligned graph changed: '+project)
+        projects[project] = {'source_db': str(graph_path),
             **{k: first[k] for k in ('source_lang','target_lang','corpus','split')},
-            'source_graph_sha256': file_hash(sources/unit['graph_db'])}
+            'source_graph_sha256': file_hash(graph_path)}
+        topic = 'native:topic:' + text_hash(project + ':' + first['unit_id'])[:20]
+        bindings[project] = {r['source_id']:{'source_version':r['source_version'], 'source_hash':r['source_hash'],
+            'conditions':{'branch_id':None,'phase_id':None,'requirements':None},
+            'metadata':{'topic_id':topic,'topic_name':r['unit_id'],'identity_origin':'source_unit_provenance'},
+            'allow_graph_speaker':True,
+            'evidence':{'source_csv':r['source_csv'],'unit_id':r['unit_id'],'boundary_status':r['boundary_status']}}
+            for r in rows}
         rng = random.Random(str(seed) + ':' + project)
         rng.shuffle(rows)
         count = min(warmup, max(0, len(rows)-1))
@@ -58,12 +71,17 @@ def prepare_plan(sources, output, *, seed=20261103, warmup=10, targets=None):
     write_lines(output/'splits.jsonl', splits)
     write_lines(output/'pilot_sequences.jsonl', [s for s in sequences.values() if s['target_ids']])
     (output/'source_projects.json').write_text(json.dumps(projects, indent=2) + '\n')
+    (output/'native_bindings.json').write_text(json.dumps(bindings,ensure_ascii=False,indent=2)+'\n')
     graph = json.loads(Path('configs/graph.json').read_text())
     graph['source_visibility'] = 'all'
     (output/'graph_config.json').write_text(json.dumps(graph, indent=2) + '\n')
     summary = {'status': 'prepared_no_paid_calls', 'source_manifest_sha256': file_hash(sources/'sources_manifest.jsonl'),
                'warmup': sum(len(s['warmup_ids']) for s in sequences.values() if s['target_ids']),
-               'targets': sum(len(s['target_ids']) for s in sequences.values()), 'requested_targets': targets}
+               'targets': sum(len(s['target_ids']) for s in sequences.values()), 'requested_targets': targets,
+               'memory_coverage':{'required_memory_kinds':['summary'],'unit_topic_groups':len(bindings),
+                   'speaker_policy':'unambiguous_source_graph_only_min_two_examples',
+                   'actual_candidate_availability':'not_collected','selector_category_quotas':False},
+               'graph_alignment_sha256':file_hash(alignment_path) if alignment else None}
     (output/'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
     return summary
 

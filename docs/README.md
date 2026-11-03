@@ -1,9 +1,16 @@
 # 协作文档入口
 
+> 2026-11-03：Teacher已按用户要求安全停止，新增1199条、混合3165条已导出；当前数量和结构见[数据停止快照](SFT_MULTIDOMAIN_DATA_SNAPSHOT.md)。不自动续采，混合SFT未启动。下文运行计划保留供参考。
+
 此目录用于保存团队共同维护的开发与实验约定。数据接入、记忆、图检索及相关接口和环境说明已有实际内容；其他页面按任务逐步填写，标记“占位”的内容不代表协议已确定或实验已完成。
 
 | 文档 | 作用 | 建议维护责任线 |
 | --- | --- | --- |
+| [TEACHER_BUDGET_FIX.md](TEACHER_BUDGET_FIX.md) | failed根因、2048预算、同状态纠正、共享schema与SFT防截断／loss mask | B/C |
+| [SFT_MULTIDOMAIN_RUNTIME.md](SFT_MULTIDOMAIN_RUNTIME.md) | 对齐图种子、单元主题、旧模板及Teacher采样运行／process.html／数据导出 | B/C |
+| [MULTIDOMAIN_GRAPH_REVIEW.md](MULTIDOMAIN_GRAPH_REVIEW.md) | 全量图结构／语义简查、旧1966候选与新1900目标的Teacher对齐及摘要覆盖缺口 | A/B/C |
+| [MULTIDOMAIN_EXTRACTION_RUNTIME.md](MULTIDOMAIN_EXTRACTION_RUNTIME.md) | 本地实体提取运行、实时进度、日志和安全停止命令 | A/B/C |
+| [MULTIDOMAIN_EXTRACTION_PREFLIGHT.md](MULTIDOMAIN_EXTRACTION_PREFLIGHT.md) | 新目录的源侧检查、新闻／小说提示词、67批计划及独立建图阶段 | A/B/C |
 | [AUTO_GRAPH.md](AUTO_GRAPH.md) | 四列CSV自动建图、程序检查与五类记忆接入（离线验证） | A/B/C |
 | [EXTRACTION_SCHEMA.md](EXTRACTION_SCHEMA.md) | 实体关系提取定稿、推断与程序准入 | A/B |
 | [EXTRACTION_RUN.md](EXTRACTION_RUN.md) | 模型接入、自适应批处理、预算与验收 | A/B |
@@ -54,3 +61,5 @@
 - [Flare 全量本地化文本 v0.2](DATA.md#flare-全量本地化文本-v02)：简化四列查看格式、完整资源覆盖、3,800 条中英对照与 616 条缺失、后台来源及复现入口。
 - [通用 CSV 导入](DATA.md#通用-csv-导入)：四列中文/英文表头、原文与参考分离、命令行/Python 接口、离线样例与检查。
 - [Flare 已整理数据与使用说明](../data/flare/v0.2/README.md)：随仓库提供的 CSV、源/参考 JSONL、覆盖统计和精简溯源，不含原始快照。
+
+- [多领域数据检查与服务器交接](SERVER_MULTIDOMAIN_HANDOFF.md)：本次main同步、训练输入路径和SFT检查边界。

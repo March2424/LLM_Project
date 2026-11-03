@@ -148,7 +148,7 @@ class GraphRetriever:
                 if occurrence.metadata.get(field) and field in metadata:
                     if metadata[field] != occurrence.metadata[field]:
                         raise ValueError('Native binding conflicts with explicit source identity')
-        if (not annotation and len(speakers) == 1
+        if ((not annotation or annotation.get('allow_graph_speaker', False)) and len(speakers) == 1
                 and not (occurrence.metadata.get('speaker_id') or metadata.get('speaker_id'))):
             identity, refs = next(iter(speakers.items()))
             metadata['speaker_id'] = identity

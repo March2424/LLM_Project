@@ -176,7 +176,7 @@ def prepare(news, guofeng, output, seed):
         'limitations': ['News Commentary original article IDs are unavailable; split by upstream files and shared long templates.',
             'GuoFeng upstream BOOK tags are preserved without claiming verified original novel identity.',
             'No semantic near-duplicate detection or reference quality approval.',
-            'Current teacher runtime still needs generic corpus plans and bidirectional run initialization.']}
+            'Source preparation does not build graphs or collect Teacher trajectories; use the separate preflight and stage entry points.']}
     (output / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
     return summary
 

@@ -82,6 +82,42 @@ class RuntimeModel:
 
 
 class TeacherRuntimeTests(unittest.TestCase):
+    @patch('localization_agent.selection.collector.LocalTokenCounter',return_value=len)
+    def test_selection_budget_feedback_retries_same_state_without_clipping_or_early_translation(self, _):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)/'run';fixture_folder(folder,games=('flare',),targets=1)
+            config=json.loads((folder/'config.json').read_text())
+            config['selection_repair']={'budget_guide':True,'max_repair_attempts':1}
+            write_json(folder/'config.json',config)
+            RuntimeModel.calls=[];RuntimeModel.folder=folder;RuntimeModel.barriers={}
+            observations=[]
+            class Model(RuntimeModel):
+                def __call__(self,task,prompt):
+                    if task=='teacher_select':
+                        self.budget.reserve(10,.000001)
+                        observations.append(json.loads(prompt.split('Observation: ',1)[1]))
+                        if len(observations)==1:
+                            ids=['c01'];rationale='The source definition appears useful.'
+                        else:
+                            self_outer.assertIn('actual_soft_tokens',prompt)
+                            self_outer.assertEqual(sum(t=='translate_game' for t,p in RuntimeModel.calls),1)
+                            ids=[];rationale='No available soft evidence is needed; translate the source directly.'
+                        return ModelReply(json.dumps({'rationale':rationale,'selected_ids':ids}),'fixture')
+                    return super().__call__(task,prompt)
+            self_outer=self
+            original=__import__('localization_agent.retrieval',fromlist=['GraphRetriever']).GraphRetriever.select_context
+            def select(retriever,pool,ids):
+                if ids==('c01',):raise ValueError('Selection exceeds context budget')
+                return original(retriever,pool,ids)
+            with patch('localization_agent.retrieval.GraphRetriever.select_context',new=select):
+                result=run(folder,Model)
+            job=load_state(folder)['jobs'][-1]
+            self.assertTrue(job['selection_checks_passed'])
+            self.assertEqual(job['action']['selected_ids'],[])
+            self.assertTrue(job['selection_repaired'])
+            self.assertEqual(observations[0],observations[1])
+            self.assertEqual([v['status'] for v in job['teacher_selection_attempts']],['invalid','valid'])
+
     @patch.dict('os.environ', {'TEST_LLM_KEY':'fixture'})
     @patch('localization_agent.selection.teacher.time.sleep')
     def test_transport_retries_preserve_all_charges_then_cache_success(self, sleep):

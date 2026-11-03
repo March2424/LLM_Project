@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 DETAIL_FIELDS = ('teacher_prompt', 'student_prompt', 'translation_prompt', 'baseline_prompt',
-                 'teacher_context', 'translation_context', 'observation', 'selected_contexts')
+                 'teacher_context', 'translation_context', 'observation', 'selected_contexts','teacher_selection_attempts')
 
 
 def write_json(path, value):
@@ -16,7 +16,7 @@ def write_json(path, value):
 def compact_job(job):
     """Keep completed-job progress in RAM; full evidence remains in its checkpoint."""
     job['_checkpoint_compact'] = True
-    for key in DETAIL_FIELDS[:6]:
+    for key in DETAIL_FIELDS[:6]+('teacher_selection_attempts',):
         job.pop(key, None)
     if 'observation' in job:
         job['observation'] = {'candidates': [

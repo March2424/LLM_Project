@@ -1,5 +1,9 @@
 # 游戏本地化 Agent
 
+> 当前执行：已按用户要求安全停止Teacher采样，导出新增1199条与旧游戏1966条，共3165条选择器SFT数据。数量、结构、路径与检查边界见[数据停止快照](docs/SFT_MULTIDOMAIN_DATA_SNAPSHOT.md)。[process.html](http://127.0.0.1:8765/process.html)保留最后状态；混合模型训练未启动，下文旧状态作为历史保留。
+
+> 2026-11-03 新目录运行前准备：`LLM_Project_main`已完成公开语料提取提示词、独立批量配置和零API预检，沿用game-graph/1.1。3213条源记录初始规划67批；本轮不执行建图／Teacher／SFT。当前参数、报告与阶段入口见[新数据提取运行前检查](docs/MULTIDOMAIN_EXTRACTION_PREFLIGHT.md)。
+
 > 2026-11-03 当前多领域范围：游戏＋News Commentary v18.1双向＋GuoFeng TEST_2 Zh→En，公开文档按无序资源处理；源图复用、运行记忆独立。GuoFeng仅报告训练内seen评测，游戏test及新闻留出保持独立。当前仅交付代码和Markdown，新建图／Teacher采样／混合SFT均已按用户要求停止。完整约定见[多领域SFT设计](docs/SFT_MULTIDOMAIN_DESIGN.md)。
 
 面向长程游戏文本翻译的研究项目：结合多层翻译记忆、图引导检索、可训练的上下文选择工具与多模型协作，生成符合语境和项目规范的译文，并在术语、人物设定或本地化规则变化后维护已有结果。

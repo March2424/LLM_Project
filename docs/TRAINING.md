@@ -1,6 +1,6 @@
 # 上下文选择器训练协议
 
-更新：2026-11-02。状态：Teacher 采样/候选导出与进度入口已实现，服务器已有旧协议付费采样；pi_SFT 自采样、偏好评分与 GPU 训练尚未实现。详细参数及论文分析见 [LOONG_RL_PLAN.md](LOONG_RL_PLAN.md)。
+更新：2026-11-03。状态：旧游戏1966条SFT已训练完成；新混合3165条示范已导出且采样停止，混合SFT未启动。pi_SFT自采样和偏好评分尚未实现。最新数据、服务器路径与训练前检查见[服务器交接](SERVER_MULTIDOMAIN_HANDOFF.md)。详细参数及论文分析见 [LOONG_RL_PLAN.md](LOONG_RL_PLAN.md)。
 
 ## 当前路线：Teacher 蒸馏 → pi_SFT 自采样 → DPO
 
@@ -9,7 +9,7 @@
 ```text
 训练侧源文＋冻结候选／记忆
   → 闭源 Teacher：Observe → 自然语言分析 → 选择 ID
-  → 独立固定基线翻译：仅更新本运行记忆，不作为当前SFT输入/标签
+  → 外部翻译器使用Teacher选中上下文：仅更新本运行记忆，不作为当前SFT输入/标签
   → 筛选示范；通用学生 prompt → Teacher 分析＋动作
   → LoRA SFT 固定 2 epoch → 冻结第 2 轮 pi_SFT
   → pi_SFT 自行观察候选，采样 2–4 条分析＋动作
@@ -23,7 +23,7 @@
 - 使用 [teacher 选择模板](../prompts/selection/teacher_context_selector.txt)，类别软提示只用于 teacher 输入；没有配额，不要求选齐五类。
 - Teacher 用显式自然语言说明当前翻译需求、候选实际内容及取舍，再输出 selected_ids。分析不能仅罗列 ID，不引用池外证据、人工参考或未来历史。
 - 验证动作并保存选中上下文正文、来源、版本和 ContextPack；Teacher 任务不生成最终译文，不再调用 teacher_translation。
-- 独立外部翻译仅用于当前运行的记忆推进：先冻结选择状态，再按固定基线翻译当前资源，记录未审译例并更新术语/摘要/角色。当前译文和记忆更新状态不进入本条 SFT label；前序译例仍可作为后续任务的候选记忆。
+- 独立外部翻译仅用于当前运行的记忆推进：先冻结选择状态，验证Teacher动作，再使用所选ContextPack翻译当前资源，记录未审译例并更新术语/摘要/角色。当前译文和记忆更新状态不进入本条 SFT label；前序译例仍可作为后续任务的候选记忆。
 - 选择结构合法与记忆写回分别记录。有效选择不因后续翻译或记忆更新失败而从 SFT 候选中删除；筛选目前是程序级，不能声称已完成语义质量验收。Reviewer 继续关闭。
 - SFT 数据为通用学生 prompt＋相同冻结 observation → Teacher 的 rationale＋selected_ids，不再要求 teacher 在混合四方案中获胜。筛选、失败与拒绝原因均保留，不能为凑数编造分析。
 

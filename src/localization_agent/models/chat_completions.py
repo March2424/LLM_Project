@@ -3,6 +3,7 @@ import json
 import math
 import os
 import threading
+import time
 import ssl
 from dataclasses import dataclass
 from http.client import IncompleteRead
@@ -27,6 +28,23 @@ class RetryableModelError(RuntimeError):
 
 class ModelResponseError(RuntimeError):
     """A received response is unusable; retrying the same limits is not a repair."""
+
+
+def read_response_json(response, deadline: float, read_timeout: float):
+    """Bound the whole body read, including providers sending keepalive whitespace."""
+    chunks = []
+    socket = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError('Model response exceeded total request deadline')
+        if socket is not None:
+            socket.settimeout(min(read_timeout, remaining))
+        # read() can wait forever while small keepalive chunks reset the socket timeout.
+        chunk = response.read1(65536)
+        if not chunk:
+            return json.loads(b''.join(chunks))
+        chunks.append(chunk)
 
 
 @dataclass
@@ -81,16 +99,17 @@ class CallBudget:
 class ChatCompletionsModel:
     def __init__(self, *, endpoint: str, model: str, api_key_env: str = 'LLM_API_KEY',
                  max_output_tokens: int = 8192, context_tokens: int = 32768,
-                 temperature: float = 0.1, timeout: float = 60,
+                 temperature: float = 0.1, timeout: float = 60, total_timeout: float = 180,
                  input_price_per_million: float | None = None,
                  output_price_per_million: float | None = None,
                  extra_body: dict | None = None, budget: CallBudget | None = None):
         self.endpoint, self.model, self.api_key_env = endpoint, model, api_key_env
         self.max_output_tokens, self.context_tokens = max_output_tokens, context_tokens
         self.temperature, self.timeout = temperature, timeout
+        self.total_timeout = total_timeout
         self.input_price, self.output_price = input_price_per_million, output_price_per_million
         self.extra_body, self.budget = extra_body or {}, budget or CallBudget()
-        if max_output_tokens < 1 or context_tokens <= max_output_tokens or timeout <= 0:
+        if max_output_tokens < 1 or context_tokens <= max_output_tokens or min(timeout, total_timeout) <= 0:
             raise ValueError('Invalid model context/output limits or timeout')
         if any(x is not None and x < 0 for x in (self.input_price, self.output_price)):
             raise ValueError('Prices cannot be negative')
@@ -119,8 +138,9 @@ class ChatCompletionsModel:
         request = Request(self.endpoint, data=json.dumps(payload).encode(),
                           headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
         try:
-            with urlopen(request, timeout=self.timeout) as response:
-                result = json.load(response)
+            deadline = time.monotonic() + self.total_timeout
+            with urlopen(request, timeout=min(self.timeout, self.total_timeout)) as response:
+                result = read_response_json(response, deadline, self.timeout)
         except HTTPError as error:
             # Do not expose provider response bodies, which may echo sensitive input.
             if error.code in {408, 429, 500, 502, 503, 504}:

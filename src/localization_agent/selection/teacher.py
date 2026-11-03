@@ -65,12 +65,21 @@ def progress(folder, state, budget):
         'selection_failed': sum(j.get('selection_checks_passed') is False for j in targets),
         'memory_failed': sum(j.get('memory_status') == 'failed' for j in jobs),
         'legacy_target_count': sum(j['phase']=='target' and j.get('trajectory_schema_version') != 2 for j in jobs),
+        'warmup_finished':sum(j['phase']=='warmup' and j['status'] in {'complete','failed'} for j in jobs),
+        'warmup_total':sum(j['phase']=='warmup' for j in jobs),
+        'target_finished':sum(j['phase']=='target' and j['status'] in {'complete','failed'} for j in jobs),
         'current_by_game':state.get('current_by_game',{}),
         'execution':state.get('execution',{}),
         'worker_errors':dict(state.get('worker_errors',{})),
         'failed': sum(job['status'] == 'failed' for job in jobs), 'budget': budget.snapshot()}
     result['games']={game:{'finished':sum(j['game']==game and j['status'] in {'complete','failed'} for j in jobs),
                           'total':sum(j['game']==game for j in jobs)} for game in sorted({j['game'] for j in jobs})}
+    if baseline:=state.get('sampling_upgrade'):
+        result['sampling_upgrade']=baseline
+        result['historical_failed']=baseline['failed']
+        result['since_upgrade']={'target_finished':result['target_finished']-baseline['target_finished'],
+            'valid_selections':passed-baseline['valid_selections'],'failed':result['failed']-baseline['failed'],
+            'repaired_selections':sum(j.get('selection_repaired',False) for j in jobs)}
     write_json(folder / 'progress.json', result)
     rows = []
     displayed={id(job) for job in sorted(finished,key=lambda j:j.get('completed_at_unix',0))[-30:]}
@@ -99,7 +108,10 @@ def progress(folder, state, budget):
     page += '<progress max="' + str(max(1, len(jobs))) + '" value="' + str(len(finished)) + '"></progress>'
     page += '<pre>' + html.escape(json.dumps(result, ensure_ascii=False, indent=2)) + '</pre>'
     page += '<table><tr>' + ''.join('<th>' + v + '</th>' for v in ['阶段','游戏','ID','状态','原文','自然语言分析','所选 ID','选中上下文','记忆更新','提示']) + '</tr>' + ''.join(rows) + '</table>'
-    (folder / 'progress.html').write_text(page, encoding='utf-8')
+    for name in ('progress.html','process.html'):
+        temporary=folder/('.'+name+'.tmp')
+        temporary.write_text(page,encoding='utf-8')
+        temporary.replace(folder/name)
     games=' '.join(f"{game}:{counts['finished']}/{counts['total']}" for game,counts in result['games'].items())
     print(f"[{len(finished)}/{len(jobs)}] {state['status']} | teacher {passed}/{len(targets)} | failed {result['failed']} | API {result['budget']['calls']} | ${result['budget']['cost']:.6f} | {games}", flush=True)
 
@@ -168,7 +180,7 @@ def prepare(folder, plan, model_config, max_cost, max_calls=10000, max_tokens=10
         'prompts': prompts, 'code': code, 'tokenizer': str(tokenizer),
         'graph': asdict(GraphConfig.from_file(plan/'graph_config.json' if (plan/'graph_config.json').exists()
                                             else 'configs/graph.json')),
-        'memory': {'stm_size': 3, 'ltm_top_k': 2, 'summary_step': 5},
+        'memory': {'stm_size': 3, 'ltm_top_k': 2, 'summary_step': 5, 'style_min_examples': 2},
         'source_visibility': 'train_source_ids_and_their_supplied_native_context',
         'reference_text_access': False, 'require_reviewer': False,
         'plan_sha256': {name: file_hash(plan / name) for name in ('splits.jsonl','pilot_sequences.jsonl')},
@@ -354,8 +366,9 @@ def export(folder, dataset_dir=None):
         'candidate_available_targets_by_kind':dict(availability),
         'legacy_targets_excluded':sum(j['phase']=='target' and j.get('trajectory_schema_version') != 2 for j in state['jobs'])})
     if dataset_dir is not None:
-        if config.get('native_bindings') and not all(availability[kind]>0 for kind in ('style','summary')):
-            raise ValueError('Inspect coverage first: no style/summary candidate exposure; raw candidates remain exported for audit')
+        required=config.get('memory_coverage',{}).get('required_memory_kinds',['style','summary'])
+        if config.get('native_bindings') and not all(availability[kind]>0 for kind in required):
+            raise ValueError('Inspect required memory coverage first: '+str(required)+'; raw candidates remain exported for audit')
         if not rows:
             raise ValueError('No valid current-protocol selections to export as training data')
         directory = Path(dataset_dir)
@@ -496,7 +509,7 @@ def upgrade(source, output, retry_key=None):
                 target.close()
         # Preserve paid legacy history; never relabel its baseline translations as Teacher-selected.
         for job in state['jobs']:
-            if job['status'] in {'complete','failed'} or job.get('baseline_translation_ref'):
+            if job['status']=='complete' or job.get('baseline_translation_ref'):
                 job.setdefault('translation_context_policy','legacy_fixed_baseline')
         config['translation_context_policy']='teacher_selected_v1'
         config['inherited_translation_context_counts']=dict(Counter(

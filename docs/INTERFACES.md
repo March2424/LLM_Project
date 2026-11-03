@@ -1,5 +1,9 @@
 # 公共数据结构与模块接口
 
+2026-11-03 Teacher对齐：source_projects可引用graph_alignment.json登记的副本；source_annotations新增可选allow_graph_speaker，默认false，只有单元主题来源明确时显式允许既有唯一SPOKEN_BY绑定。topic绑定来自源文件／章节，不是新实体或剧情事实。memory_coverage.required_memory_kinds可声明导出必需曝光项，旧配置默认style＋summary，新公开单元只要求summary而不强制角色。progress新增冷启动／目标计数，并同时原子写progress.html与process.html。详见[当前Teacher运行](SFT_MULTIDOMAIN_RUNTIME.md)。
+
+2026-11-03：新增离线`data.extraction_preflight.preflight(sources, config)`，读取既有四列源CSV、source manifest及extraction units，返回逐单元批量、完整提示容量估算和哈希；不读取offline参考或调用模型。`run_multidomain_collection.py`默认stage=graph，图完成后退出，Teacher仅在显式stage=all时启用。Occurrence／Graph／game-graph/1.1字段不变，详见[公开语料提取预检](MULTIDOMAIN_EXTRACTION_PREFLIGHT.md)。
+
 状态：2026-10-30，M1 通用 CSV 与 Flare 数据契约、M2 记忆及基础 M3 图检索接口已实现；其他模块契约待实现时补充。
 
 M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/memory.py)。本页解释边界，完整用法和示例见 [MEMORY.md](MEMORY.md)。
@@ -28,6 +32,8 @@ M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/me
 - `invalidate(ref, reason)`：失效一个版本及递归派生物，保留历史正文供审计。
 
 所有在线目标侧记忆限定于当前 run。测试参考译文不属于本接口；数据适配器必须负责源/参考物理分离，不能把参考伪装成通过检查的译文传入。显式批准和检查回执是可信调用方操作，不是本模块自动完成的语义判定。
+
+HTTP适配器的`timeout`控制socket空闲时间；新增`total_timeout`默认180秒，响应体分段读取并按剩余总时间收紧socket超时，避免保活空白延长等待。总时限失败按RetryableModelError处理，费用预留不回退；Teacher仍使用有界重试，未知中断只经显式审计恢复。
 
 错误约定：未知对象 `KeyError`；内容、作用域、模型结构不合法 `ValueError`；预期版本/源版本冲突 `VersionConflict`；缺少所需模型适配器 `RuntimeError`；真实模型异常记录后上抛。调用方应决定重试/人工处理，不统一转成空结果。`summarize()` 返回 None 表示没有达到更新条件，不表示模型调用失败。
 

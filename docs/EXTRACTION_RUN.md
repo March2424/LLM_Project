@@ -1,5 +1,7 @@
 # 低成本实体关系提取：配置与验收
 
+> 2026-11-03 公开语料当前执行前配置见[新数据提取运行前检查](MULTIDOMAIN_EXTRACTION_PREFLIGHT.md)：沿用game-graph/1.1，最多64条、8000输入／14000预计输出、16384模型输出；57单元规划67批。本轮仅本地零API预检，不执行下文历史游戏运行或Teacher采样。
+
 日期：2026-10-31。已实现 HTTP 模型适配、长度自适应批处理和共享预算，已完成 Flare 24 条源文、1 次 DeepSeek API 真实提取试跑；尚未完成真实提取质量验收。Schema 见 [定稿协议](EXTRACTION_SCHEMA.md)，源文数据见 [三款游戏验收](GAME_SAMPLE_QA.md)。
 
 ## 模型接入

@@ -1,4 +1,4 @@
-"""Extract source graph shards, then collect selector demonstrations; no GPU training."""
+"""Prepare or extract source graph shards; Teacher collection is a separate opt-in stage."""
 import argparse
 import fcntl
 import json
@@ -9,9 +9,15 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+from localization_agent.data.extraction_preflight import preflight
 from localization_agent.selection.checkpoints import load_state, write_json
 from localization_agent.selection.teacher import prepare, run, export, read_lines, file_hash
+from localization_agent.schemas.extraction import SCHEMA_VERSION
 from prepare_multidomain_teacher import prepare_plan
+
+
+class ExtractionStopped(RuntimeError):
+    pass
 
 
 def main():
@@ -19,10 +25,15 @@ def main():
     parser.add_argument('--sources', type=Path, required=True)
     parser.add_argument('--credential-env-file', type=Path, default=Path('.env.extraction'))
     parser.add_argument('--workers', type=int, default=2)
+    parser.add_argument('--extraction-config', type=Path, default=Path('configs/multidomain.extraction.json'))
+    parser.add_argument('--stage', choices=('graph', 'all'), default='graph',
+                        help='graph stops after extraction; all also collects Teacher trajectories')
     parser.add_argument('--dry-run', action='store_true')
-    parser.add_argument('--execute', action='store_true', help='Explicitly enable paid extraction and collection; default is dry-run')
+    parser.add_argument('--execute', action='store_true', help='Explicitly enable paid work for the selected stage; default is dry-run')
     parser.add_argument('--continue-after-pilot', action='store_true', help='Continue after inspecting the three source graph pilots')
     args = parser.parse_args()
+    if args.workers < 1:
+        parser.error('--workers must be positive')
     if args.execute and args.dry_run:
         parser.error('Choose either --execute or --dry-run')
     args.dry_run = not args.execute
@@ -36,35 +47,49 @@ def main():
                 os.environ.setdefault(key, value.strip().strip('\"\''))
     os.environ['TOKENIZERS_PARALLELISM'] = 'false'
     units = read_lines(root/'extraction_units.jsonl')
+    extraction = json.loads(args.extraction_config.read_text())
+    checked = preflight(root, extraction)
+    extraction_config = args.extraction_config.resolve()
     configs = root/'configs'
-    configs.mkdir(exist_ok=True)
-    extraction = json.loads(Path('configs/shattered.extraction.json').read_text())
-    extraction['budget'] = {'max_calls': 1000000, 'max_tokens': 1000000000000, 'max_cost': None}
-    extraction['budget_note'] = '2026-11-03: user explicitly requested no monetary cap; finite source manifest, durable usage accounting.'
-    extraction_config = configs/'extraction.json'
     translation_config = configs/'teacher_model.json'
-    for path, value in [(extraction_config, extraction),
-                        (translation_config, {'model': json.loads(Path('configs/flare.memory_trial.json').read_text())['model']})]:
-        if path.exists() and json.loads(path.read_text()) != value:
-            raise ValueError(f'Frozen configuration changed: {path}')
-        if not path.exists():
-            write_json(path, value)
+    if not args.dry_run:
+        key = extraction['model'].get('api_key_env', 'LLM_API_KEY')
+        if not os.environ.get(key):
+            raise RuntimeError('Missing credential environment variable: '+key)
+        configs.mkdir(exist_ok=True)
+        extraction_config = configs/'extraction-multidomain.json'
+        values = [(extraction_config, extraction)]
+        if args.stage == 'all':
+            values.append((translation_config, {'model': json.loads(Path('configs/flare.memory_trial.json').read_text())['model']}))
+        for path, value in values:
+            if path.exists() and json.loads(path.read_text()) != value:
+                raise ValueError(f'Frozen configuration changed: {path}')
+            if not path.exists():
+                write_json(path, value)
     env = dict(os.environ, PYTHONPATH='src')
 
-    def graph(unit, dry=False):
+    def graph(unit):
+        if (root/'STOP').exists():
+            raise ExtractionStopped('STOP requested; no new source unit started')
         folder = (root/unit['graph_db']).parent
         result_path = root/unit['graph_result']
         command = [sys.executable, '-u', 'scripts/run_benchmark_agent.py', str(root/unit['csv']),
             '--project', unit['project_id'], '--source-lang', unit['source_lang'], '--target-lang', unit['target_lang'],
             '--config', str(extraction_config), '--max-batches', '0', '--split-failures']
-        if dry:
-            result = subprocess.run(command+['--dry-run'], env=env, capture_output=True, text=True, check=True)
-            return json.loads(result.stdout)
         if result_path.exists():
             saved = json.loads(result_path.read_text())
             if saved.get('status') == 'complete':
-                if saved['inputs'].get(str(root/unit['csv'])) != file_hash(root/unit['csv']):
-                    raise ValueError('Completed graph source changed: '+unit['project_id'])
+                batch = extraction.get('batch', {})
+                expected = {'project':unit['project_id'], 'schema':SCHEMA_VERSION,
+                    'inputs':{str(root/unit['csv']):file_hash(root/unit['csv'])},
+                    'prompts':{'discover_graph.txt':file_hash('prompts/memory/discover_graph.txt')},
+                    'options':{'source_lang':unit['source_lang'],'target_lang':unit['target_lang'],
+                        'batch_size':batch.get('max_rows',64),'batch_input_tokens':batch.get('input_tokens',5000),
+                        'batch_output_tokens':batch.get('output_tokens',8192)},
+                    'model':extraction['model'], 'catalog_limit':extraction.get('catalog_limit',48),
+                    'catalog_tokens':extraction.get('catalog_tokens',1200), 'factory':None}
+                if saved.get('run_signature') != expected:
+                    raise ValueError('Completed graph source/prompt/model/batching changed; use new output paths: '+unit['project_id'])
                 return saved
             # Failed/unknown requests need inspection, never an implicit paid retry.
             raise RuntimeError('Inspect incomplete graph before explicit resume: '+str(result_path))
@@ -79,14 +104,14 @@ def main():
     with (root/'.pipeline.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if args.dry_run:
-            reports = {u['project_id']: graph(u, True) for u in units}
-            write_json(root/'dry-run.json', {'units':reports, 'model_calls':0,
-                'planned_batches':sum(r['total_batches'] for r in reports.values())})
-            print(json.dumps({'dry_run_units':len(reports),'model_calls':0}))
+            write_json(root/'dry-run.json', checked)
+            print(json.dumps({'dry_run_units':len(units),'planned_batches':checked['planned_batches'],'model_calls':0}))
             return
+        write_json(root/'preflight.json', checked)
         state = {'status':'extracting_graphs','pid':os.getpid(),'started_at_unix':time.time(),
                  'source_manifest_sha256':file_hash(root/'sources_manifest.jsonl'),
-                 'monetary_cap':None,'graph_units':len(units),'completed_graphs':0,'graph_usage':{}}
+                 'monetary_cap':extraction.get('budget',{}).get('max_cost'),'stage':args.stage,
+                 'graph_units':len(units),'completed_graphs':0,'graph_usage':{}}
         archived = root/'archived_graph_usage.json'
         state['archived_graph_usage'] = json.loads(archived.read_text()) if archived.exists() else {}
 
@@ -122,6 +147,11 @@ def main():
                     for future in futures:
                         future.cancel()
                     raise
+            if (root/'STOP').exists():
+                raise ExtractionStopped('STOP requested')
+            if args.stage == 'graph':
+                state['status'] = 'graphs_complete_teacher_not_started'
+                return
             plan, teacher = root/'teacher_plan', root/'teacher'
             if not plan.exists():
                 prepare_plan(root, plan)
@@ -142,6 +172,8 @@ def main():
             else:
                 state['status'] = 'teacher_'+result['status']
             state['teacher_budget'] = json.loads((teacher/'budget.json').read_text())
+        except ExtractionStopped:
+            state['status'] = 'stopped'
         except BaseException as error:
             state.update(status='needs_attention',error=type(error).__name__+': '+str(error))
             raise

@@ -31,6 +31,14 @@ def verify_tokenization(config, data):
                 raise ValueError(f'Full observation/completion is {length} tokens; refusing silent cutoff at {config["cutoff_len"]}')
             maximum = max(maximum, length)
         encoded = processor._encode_data_example(prompt, response, None, None, [], [], [])
+        if config['stage']=='sft':
+            source_ids,target_ids=template.encode_oneturn(tokenizer,prompt+response)
+            input_ids,label_ids=encoded[:2]
+            boundary=len(source_ids)
+            if input_ids[:boundary]!=source_ids or any(token!=-100 for token in label_ids[:boundary]):
+                raise ValueError('Prompt boundary or prompt loss mask differs from the template')
+            if label_ids[boundary:boundary+len(target_ids)]!=target_ids:
+                raise ValueError('Full rationale/action/EOS tokens are not supervised intact')
         labels = (encoded[1],) if config['stage']=='sft' else (encoded[1],encoded[3])
         for field, item in zip(fields, labels):
             supervised = tokenizer.decode([token for token in item if token != -100], skip_special_tokens=True)
@@ -39,7 +47,7 @@ def verify_tokenization(config, data):
     return maximum
 
 
-def check(config_path, registry_path, verify_tokens=False):
+def check(config_path, registry_path, verify_tokens=False, require_common_prompt=False):
     config = yaml.safe_load(Path(config_path).read_text())
     registry = json.loads(Path(registry_path).read_text())
     if config.get('do_eval') or config.get('eval_dataset') or config.get('val_size', 0):
@@ -88,6 +96,14 @@ def check(config_path, registry_path, verify_tokens=False):
             if stage == 'dpo' and actions[0] == actions[1]:
                 raise ValueError('Different rationale wording alone is not a quality preference')
         count = len(data)
+        if require_common_prompt:
+            from localization_agent.selection.sft_contract import inspect_sft_rows
+            tokenizer_path=Path(config['model_name_or_path'])/'tokenizer.json'
+            if not tokenizer_path.exists():
+                tokenizer_path=Path('artifacts/retrieval_tokenizer/tokenizer.json')
+            contract=inspect_sft_rows(data,tokenizer_path)
+            if contract['max_sequence_tokens']>config['cutoff_len']:
+                raise ValueError('Common-template sequence exceeds cutoff_len; increase it before training')
         if verify_tokens:
             max_tokens = verify_tokenization(config, data)
     model = Path(config['model_name_or_path'])
@@ -109,8 +125,9 @@ def main():
     parser.add_argument('--registry', default='configs/training/dataset_info.json')
     parser.add_argument('--output', required=True)
     parser.add_argument('--verify-tokenization', action='store_true', help='Requires the training environment; checks full real data and loss masks on CPU')
+    parser.add_argument('--require-common-prompt',action='store_true',help='Check the shared selector observation schema and full untruncated text template')
     args = parser.parse_args()
-    result = check(args.config, args.registry, args.verify_tokenization)
+    result = check(args.config, args.registry, args.verify_tokenization,args.require_common_prompt)
     path = Path(args.output)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
