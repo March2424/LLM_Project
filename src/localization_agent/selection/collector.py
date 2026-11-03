@@ -178,7 +178,11 @@ class Collector:
                     outcome='stopped'
                     break
                 if not store.db.execute('SELECT 1 FROM runs WHERE id=?',(job['run_id'],)).fetchone():
-                    store.start_run(job['run_id'],game,None,'en','zh','teacher-knowledge',mode='game_resources')
+                    payload=store.db.execute('SELECT payload FROM sources WHERE project=? AND id=? ORDER BY version DESC LIMIT 1',
+                                             (game,job['source_id'])).fetchone()
+                    source=Occurrence(**json.loads(payload[0]))
+                    store.start_run(job['run_id'],game,None,source.source_lang,source.target_lang,
+                                    'teacher-knowledge',mode='game_resources')
                 graph=job.get('graph_config',self.config['graph'])
                 key=json.dumps(graph,sort_keys=True)
                 if key not in services:

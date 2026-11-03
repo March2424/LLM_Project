@@ -127,6 +127,9 @@ def prepare(folder, plan, model_config, max_cost, max_calls=10000, max_tokens=10
     dbs = {'flare': 'outputs/flare_full_2026-10-31/graph.sqlite',
         'shattered': 'outputs/shattered_full_2026-11-01/graph.sqlite',
         'naev': 'outputs/naev_full_2026-11-01/graph.sqlite'}
+    projects_path = plan / 'source_projects.json'
+    projects = json.loads(projects_path.read_text()) if projects_path.exists() else {}
+    dbs.update({key: spec['source_db'] for key, spec in projects.items()})
     folder.mkdir(parents=True, exist_ok=False)
     jobs, assets = [], {}
     tokenizer = Path('artifacts/retrieval_tokenizer/tokenizer.json').resolve()
@@ -153,7 +156,9 @@ def prepare(folder, plan, model_config, max_cost, max_calls=10000, max_tokens=10
                 jobs.append({'game': sequence['game'], 'run_id': run, 'source_id': key,
                     'split': sequence['split'], 'group_id': group_ids[(sequence['game'], key)],
                     'phase': phase, 'status': 'pending',
-                    'trajectory_schema_version': 2})
+                    'trajectory_schema_version': 2,
+                    **{k: sequence[k] for k in ('corpus','source_lang','target_lang','origin_split',
+                                                'seen_evaluation_overlap') if k in sequence}})
     prompts = {str(p.resolve()): file_hash(p) for root in ('prompts/memory', 'prompts/selection')
                for p in Path(root).rglob('*.txt')}
     code = {str(p.resolve()): file_hash(p) for p in Path('src/localization_agent').rglob('*.py')}
@@ -161,12 +166,16 @@ def prepare(folder, plan, model_config, max_cost, max_calls=10000, max_tokens=10
         'memory_policy': 'per_game_split_stage_v1', 'collection_stage': 'teacher_sft',
         'models': models, 'allowed_source_ids': allowed, 'assets': assets,
         'prompts': prompts, 'code': code, 'tokenizer': str(tokenizer),
-        'graph': asdict(GraphConfig.from_file('configs/graph.json')),
+        'graph': asdict(GraphConfig.from_file(plan/'graph_config.json' if (plan/'graph_config.json').exists()
+                                            else 'configs/graph.json')),
         'memory': {'stm_size': 3, 'ltm_top_k': 2, 'summary_step': 5},
         'source_visibility': 'train_source_ids_and_their_supplied_native_context',
         'reference_text_access': False, 'require_reviewer': False,
         'plan_sha256': {name: file_hash(plan / name) for name in ('splits.jsonl','pilot_sequences.jsonl')},
         'model_config_origin': str(model_config), 'max_cost_is_estimated_not_provider_billing': True}
+    if projects:
+        config['source_projects'] = projects
+        config['plan_sha256']['source_projects.json'] = file_hash(projects_path)
     if (plan/'native_bindings.json').exists():
         config['native_bindings']={'path':str((plan/'native_bindings.json').resolve()),
                                    'sha256':file_hash(plan/'native_bindings.json')}

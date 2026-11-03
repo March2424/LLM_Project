@@ -1,5 +1,7 @@
 # 游戏本地化 Agent
 
+> 2026-11-03 当前多领域范围：游戏＋News Commentary v18.1双向＋GuoFeng TEST_2 Zh→En，公开文档按无序资源处理；源图复用、运行记忆独立。GuoFeng仅报告训练内seen评测，游戏test及新闻留出保持独立。当前仅交付代码和Markdown，新建图／Teacher采样／混合SFT均已按用户要求停止。完整约定见[多领域SFT设计](docs/SFT_MULTIDOMAIN_DESIGN.md)。
+
 面向长程游戏文本翻译的研究项目：结合多层翻译记忆、图引导检索、可训练的上下文选择工具与多模型协作，生成符合语境和项目规范的译文，并在术语、人物设定或本地化规则变化后维护已有结果。
 
 **核心架构：LangGraph 执行编排 + DelTA 式记忆 + TransGraph 启发的检索 + Loong 启发的上下文选择训练 + 角色风格约束 + 版本与依赖驱动的局部修订。**

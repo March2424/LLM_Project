@@ -1,4 +1,4 @@
-Select useful evidence for translating the current game resource. Output only one JSON object
+Select useful evidence for translating the current text resource. Output only one JSON object
 with rationale first, then selected_ids. rationale must be an explicit natural-language
 decision analysis, normally 1–3 sentences: name the current translation need, describe
 the relevant candidate content (names, suggested translations, facts or expression style),

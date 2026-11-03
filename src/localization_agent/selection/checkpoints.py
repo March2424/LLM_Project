@@ -42,7 +42,8 @@ def load_state(folder, *, compact_completed=False):
 
 
 class JobCheckpoints:
-    fields = ('game','run_id','source_id','split','group_id','phase','status','trajectory_schema_version')
+    fields = ('game','run_id','source_id','split','group_id','phase','status','trajectory_schema_version',
+              'corpus','source_lang','target_lang','origin_split','seen_evaluation_overlap')
 
     def __init__(self, folder, state):
         self.folder, self.state = Path(folder), state

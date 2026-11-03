@@ -27,6 +27,8 @@
 | [CPU_PREPARATION.md](CPU_PREPARATION.md) | 无 GPU 的分组划分草案、冷启动/试采样清单与服务器边界 | B/C |
 | [LLAMAFACTORY_SETUP.md](LLAMAFACTORY_SETUP.md) | 无 dev 的 SFT/DPO 配置、数据注册和训练预检状态 | B/C |
 | [SFT_96GB.md](SFT_96GB.md) | RTX PRO 6000实际SFT参数、SwanLab及完整状态续训 | B/C |
+| [SFT_MULTIDOMAIN_DESIGN.md](SFT_MULTIDOMAIN_DESIGN.md) | 多领域双向无序资源SFT设计、seen评测及隔离约定 | B/C/D |
+| [SFT_MULTIDOMAIN_HANDOFF.md](SFT_MULTIDOMAIN_HANDOFF.md) | 代码／文档交付、已停止执行状态与后续边界 | B/C |
 | [TEACHER_RUNTIME.md](TEACHER_RUNTIME.md) | 并发采样、逐条检查点、安全升级与续跑 | B/C |
 | [TEACHER_TRAJECTORIES.md](TEACHER_TRAJECTORIES.md) | 可恢复的教师轨迹脚本、终端/HTML进度与生成命令 | B/C |
 | [TRAINING.md](TRAINING.md) | Teacher采样已实现；pi_SFT自采样与DPO协议待实现 | B |

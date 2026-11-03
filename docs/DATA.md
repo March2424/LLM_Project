@@ -148,3 +148,8 @@ result = import_localization_csv(
 该目录保留上游署名及许可文本，原文/译文未改写。CSV 的记录换行统一为 LF，单元格内容不变。JSONL 保留原字节与已有后台编号；`manifest.json` 是只引用实际发布文件的清单。精简溯源保留原生 ID、静态条件和原文/参考的来源位置；不附原始脚本事件、PO/POT 正文、完整原始输入清单或媒体。此前包含原始快照的本地 ZIP 不上传；`artifacts/` 和 `outputs/` 继续忽略。
 
 `tests/test_flare_dataset.py` 不依赖原始输入，检查发布清单/哈希、源侧与参考关联、CSV 与结构化数据一致及未混入原始文件。正式场景划分、译文人工质量核验和全局路径核验仍未完成，发布数据不等于把它标为正式测试集或批准 TM。
+
+
+## 2026-11-03：多领域代码交付约定
+
+当前新增News Commentary v18.1双向源视图与GuoFeng TEST_2源文／参考分离准备。新闻两方向共用文件划分；GuoFeng用于适配训练及训练内seen评测，不再作为该模型的独立未见测试。原始语料与生成运行数据单独保存，不随本次代码提交上传。完整范围与已知限制见[多领域SFT设计](SFT_MULTIDOMAIN_DESIGN.md)，执行停止状态见[交接](SFT_MULTIDOMAIN_HANDOFF.md)。

@@ -13,3 +13,8 @@
 - 关键业务边界的验收场景与实际可执行检查入口。
 
 主评测方案见 [README](../README.md#5-评测指标与质量保证)。本页规定如何测，实际运行记录放在 [EXPERIMENTS.md](EXPERIMENTS.md)。
+
+
+## 2026-11-03：多领域代码交付约定
+
+当前主要评测为游戏test、News Commentary En→Zh文件留出及GuoFeng TEST_2训练内seen评测，分别报告；GuoFeng不用于未见泛化结论或选checkpoint，参考不进入在线生成或记忆。本条覆盖该多领域模型的历史评测范围，旧实验记录保持原日期。完整范围与已知限制见[多领域SFT设计](SFT_MULTIDOMAIN_DESIGN.md)，执行停止状态见[交接](SFT_MULTIDOMAIN_HANDOFF.md)。

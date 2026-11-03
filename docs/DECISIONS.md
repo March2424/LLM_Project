@@ -304,3 +304,10 @@ selected 在1058次累计调用后进程消失，缓存恢复复现SIGKILL/137�
 每25次更新、epoch末和优雅停止时保存完整adapter、optimizer、scheduler、RNG及Trainer状态，最近3份保留，完成后标记resume_ready。第1步及第3步真实续训均核对optimizer moments、global_step、scheduler步数与恢复LR；总2轮不重走warmup。W&B网络403后按用户要求换SwanLab，固定run ID并审计仅report_to变更；阶段汇总与逐步曲线分开。
 
 实际246/246、epoch2完成，最终adapter及checkpoint-246完整；运行产物与凭据不入Git。数据仍为未全量语义审核的候选，不把train loss或SFT完成当正式翻译质量结果，DPO和测试评测仍待实施。详见[SFT_96GB.md](SFT_96GB.md)。
+
+
+## M4-019：多领域准备与主线合并（2026-11-03）
+
+同步服务器保存的多领域代码快照：公开语料源文／参考分离、通用Teacher计划、动态project源库和双向run初始化、通用领域提示及明确执行开关。GuoFeng TEST_2仅按用户既定方案报告训练内seen评测；游戏和新闻留出保持独立。仅代码与Markdown交付，不恢复已停止的建图、采样或混合SFT。
+
+快照基于较旧代码；三方合并保留main已有有界网络重试、费用尝试审计与失败隔离，再加入多领域功能，未直接覆盖回旧实现。相关8项Teacher运行检查通过；不将夹具成功当真实双向质量或新提示词效果。当前main的data及已跟踪output保留原样，本地使用新干净副本并仅复制选定有用运行输入，旧工作区保留。

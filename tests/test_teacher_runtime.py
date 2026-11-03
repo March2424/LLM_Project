@@ -21,7 +21,7 @@ from localization_agent.selection.checkpoints import JobCheckpoints, load_state,
 from localization_agent.selection.teacher import DurableChat, run, upgrade, export, file_hash, retry_call
 
 
-def fixture_folder(folder, games=('flare','shattered'), targets=2):
+def fixture_folder(folder, games=('flare','shattered'), targets=2, direction=('en','zh')):
     folder.mkdir()
     tokenizer=folder/'tokenizer.json';tokenizer.write_text('{}')
     jobs=[];allowed={}
@@ -30,7 +30,8 @@ def fixture_folder(folder, games=('flare','shattered'), targets=2):
         allowed[game]=[]
         for i in range(targets+1):
             key=game+'-'+str(i)
-            row=Occurrence(game,'scene',key,i,key,metadata={'text_type':'dialogue'})
+            row=Occurrence(game,'scene',key,i,key,metadata={'text_type':'dialogue'},
+                           source_lang=direction[0],target_lang=direction[1])
             store.put_source(row)
             graph.put_node(GraphNode(key,'occurrence',Scope(game,'scene'),{'occurrence_id':key},
                                      (Evidence(key,1,key),)))
@@ -124,6 +125,26 @@ class TeacherRuntimeTests(unittest.TestCase):
             self.assertEqual(state['status'],'complete_with_failures')
             self.assertEqual([j['status'] for j in state['jobs']],['complete','failed','complete'])
             self.assertNotIn('baseline_translation_ref',state['jobs'][1])
+
+    @patch('localization_agent.selection.collector.LocalTokenCounter',return_value=len)
+    def test_reverse_direction_uses_registered_source_and_restores_same_run(self, _):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)/'run'
+            fixture_folder(folder,games=('news_zh_en',),targets=1,direction=('zh','en'))
+            RuntimeModel.calls=[];RuntimeModel.folder=folder;RuntimeModel.barriers={}
+            state=run(folder,RuntimeModel)
+            self.assertEqual(state['status'],'complete',state.get('worker_errors'))
+            store=MemoryStore(folder/'news_zh_en.sqlite')
+            try:
+                row=store.run(state['jobs'][0]['run_id'])
+                self.assertEqual((row['source_lang'],row['target_lang']),('zh','en'))
+            finally:
+                store.close()
+            prompts=[p for task,p in RuntimeModel.calls if task=='translate_game']
+            self.assertTrue(all('from zh to en' in p for p in prompts))
+            before=len(RuntimeModel.calls)
+            run(folder,RuntimeModel)
+            self.assertEqual(len(RuntimeModel.calls),before)
 
     @patch('localization_agent.selection.collector.LocalTokenCounter',return_value=len)
     def test_parallel_games_with_selection_before_translation_and_memory(self, _):

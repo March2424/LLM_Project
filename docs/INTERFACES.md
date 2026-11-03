@@ -180,3 +180,8 @@ GraphRetriever 可选 allowed_source_ids 冻结源侧可见集合，默认None�
 
 
 Teacher 采集检查点补充（2026-11-02）：`translation_context_policy` 区分 `teacher_selected_v1`、`warmup_fixed_baseline` 和 `legacy_fixed_baseline`。新目标的 `translation_context` 保存实际翻译 ContextPack（与 `teacher_context` 一致），`translation_prompt` 保存实际翻译输入；`baseline_translation_ref` 沿用旧字段名保存记忆译例引用，不代表采用默认候选。导出报告按实际流程分别计数，译文不进入选择器标签。
+
+
+## 2026-11-03：多领域代码交付约定
+
+新增可选source_projects.json：每project登记source_db、source_lang、target_lang、corpus、split及source_graph_sha256，由多领域计划生产、Teacher prepare消费。逐条检查点保留corpus、source_lang、target_lang、origin_split、seen_evaluation_overlap；run方向从真实源Occurrence初始化。graph_config.json可为计划提供源侧读取范围。旧游戏计划保持兼容，公共图schema不变。完整范围与已知限制见[多领域SFT设计](SFT_MULTIDOMAIN_DESIGN.md)，执行停止状态见[交接](SFT_MULTIDOMAIN_HANDOFF.md)。
