@@ -372,3 +372,44 @@ selected 在1058次累计调用后进程消失，缓存恢复复现SIGKILL/137�
 用户授权提交本地修改到main、更新PRO6000服务器并上传训练所需数据；随后明确当前不进行DPO相关工作，本次范围收紧为SFT。核对3165条共同prompt／schema／来源与新示范冻结job，57个源图及新闻文件划分、参考隔离，保留停止、失败与pending。29项相关离线验证通过；不追加付费采样或模型训练。
 
 服务器保留旧SFT训练目录，main代码和新数据在独立主工作区更新。上传源数据、校正及原始源图、身份绑定、划分、SFT投影和当前Teacher审计。历史冻结JSON不改路径／hash，另建服务器资源索引；不准备DPO偏好、奖励参考或配置。详情见[服务器交接](SERVER_MULTIDOMAIN_HANDOFF.md)。
+
+## M5-001：判定与可重试状态分离（2026-11-04）
+
+背景：恢复语义要求"已完成的案例不再付费"，但传输失败／预算耗尽与 Reviewer 结论性质不同；把两者混为一谈会让重启后跳过本应重试的行，或让重复运行推翻已给出的判定。
+
+决定：`RunJournal.pending()` 只把 `failed`／`budget_exhausted` 视为可重试并重跑，其余状态视为一次性的最终判定不再请求模型；检查点用临时文件＋`os.replace` 原子写；若 TM 已有提交行而检查点缺失，抛 `CommittedWithoutCheckpoint` 要求先人工检查数据库，不猜测补写。配置哈希变化必须换新检查点目录。
+
+影响模块：M5、M2 的 `model_calls` 重放（`reuse_calls`）。可撤销：是，但恢复语义会退化为"要么全跑要么不跑"。
+
+## M5-002：本地 llama.cpp＋Qwen 9B 接入参数（2026-11-04）
+
+背景：需要在不付费的本地机器上验证闭环，服务为 llama.cpp 的 OpenAI 兼容端点。
+
+决定：配置 `configs/local.qwen9b.{workflow,maintenance}.json`，`extra_body.chat_template_kwargs.enable_thinking=false` 必填（思考模式会把输出吃掉在推理文本里，JSON 契约拿不到结果）；无 tokenizer.json 时 `graph_config.max_soft_tokens=null` 走字符预算；`max_output_tokens` 1600～2600。此类配置只用于本机验证，不作为论文实验的最终模型设置。
+
+影响模块：M5、M1 建图（实测本地 9B 无法稳定产出可解析的实体抽取，建图沿用已准备好的图）。可撤销：是。
+
+## M6-001：supersede 不失效、级联作为有界工作清单、报告净变化（2026-11-04）
+
+背景：M2 替换一条 TM 会递归失效把它当历史引用的行；若 `supersede()` 顺带 invalidate，M6 还没来得及检查的译文会先被判为已失效。实测三行样例中修订一行会连带退役两行。
+
+决定：`supersede()` 只发布知识新版本，不做失效级联；`apply()` 先修订到达项，再按 `max_cascades` 跟进"本次修订自身造成的失效"，把它们重新锚定；同一 occurrence 被写多次时报告按净变化汇总（diff 基线取计划时读到的原译文），并把级联新发现的行计入 `candidates`。级联仍有上限，超限记为冲突交人工。
+
+影响模块：M6、M2 版本契约、M7 成本统计（untouched 才是真实节省）。可撤销：否，否则选择性修订的成本无法解释。
+
+## M6-002：retrieval 手臂按事件项作用域比较（2026-11-04）
+
+背景：`ContextPack.context_hash` 包含读取时的 `view`（run watermark 随每次提交增长），直接比较新旧 context 会让全表都被判为"上下文已变"。
+
+决定：retrieval 手臂只问"变更项是否仍被供给这一行"（旧选择与新选择两种装填都查），源事件等无 ref 的情况才比较渲染正文。
+
+影响模块：M6 消融手臂可区分性。可撤销：是，但会失去 selective 与 full 的差别。
+
+## M6-003：事件版本归一，使重放零成本（2026-11-04）
+
+背景：人工可能对同一术语重复发起同一变更；若按事件引用的旧版本判定，第二次仍会把已符合新词表的行标为待修订并再付一次模型调用。
+
+决定：`changed()` 把事件里的引用归一到该记录最新版本，因此对已满足的词表行 `plan()` 直接给 `no_change`，重放不付费、不重写版本；测试 `test_replaying_a_committed_event_costs_no_second_revision` 固定该行为。
+
+影响模块：M6 幂等约定、`scripts/run_maintenance.py` 的 plan／apply 两阶段。可撤销：是。
+

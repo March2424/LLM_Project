@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>M5/M6 本地化 Agent 演示</title>
+<style>
+  :root { --ink:#1c1f23; --muted:#6b7280; --line:#e3e6ea; --bg:#f7f8fa; --card:#fff;
+          --ok:#0f766e; --warn:#b45309; --bad:#b91c1c; --accent:#1d4ed8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.55 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+         color:var(--ink); background:var(--bg); }
+  header { display:flex; gap:16px; align-items:baseline; padding:14px 20px; background:var(--card);
+           border-bottom:1px solid var(--line); }
+  header h1 { font-size:16px; margin:0; }
+  header .meta { color:var(--muted); font-size:12px; }
+  header .grow { flex:1; }
+  button { font:inherit; padding:4px 12px; border:1px solid var(--line); border-radius:6px;
+           background:#fff; cursor:pointer; }
+  button:hover { border-color:#c3c9d1; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.danger { color:var(--bad); border-color:#f0c7c7; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  main { display:grid; grid-template-columns:260px minmax(0,1.15fr) minmax(0,1fr); gap:14px; padding:14px 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  .card h2 { font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+             margin:0; padding:10px 14px; border-bottom:1px solid var(--line); font-weight:600; }
+  .body { padding:12px 14px; }
+  #rows { list-style:none; margin:0; padding:0; max-height:calc(100vh - 220px); overflow:auto; }
+  #rows li { padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+  #rows li:hover { background:#f2f5fa; }
+  #rows li.active { background:#eaf0fd; box-shadow:inset 3px 0 0 var(--accent); }
+  #rows .src { display:block; }
+  #rows .sub { color:var(--muted); font-size:12px; }
+  .tag { display:inline-block; font-size:11px; padding:0 6px; border-radius:999px; border:1px solid var(--line);
+         color:var(--muted); margin-right:4px; }
+  .tag.ok { color:var(--ok); border-color:#bfe3dd; background:#eefaf7; }
+  .tag.bad { color:var(--bad); border-color:#f0c7c7; background:#fdf1f1; }
+  .target { font-size:20px; margin:2px 0 10px; }
+  .kv { display:grid; grid-template-columns:96px 1fr; gap:4px 12px; font-size:13px; }
+  .kv .k { color:var(--muted); }
+  code, .mono { font-family: ui-monospace, Consolas, monospace; font-size:12px; }
+  .chain { list-style:none; margin:0; padding:0; }
+  .chain li { display:grid; grid-template-columns:44px 1fr auto; gap:8px; align-items:center;
+              padding:6px 0; border-bottom:1px dashed var(--line); }
+  .chain li:last-child { border-bottom:0; }
+  .chain .v { color:var(--muted); font-size:12px; }
+  .ctx { border-top:1px solid var(--line); padding:8px 0; }
+  .ctx:first-child { border-top:0; }
+  .ctx .who { font-size:12px; color:var(--muted); margin-bottom:2px; }
+  .ctx .txt { white-space:pre-wrap; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:12px; }
+  .report { margin-top:12px; }
+  .counts { display:flex; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .counts .pill { border:1px solid var(--line); border-radius:8px; padding:6px 10px; min-width:86px; }
+  .counts .pill b { display:block; font-size:18px; }
+  .empty { color:var(--muted); padding:20px; text-align:center; }
+  #toast { position:fixed; right:18px; bottom:18px; background:#111827; color:#fff; padding:10px 14px;
+           border-radius:8px; opacity:0; transition:opacity .2s; max-width:420px; }
+  #toast.show { opacity:.94; }
+  .hint { color:var(--muted); font-size:12px; margin:6px 0 0; }
+  footer { color:var(--muted); font-size:12px; padding:0 20px 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>M5 / M6 本地化 Agent</h1>
+  <span class="meta" id="meta">加载中…</span>
+  <span class="grow"></span>
+  <button id="reset" title="把会话副本恢复成运行时的原始状态">重置演示数据</button>
+</header>
+
+<main>
+  <section class="card">
+    <h2>译文记录 <span id="rowcount" class="meta"></span></h2>
+    <ul id="rows"></ul>
+  </section>
+
+  <section class="card">
+    <h2>当前译文与版本链</h2>
+    <div class="body" id="detail"><div class="empty">选择左侧一条记录</div></div>
+  </section>
+
+  <section class="card">
+    <h2>模型实际收到的上下文</h2>
+    <div class="body" id="context"><div class="empty">选择左侧一条记录</div></div>
+  </section>
+
+  <section class="card" style="grid-column:1 / -1">
+    <h2>术语变更（M6 选择性修订）</h2>
+    <div class="body">
+      <table id="terms"><thead><tr><th>原文</th><th>当前译法</th><th>版本</th><th style="width:34%">改成</th></tr></thead>
+        <tbody></tbody></table>
+      <div class="report" id="report"></div>
+      <p class="hint" id="modelhint"></p>
+    </div>
+  </section>
+</main>
+<footer>预演（plan）先提交术语的新版本（记录改动），不调用模型、不改写任何译文；执行（apply）只重译被术语变更或依赖失效影响的记录，其余保留并标注 no_change。</footer>
+<div id="toast"></div>
+
+<script>
+const $ = (selector) => document.querySelector(selector);
+let state = null, selected = null;
+
+function toast(message) {
+  const box = $('#toast');
+  box.textContent = message;
+  box.classList.add('show');
+  clearTimeout(box.timer);
+  box.timer = setTimeout(() => box.classList.remove('show'), 4200);
+}
+
+async function api(path, body) {
+  const response = await fetch(path, body === undefined ? {} : {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const value = await response.json();
+  if (!response.ok) throw new Error(value.error || response.statusText);
+  return value;
+}
+
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function render() {
+  $('#meta').textContent = `${state.project} · run ${state.run_id} · ${state.rows.length} 条译文 · ` +
+    (state.has_model ? `模型 ${state.model}` : '未接模型（只能预演）');
+  $('#rowcount').textContent = `(${state.rows.length})`;
+  $('#modelhint').textContent = state.has_model
+    ? '执行会用当前配置里的模型真实重译；本地模型较慢，演示时建议先预演。'
+    : '未提供 --config，本次只开放预演：展示会命中哪些记录、各自判为哪一类。';
+  $('#rows').innerHTML = state.rows.map((row) => `
+    <li data-id="${row.id}" class="${selected === row.id ? 'active' : ''}">
+      <span class="src">${escapeHtml(row.source)}</span>
+      <span class="sub">
+        <span class="tag">${escapeHtml(row.text_type || 'unknown')}</span>
+        <span class="tag ${row.passed ? 'ok' : 'bad'}">${row.passed ? '已通过评审' : '未通过'}</span>
+        v${row.version}${row.locked ? ' · 🔒' : ''}
+      </span>
+    </li>`).join('');
+  for (const item of document.querySelectorAll('#rows li')) {
+    item.onclick = () => { selected = item.dataset.id; render(); };
+  }
+  renderDetail();
+  renderTerms();
+  renderReport(state.report);
+}
+
+function renderDetail() {
+  const row = state.rows.find((item) => item.id === selected);
+  if (!row) return;
+  const chain = row.versions.map((version, index) => `
+    <li>
+      <span class="v">v${version.version}</span>
+      <span>${escapeHtml(version.target)}
+        <span class="tag ${version.valid ? 'ok' : ''}">${version.valid ? '当前' : version.status}</span>
+        <span class="sub">${escapeHtml(version.reviewer || '')}</span></span>
+      <span>${index < row.versions.length - 1
+        ? `<button class="danger" data-rollback="${version.version}">回滚到此版</button>` : ''}</span>
+    </li>`).join('');
+  $('#detail').innerHTML = `
+    <div class="sub mono">${escapeHtml(row.id)}</div>
+    <div class="kv" style="margin:6px 0 10px">
+      <span class="k">原文</span><span>${escapeHtml(row.source)}</span>
+      <span class="k">当前译文</span><span class="target">${escapeHtml(row.target)}</span>
+      <span class="k">评审回执</span><span>${escapeHtml(row.reviewer || '—')} · ${row.passed ? 'passed' : 'failed'}</span>
+      <span class="k">人工锁</span><span>${row.locked ? escapeHtml(row.locked.reviewer + (row.locked.note ? ' · ' + row.locked.note : '')) : '—'}</span>
+    </div>
+    <ul class="chain">${chain}</ul>
+    <div style="margin-top:12px">
+      ${row.locked
+        ? `<button data-unlock="${row.id}">解除人工锁</button>`
+        : `<button data-lock="${row.id}">人工锁定（模型不再改动）</button>`}
+    </div>`;
+  for (const button of document.querySelectorAll('[data-rollback]')) {
+    button.onclick = () => act(() => api('/api/rollback', {occurrence: row.id}), '已回滚并追加新版本');
+  }
+  const lock = document.querySelector('[data-lock]');
+  if (lock) lock.onclick = () => act(() => api('/api/lock', {occurrence: row.id, reviewer: 'human:lead',
+                                                             note: '演示：人工锁定'}), '已锁定');
+  const unlock = document.querySelector('[data-unlock]');
+  if (unlock) unlock.onclick = () => act(() => api('/api/unlock', {occurrence: row.id}), '已解锁');
+
+  $('#context').innerHTML = row.context.length ? row.context.map((item) => `
+    <div class="ctx">
+      <div class="who">${escapeHtml(item.id)} · ${escapeHtml(item.category)}</div>
+      <div class="txt">${escapeHtml(item.text)}</div>
+    </div>`).join('') : '<div class="empty">这一版没有附带上下文</div>';
+}
+
+function renderTerms() {
+  const body = $('#terms tbody');
+  body.innerHTML = state.terms.map((term) => `
+    <tr>
+      <td>${escapeHtml(term.source)}</td>
+      <td>${escapeHtml(term.target)}</td>
+      <td>v${term.version}</td>
+      <td>
+        <input data-term="${escapeHtml(term.record_id)}" placeholder="新译法" style="width:52%;padding:3px 6px">
+        <button data-plan="${escapeHtml(term.record_id)}">预演</button>
+        ${state.has_model ? `<button class="primary" data-apply="${escapeHtml(term.record_id)}">执行</button>` : ''}
+      </td>
+    </tr>`).join('');
+  for (const button of document.querySelectorAll('[data-plan],[data-apply]')) {
+    button.onclick = () => {
+      const record = button.dataset.plan || button.dataset.apply;
+      const input = document.querySelector(`[data-term="${record}"]`);
+      const target = input.value.trim();
+      if (!target) return toast('先填一个新译法');
+      const apply = Boolean(button.dataset.apply);
+      if (apply && !confirm('执行会真实调用模型重译受影响的记录，继续？')) return;
+      act(() => api('/api/event', {record_id: record, target, apply}), apply ? '已执行' : '预演完成');
+    };
+  }
+}
+
+async function act(action, message) {
+  try {
+    await action();
+    toast(message);
+    state = await api('/api/run');
+    render();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+function renderReport(report) {
+  const box = $('#report');
+  if (!report) { box.innerHTML = ''; return; }
+  const counts = report.counts;
+  const items = report.items.slice(0, 8);
+  box.innerHTML = `
+    <div class="counts">
+      <div class="pill"><span class="sub">候选</span><b>${report.candidates}</b></div>
+      <div class="pill"><span class="sub">需修订</span><b>${counts.needs_revision}</b></div>
+      <div class="pill"><span class="sub">未改动</span><b>${counts.no_change + counts.locked}</b></div>
+      <div class="pill"><span class="sub">待人工</span><b>${counts.unresolved}</b></div>
+      <div class="pill"><span class="sub">模型调用</span><b>${report.model_calls.length}</b></div>
+    </div>
+    <table><thead><tr><th>记录</th><th>发现方式</th><th>判定</th><th>变化</th></tr></thead><tbody>
+    ${items.map((item) => `<tr>
+      <td class="mono">${escapeHtml(item.occurrence_id)}</td>
+      <td>${escapeHtml(item.discovery.join('+'))}</td>
+      <td><span class="tag ${item.decision === 'needs_revision' ? 'ok' : ''}">${escapeHtml(item.decision)}</span>
+          <div class="sub">${escapeHtml(item.reason)}</div></td>
+      <td>${escapeHtml(item.old_target)} → <b>${escapeHtml(item.new_target || '待重译')}</b></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+$('#reset').onclick = () => act(() => api('/api/reset', {}), '已恢复到演示开始时的数据');
+
+api('/api/run').then((value) => { state = value; selected = state.rows[0] && state.rows[0].id; render(); })
+  .catch((error) => { $('#meta').textContent = error.message; });
+</script>
+</body>
+</html>

@@ -60,9 +60,9 @@ _(dynamic_text)
             self.assertEqual(len({r['id'] for r in rows}),8)
             self.assertTrue(any(r['source_text']==' ' and r['text_type']=='formatting' for r in rows))
             self.assertEqual(sum(r['source_text']=='Hello' for r in rows),2)
-            self.assertNotIn('参考专用',(first/'naev_entity_input.csv').read_text())
+            self.assertNotIn('参考专用',(first/'naev_entity_input.csv').read_text(encoding='utf-8'))
             self.assertEqual(m['reference_status_records'],{'translated':5,'missing':2,'fuzzy':1})
-            refs=[json.loads(s) for s in (first/'references.jsonl').read_text().splitlines()]
+            refs=[json.loads(s) for s in (first/'references.jsonl').read_text(encoding='utf-8').splitlines()]
             self.assertEqual({r['source_form'] for r in refs if r['reference_plural_index']==0},{'singular','plural'})
             self.assertTrue(any(r['fuzzy'] and r['reference_text']=='参考专用乙' for r in refs))
             before=(first/'naev_entity_input.csv').read_bytes()

@@ -15,9 +15,11 @@ NATIVE = ROOT / 'data/flare/entity_input_background.jsonl'
 
 class FlareEntityInputTest(unittest.TestCase):
     def test_export_preserves_records_and_native_clues(self):
-        sources = [json.loads(line) for line in (DATA / 'source.jsonl').read_text().splitlines()]
+        sources = [json.loads(line) for line in
+                   (DATA / 'source.jsonl').read_text(encoding='utf-8').splitlines()]
         origins = {row['record_id']: row for row in
-                   (json.loads(line) for line in (DATA / 'background/provenance.jsonl').read_text().splitlines())}
+                   (json.loads(line) for line in
+                    (DATA / 'background/provenance.jsonl').read_text(encoding='utf-8').splitlines())}
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'input.csv'
             export(DATA / 'source.jsonl', NATIVE, output)

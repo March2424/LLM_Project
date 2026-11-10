@@ -38,8 +38,13 @@ def read_response_json(response, deadline: float, read_timeout: float):
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Model response exceeded total request deadline')
-        if socket is not None:
-            socket.settimeout(min(read_timeout, remaining))
+        if socket is not None and socket.fileno() != -1:
+            # A peer-closed connection leaves an unusable handle on Windows while buffered
+            # bytes still drain; the deadline below bounds the wait either way.
+            try:
+                socket.settimeout(min(read_timeout, remaining))
+            except OSError:
+                pass
         # read() can wait forever while small keepalive chunks reset the socket timeout.
         chunk = response.read1(65536)
         if not chunk:

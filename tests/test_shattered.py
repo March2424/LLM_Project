@@ -40,8 +40,9 @@ class Thing { void f() {
             for bundle in BUNDLES:
                 folder = root / MESSAGE_ROOT / bundle
                 folder.mkdir(parents=True)
-                (folder / (bundle + '.properties')).write_text(f'{bundle}.example=Original %s\n')
-                (folder / (bundle + '_zh.properties')).write_text(f'{bundle}.example=秘密参考\n' if bundle != 'items' else '')
+                (folder / (bundle + '.properties')).write_text(f'{bundle}.example=Original %s\n', encoding='utf-8')
+                (folder / (bundle + '_zh.properties')).write_text(
+                    f'{bundle}.example=秘密参考\n' if bundle != 'items' else '', encoding='utf-8')
             (root / 'LICENSE.txt').write_text('test fixture license')
             first = Path(tmp) / 'one'
             manifest = build(root, first)
@@ -54,11 +55,12 @@ class Thing { void f() {
             second = Path(tmp) / 'two'
             build(root, second)
             self.assertEqual(source_bytes, (second / 'shattered_entity_input.csv').read_bytes())
-            with (first / 'shattered_entity_input.csv').open(newline='') as stream:
+            with (first / 'shattered_entity_input.csv').open(encoding='utf-8', newline='') as stream:
                 reader = csv.DictReader(stream)
                 self.assertEqual(reader.fieldnames, ['id', 'source_text', 'text_type', 'context'])
                 ids = {row['id'] for row in reader}
-            refs = [json.loads(line) for line in (first / 'references.jsonl').read_text().splitlines()]
+            refs = [json.loads(line) for line in
+                    (first / 'references.jsonl').read_text(encoding='utf-8').splitlines()]
             self.assertTrue({row['record_id'] for row in refs} < ids)
 
 
