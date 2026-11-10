@@ -145,6 +145,7 @@ function render() {
   }
   renderDetail();
   renderTerms();
+  renderReport(state.report);
 }
 
 function renderDetail() {
@@ -210,15 +211,14 @@ function renderTerms() {
       if (!target) return toast('先填一个新译法');
       const apply = Boolean(button.dataset.apply);
       if (apply && !confirm('执行会真实调用模型重译受影响的记录，继续？')) return;
-      act(() => api('/api/event', {record_id: record, target, apply}), apply ? '已执行' : '预演完成', true);
+      act(() => api('/api/event', {record_id: record, target, apply}), apply ? '已执行' : '预演完成');
     };
   }
 }
 
-async function act(action, message, keepReport = false) {
+async function act(action, message) {
   try {
-    const result = await action();
-    if (keepReport && result.counts) renderReport(result);
+    await action();
     toast(message);
     state = await api('/api/run');
     render();
@@ -229,6 +229,7 @@ async function act(action, message, keepReport = false) {
 
 function renderReport(report) {
   const box = $('#report');
+  if (!report) { box.innerHTML = ''; return; }
   const counts = report.counts;
   const items = report.items.slice(0, 8);
   box.innerHTML = `

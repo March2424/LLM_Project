@@ -36,6 +36,7 @@ class Session:
     def __init__(self, source: Path, session: Path, config: dict | None, run_id: str | None):
         self.source, self.session, self.config = Path(source), Path(session), config
         shutil.copyfile(self.source, self.session)
+        self.report = None
         self.run_id, self.project = run_id, (config or {}).get('project')
         self.open()
 
@@ -62,6 +63,7 @@ class Session:
     def reset(self):
         self.store.close()
         shutil.copyfile(self.source, self.session)
+        self.report = None
         self.open()
 
     # Reads ------------------------------------------------------------------------------
@@ -117,7 +119,7 @@ class Session:
 
     def state(self) -> dict:
         return {'run_id': self.run_id, 'project': self.project, 'rows': self.rows(),
-                'terms': self.terms(), 'snapshot': self.snapshot,
+                'terms': self.terms(), 'snapshot': self.snapshot, 'report': self.report,
                 'model': (self.config or {}).get('model', {}).get('model'),
                 'has_model': bool(self.config)}
 
@@ -143,7 +145,9 @@ class Session:
                             ref=current.ref, previous={'target': latest.content['target']},
                             current={'target': target})
         report = self.maintenance.apply(event, self.run_id, self.snapshot, dry_run=not apply)
-        return MaintenanceService.export(report)
+        # Kept in the session so a refresh (or a second screen) still shows the last verdict.
+        self.report = MaintenanceService.export(report)
+        return self.report
 
 
 def handler_for(session: Session):
