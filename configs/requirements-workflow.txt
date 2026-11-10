@@ -1,0 +1,2 @@
+# M5 workflow and M6 maintenance runtime. Python 3.11+; storage uses the standard library sqlite3.
+langgraph==1.2.19

@@ -37,7 +37,7 @@ HTTP适配器的`timeout`控制socket空闲时间；新增`total_timeout`默认1
 
 错误约定：未知对象 `KeyError`；内容、作用域、模型结构不合法 `ValueError`；预期版本/源版本冲突 `VersionConflict`；缺少所需模型适配器 `RuntimeError`；真实模型异常记录后上抛。调用方应决定重试/人工处理，不统一转成空结果。`summarize()` 返回 None 表示没有达到更新条件，不表示模型调用失败。
 
-尚未实现的公共结构：SelectionResult、TranslationOutcome、UpdateReport。M6 的人工锁、完整事务回执、幂等工作流恢复与导出协议也尚未冻结。
+已实现的公共结构：TranslationOutcome、UpdateReport（见下方 M5/M6 节，代码定义在 `schemas/workflow.py` 与 `schemas/maintenance.py`）。尚未实现的公共结构：SelectionResult。
 
 
 ## 图与 M3 接口（2026-10-28）
@@ -159,6 +159,25 @@ AutoGraphBuilder 不再接收 reviewer，只使用 memory 中的 ChatModel，每
 ## 全量提取检查点（2026-10-31）
 
 AutoGraphBuilder 新增 reuse_logged_calls 与 keep_valid_items（均默认 false）。前者仅重放完整 prompt 哈希匹配的成功响应，后者逐项保留通过现有结构/来源检查的结果，将拒绝项原提议和原因写入 BuildResult.rejected（默认空元组）。原模型输出 schema 不变，不降低单项校验标准。CLI --resume 检查数据/模型/提示词/批次指纹并恢复累计预算；图写入和 extraction_batches 检查点共同提交。专用 Flare 配置启用逐项模式，--split-failures 对完整响应无效或截断批次拆分，预算仍共享。详见 [全量运行说明](EXTRACTION_RUN.md)。
+
+
+## M5 翻译闭环与 M6 更新流程（2026-11-04）
+
+代码定义：`schemas/workflow.py`、`workflow/{agent,journal}.py`、`schemas/maintenance.py`、`maintenance/service.py`。
+
+- `TranslationOutcome`：一条 occurrence 的最终判定，字段为 occurrence_id／source_version／status／target／revisions／context_hash／translation 引用／model_calls／failure。status 取 committed／needs_revision／stopped／failed／budget_exhausted／conflict；其中 failed 与 budget_exhausted 是可重试状态，不是判定，Reviewer 给出的结论才是一次性的。
+- `TranslationAgent.run(occurrence, run_id, snapshot_id, reuse_calls=False, expected_version=0)`：LangGraph 状态是 `TypedDict(total=False)`，节点按通道合并。`expected_version` 由 M6 传入它检查过的版本，过期的修订请求失败而不分叉。`reuse_calls=True` 只重放 `model_calls` 中 prompt 哈希匹配的成功响应。
+- `RunJournal`：`state.json` 临时文件＋`os.replace` 原子写；已 committed 案例不再付费；`pending()` 返回未记录或处于可重试状态的 occurrence；配置哈希变化必须换新目录。TM 中已有提交而检查点缺失时抛 `CommittedWithoutCheckpoint`，要求先检查数据库，不猜测补写。入口 `scripts/run_agent_workflow.py`（prepare／run／report）。
+- `UpdateEvent`：project／kind（term、style、summary、source、graph、rule）／reason／ref／previous／current／source_change。source 事件必须携带变更出现证据，其他类型必须携带被改引用；reason 不得为空。
+- `AffectedTranslation`：occurrence_id、被检查的版本、discovery 手臂（dependency／scope／retrieval）、decision（no_change／needs_revision／locked／unresolved）、原因、old/new target 与 context_hash。needs_revision 必须给出新译文；no_change 不得携带不同译文。
+- `UpdateReport`：`counts` 由 items 自动统计；`revised` 是付费项，`untouched`（no_change＋locked）是本项目声称省下的部分。
+- `MaintenanceService`：
+  - `plan()` 不写不付费；`apply()` 先修订到达项，再按 `max_cascades` 跟进修订自身引发的失效（M2 替换一条 TM 会使把它当历史引用的行失效），报告按 occurrence 汇总**净变化**：一行在级联中被写两次时，diff 仍以计划时读到的原译文为基线。
+  - `supersede()` 发布知识新版本但刻意不 invalidate；`changed()` 把事件引用的版本归一到该记录最新版本，因此重复 apply 同一事件不再请求模型，也不重写译文（幂等）。
+  - discovery 取 `dependency`／`retrieval`／`dependency_retrieval`／`full`；retrieval 手臂只比较"该事件项是否仍被供给"，避免 run watermark 随提交增长导致全表误判。
+  - `lock／unlock／locked`：被人工锁定的行只报 locked，模型不会碰；`rollback(ref, run_id, snapshot_id, reason)` 回溯到最近一个译文不同的版本并作为新版本追加；`export(report)` 是给 Reviewer 和其他成员的稳定 JSON。
+  - 收据与锁写入同一 SQLite 的 `maintenance_locks`／`maintenance_audit`；审计表用自增 `seq` 排序，同一秒内的多条收据保持先后。CLI：`scripts/run_maintenance.py`（plan／apply／rollback／lock／unlock）。
+- 2026-11-04 实机限制：`selection/teacher.py` 与两个 Teacher 脚本使用 `fcntl`，只能在 Linux 运行；本地 llama.cpp＋9B 在 Reviewer JSON 上会截断或产出非法 JSON，M5/M6 把这类中断记为可重试的 failed／unresolved 并保留原因，不写成判定，也不落译文。
 
 
 ## CPU 训练准备接口（2026-11-01）

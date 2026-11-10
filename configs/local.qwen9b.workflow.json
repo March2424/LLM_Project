@@ -1,0 +1,59 @@
+{
+  "project": "flare_local_qwen",
+  "source_lang": "en",
+  "target_lang": "zh",
+  "graph_snapshot": "graph",
+  "knowledge_snapshot": "knowledge",
+  "run_id": "run",
+  "model": {
+    "endpoint": "http://127.0.0.1:8080/v1/chat/completions",
+    "model": "qwen3-9b-local",
+    "api_key_env": "LOCAL_LLM_KEY",
+    "max_output_tokens": 1600,
+    "context_tokens": 8192,
+    "temperature": 0,
+    "timeout": 120,
+    "total_timeout": 300,
+    "extra_body": {
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    }
+  },
+  "budget": {
+    "max_calls": 80,
+    "max_tokens": 400000,
+    "max_cost": null
+  },
+  "pricing_note": "Local llama.cpp endpoint: unpriced calls, so max_cost stays null and CallBudget counts calls and tokens only.",
+  "graph_config": {
+    "max_hops": 3,
+    "max_nodes": 40,
+    "max_candidates": 12,
+    "max_characters": 2600,
+    "source_visibility": "previous",
+    "max_entity_seeds": 3,
+    "max_entity_hops": 1,
+    "max_selected": 6,
+    "max_soft_tokens": null
+  },
+  "memory": {
+    "stm_size": 3,
+    "ltm_top_k": 2,
+    "summary_step": 3
+  },
+  "agent": {
+    "max_revisions": 2,
+    "max_retries": 1,
+    "max_retrievals": 1,
+    "max_review_calls": 3,
+    "reviewer": "agent:reviewer"
+  },
+  "batch": {
+    "max_rows": 3
+  },
+  "keep_valid_items": true,
+  "catalog_limit": 36,
+  "catalog_tokens": 900,
+  "model_note": "enable_thinking must stay false: this GGUF otherwise spends the whole output budget on reasoning_content and returns empty content."
+}

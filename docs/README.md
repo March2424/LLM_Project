@@ -44,6 +44,7 @@
 | [EVALUATION.md](EVALUATION.md) | 指标定义、Judge、基线与统一评测口径 | D |
 | [EXPERIMENTS.md](EXPERIMENTS.md) | 已执行实验的配置、产物、结果和失败记录 | 实验执行者，D 汇总 |
 | [SETUP.md](SETUP.md) | 经验证的环境、依赖、模型服务和运行方式 | C 牵头，各模块补充 |
+| [DEMO.md](DEMO.md) | M5/M6 网页演示的启动、演示脚本、数据隔离与限制 | C |
 | [SERVER_HANDOFF.md](SERVER_HANDOFF.md) | Push 检查、服务器依赖、源图迁移和 teacher trajectory 前置缺口 | A/B/C |
 | [DECISIONS.md](DECISIONS.md) | 已确定的重要设计取舍及影响 | 决策涉及成员 |
 | [HANDOFF.md](HANDOFF.md) | 跨成员、跨 Codex 会话的工作交接 | 当前任务执行者 |
