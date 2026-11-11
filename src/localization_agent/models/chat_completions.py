@@ -82,7 +82,7 @@ class ChatCompletionsModel:
         payload = {'model': self.model, 'messages': [{'role': 'user', 'content': prompt}],
                    'temperature': self.temperature, 'max_tokens': self.max_output_tokens,
                    'stream': False, **self.extra_body}
-        if task == 'discover_graph':
+        if task in {'discover_graph', 'review_game_autonomous'}:
             payload.setdefault('response_format', {'type': 'json_object'})
         reserved_cost = self._cost(inputs, self.max_output_tokens)
         self.budget.reserve(inputs + self.max_output_tokens, reserved_cost)

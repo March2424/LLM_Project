@@ -1,5 +1,9 @@
 # 公共数据结构与模块接口
 
+2026-11-10 M5 当前接口：`build_workflow` 改为无人工中断的 `auto_review`，动作 accept/repair/reselect/stop；CLI 仅 init/run/status，删除 `edit_draft` 和手填／人工确认入口。新增 `quality.py` 结构化模型审查与程序格式检查。`generate_draft(..., allow_context_change=True)` 仅用于同源版本／同 run 的显式上下文重选，换输入后重新审查。自动结论绑定草稿、目标、上下文与策略 hash，再复用 `complete_review`／`TranslationCheck` 提交。详见 [自主策略](AUTONOMOUS_REVIEW.md)。下面 2026-11-02 的外部审阅／直接修订说明属于已被替代的历史约定。
+
+2026-11-02 M5 补充：`GameSession` 拆出固定上下文生成、模型修复与外部修订接口，旧 `translate_one` 保留。`GraphRetriever.commit` / `MemoryStore.commit_translation` 增加可选 `reviewed_draft: MemoryRef` 并与正式 TM 同事务保存；`MemoryStore` 增加默认保持原行为的 `check_same_thread` 参数。LangGraph 状态、审阅 token、草稿防重及提交回执见 [工作流接口](LANGGRAPH_WORKFLOW.md)。AI 审阅明确记录 `ai:`，不写成人工通过。
+
 状态：2026-10-30，M1 通用 CSV 与 Flare 数据契约、M2 记忆及基础 M3 图检索接口已实现；其他模块契约待实现时补充。
 
 M2 类型代码定义：[schemas/memory.py](../src/localization_agent/schemas/memory.py)。本页解释边界，完整用法和示例见 [MEMORY.md](MEMORY.md)。

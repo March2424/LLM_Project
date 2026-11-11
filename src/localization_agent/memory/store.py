@@ -30,8 +30,8 @@ def _record(payload: str) -> MemoryRecord:
 
 
 class MemoryStore:
-    def __init__(self, path: str | Path = ":memory:"):
-        self.db = sqlite3.connect(str(path))
+    def __init__(self, path: str | Path = ":memory:", *, check_same_thread: bool = True):
+        self.db = sqlite3.connect(str(path), check_same_thread=check_same_thread)
         self.db.row_factory = sqlite3.Row
         self.db.executescript("""
             CREATE TABLE IF NOT EXISTS sources (
@@ -202,7 +202,8 @@ class MemoryStore:
                            check: TranslationCheck, *, used: tuple[MemoryRef, ...] = (),
                            expected_version: int = 0, view: ReadView | None = None,
                            context_sources: tuple[Evidence, ...] = (),
-                           context_manifest: dict | None = None, allow_unreviewed: bool = False) -> MemoryRecord:
+                           context_manifest: dict | None = None, allow_unreviewed: bool = False,
+                           reviewed_draft: MemoryRef | None = None) -> MemoryRecord:
         if ((not check.passed and not allow_unreviewed) or not check.reviewer.strip() or not check.context_hash
                 or check.occurrence_id != occurrence.occurrence_id
                 or check.source_version != occurrence.source_version
@@ -238,7 +239,8 @@ class MemoryStore:
                                "metadata": effective.metadata, "check": asdict(check),
                                "verification": "unreviewed" if allow_unreviewed else "reviewed",
                                "knowledge_snapshot": run["snapshot"], "input_view": asdict(view),
-                               "context_manifest": context_manifest or {}},
+                               "context_manifest": context_manifest or {},
+                               "reviewed_draft": asdict(reviewed_draft) if reviewed_draft else None},
                               tuple(dict.fromkeys((evidence,) + context_sources)), used,
                               "approved", run_id, occurrence.position, reviewer=check.reviewer)
         with self.db:

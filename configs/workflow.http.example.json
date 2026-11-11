@@ -1,0 +1,10 @@
+{
+  "backend": "http",
+  "endpoint": "https://YOUR-PROVIDER/v1/chat/completions",
+  "model": "YOUR-MODEL",
+  "api_key_env": "LLM_API_KEY",
+  "max_output_tokens": 512,
+  "context_tokens": 16384,
+  "timeout": 90,
+  "max_calls": 30
+}

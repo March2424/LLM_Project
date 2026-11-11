@@ -402,7 +402,8 @@ class GraphRetriever:
         return tuple(r for r in (summary, style) if r is not None)
 
     def commit(self, occurrence: Occurrence, target: str, check: TranslationCheck, pack: ContextPack,
-               *, expected_version: int = 0, allow_unreviewed: bool = False):
+               *, expected_version: int = 0, allow_unreviewed: bool = False,
+               reviewed_draft: MemoryRef | None = None):
         """Single-thread run: revalidate the actual input before delegating the TM transaction."""
         if pack.status != 'ready' or check.context_hash != pack.context_hash:
             raise ValueError('Check must bind a ready context pack')
@@ -422,4 +423,5 @@ class GraphRetriever:
                         tuple(Evidence(**e) for e in pack.manifest['sources']) +
                         tuple(e for c in pack.selected for ref in c.graph_refs
                               for e in self.graph.get(ref).evidence))),
-                    context_manifest=pack.manifest,allow_unreviewed=allow_unreviewed)
+                    context_manifest=pack.manifest,allow_unreviewed=allow_unreviewed,
+                    reviewed_draft=reviewed_draft)

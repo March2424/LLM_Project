@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "验证 LangGraph 闭环", "type": "process",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "unittest", "discover", "-s", "tests", "-p", "test_langgraph_workflow.py", "-v"],
+      "options": {"cwd": "${workspaceFolder}"}, "group": {"kind": "test", "isDefault": true}, "problemMatcher": []
+    }
+  ]
+}

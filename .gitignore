@@ -4,7 +4,14 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+*.egg-info/
+build/
+dist/
 
 # 本地环境与凭据；示例配置可以提交
 .venv/

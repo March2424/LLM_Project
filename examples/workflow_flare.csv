@@ -1,0 +1,4 @@
+id,source_text,text_type,context
+flr_370f255aacc80828122d,Cleave,skill_name,requires_mp=8
+flr_3d765caa330daf54cdb8,Attack all enemies in a wide arc.,skill_description,requires_mp=8
+flr_0844a7d74b1087656d7e,Buy Price: %d %s,system_message,

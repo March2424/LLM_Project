@@ -1,5 +1,11 @@
 # 游戏本地化 Agent
 
+2026-11-10 M5 更新：当前流程已改为 DeepSeek Flash 自主审查，自动决定通过、修复、候选资料重选或停止；删除人工确认与手填译文入口。依据与边界见 [自主审查策略](docs/AUTONOMOUS_REVIEW.md)，运行见 [START_HERE.md](START_HERE.md)，真实样例见 [自主试跑](docs/AUTONOMOUS_TRIAL.md)。此前人工流程与阶段状态作为历史记录保留，以本更新为当前 M5 约定；RL 仍未启用。
+
+2026-11-02 本地 M5 实现：新增 LangGraph 外部审阅、有限修复、SQLite 暂停恢复与 VS Code 运行配置。先阅读 [START_HERE.md](START_HERE.md)；设计和当前边界见 [LangGraph 工作流](docs/LANGGRAPH_WORKFLOW.md)。RL 与自动语义 Reviewer 暂不接入，下文既往阶段记录保留。
+
+同日改用远程 DeepSeek Flash 重跑三条样例：经 Codex AI 审阅三条均提交，其中一条完成模型修复与复审，6 次真实 API 调用。用量、保存结果和限制见 [DeepSeek 试跑记录](docs/DEEPSEEK_TRIAL.md)。
+
 面向长程游戏文本翻译的研究项目：结合多层翻译记忆、图引导检索、可训练的上下文选择工具与多模型协作，生成符合语境和项目规范的译文，并在术语、人物设定或本地化规则变化后维护已有结果。
 
 **核心架构：LangGraph 执行编排 + DelTA 式记忆 + TransGraph 启发的检索 + Loong 启发的上下文选择训练 + 角色风格约束 + 版本与依赖驱动的局部修订。**

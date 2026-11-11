@@ -1,0 +1,58 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "0 · 一键自主翻译（推荐）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_workflow.py",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "1 · 初始化一个新演示（目录须不存在）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "localization_agent.workflow.cli",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "init",
+        "--directory",
+        "outputs/deepseek-autonomous-next",
+        "--model-config",
+        "configs/workflow.deepseek.json"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "2 · 自动翻译、审查与修复（可恢复）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "localization_agent.workflow.cli",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "run",
+        "--directory",
+        "outputs/deepseek-autonomous-next"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "3 · 查看自主审查试跑结果",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "localization_agent.workflow.cli",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "args": [
+        "status",
+        "--directory",
+        "outputs/deepseek-autonomous-v2"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

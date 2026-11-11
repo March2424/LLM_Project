@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install offline test dependencies
-        run: python -m pip install -r configs/requirements-naev.txt -r configs/requirements-shattered.txt -r configs/requirements-retrieval.txt
+        run: python -m pip install -r configs/requirements-naev.txt -r configs/requirements-shattered.txt -r configs/requirements-retrieval.txt -r configs/requirements-workflow.txt
       - name: Run offline tests
         env:
           PYTHONPATH: src
